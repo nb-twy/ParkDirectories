@@ -1,15 +1,5 @@
 #!/bin/bash
 
-# To Do
-#   > Use a single function
-#   > Call the function pd
-#   > pd NAME changes the CWD to the directory referenced by the bookmark NAME
-#   > Use flags for all of the other behavior
-#       * -a, --add NAME    Add a new bookmarked directory referenced by NAME
-#       * -d, --del NAME    Delete a bookmarked directory referenced by NAME
-#       * -l, --list        List all of the bookmarked directories
-#       * -c, --clear       Clear all bookmarked directories
-
 pdFile="$HOME/.pd-data"
 
 pd() {
