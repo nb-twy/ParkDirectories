@@ -17,7 +17,7 @@ examples:
     pd -d dev   Remove the directory referenced by the name dev from
                 the parked directories list
 
-Parked directories are stored in "$pdFile"
+Parked directories are stored in $HOME/.pd-data by default.
 
 ## Installation
 
