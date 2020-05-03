@@ -22,11 +22,11 @@ Parked directories are stored in "$pdFile"
 ## Installation
 
 ## To Do
-[ ] Add automated install script  
-    [ ] Copy pd.sh to home directory  
-    [ ] Place sourcing in .bash_profile (default)  
-    [ ] Option: place sourcing in .bashrc (--bashrc)  
-    [ ] Option: change the name of the function to user's choice (--cmd NAME)  
-    [ ] Option: copy pd.sh to user chosen destination (--dir FULL-PATH)  
-    [ ] Option: store parked directories in user chosen file (--file FULL-PATH)  
+- [ ] Add automated install script  
+    - [ ] Copy pd.sh to home directory  
+    - [ ] Place sourcing in .bash_profile (default)  
+    - [ ] Option: place sourcing in .bashrc (--bashrc)  
+    - [ ] Option: change the name of the function to user's choice (--cmd NAME)  
+    - [ ] Option: copy pd.sh to user chosen destination (--dir FULL-PATH)  
+    - [ ] Option: store parked directories in user chosen file (--file FULL-PATH)  
 
