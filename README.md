@@ -22,23 +22,9 @@ Parked directories are stored in $HOME/.pd-data by default.
 ## Installation
 
 ## To Do
-- [x] Add automated install script  
-    - [x] Copy pd.sh to home directory  
-    - [x] Place sourcing in .bash_profile (default)  
-    - [x] Log (mostly for uninstall purposes)
-        1. Location of pd.sh
-        2. Full path to data file
-        3. Where it's sourced: .bashrc or .bash_profile
-    - [x] Option: place sourcing in .bashrc (--bashrc)  
-    - [x] Option: change the name of the function to user's choice (--cmd NAME)  
-    - [x] Option: copy pd.sh to user chosen destination (--dir FULL-PATH)  
-    - [x] Option: store parked directories in user chosen file (--file FILENAME)  
-- [ ] Add automated uninstall script  
-  - [x] Remove executable
-  - [x] Remove data file
-  - [x] Remove sourcing from .bashrc or .bash_profile
-  - [x] Remove log file
-  - [x] ~~Unset function~~
-  - [x] Remove directory containing executable and data file if it is empty after removal
-  - [x] Ask before removing the directory
+- [ ] Update README
+  - [ ] Introduction
+  - [ ] Install
+  - [ ] Uninstall
+  - [ ] How to use
   
