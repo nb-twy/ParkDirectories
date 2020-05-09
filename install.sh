@@ -139,9 +139,10 @@ if [[ $INSTALLED -eq 0 ]]; then
     
     # Create the log file
     cat << EOF >> "$LOGFILE"
-path_to_executable "$TARGET_DIR/$EXECUTABLE_DEST"
-path_to_data_file "$TARGET_DIR/$DATA_FILE"
-profile "$PROFILE"
+path_to_executable $TARGET_DIR/$EXECUTABLE_DEST
+path_to_data_file $TARGET_DIR/$DATA_FILE
+profile $PROFILE
+func_name $FUNC_NAME
 EOF
     # Change the location where the data file is stored
     # Write the output to a new file so that the original is not altered.
