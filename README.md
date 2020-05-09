@@ -34,6 +34,9 @@ Parked directories are stored in $HOME/.pd-data by default.
     - [x] Option: copy pd.sh to user chosen destination (--dir FULL-PATH)  
     - [x] Option: store parked directories in user chosen file (--file FILENAME)  
 - [ ] Add automated uninstall script  
+  - [ ] Remove executable
   - [ ] Remove data file
+  - [ ] Remove directory, if one was created
   - [ ] Remove sourcing from .bashrc or .bash_profile
-  - [ ] Remove pd.sh
+  - [ ] Remove log file
+  - [ ] Unset function
