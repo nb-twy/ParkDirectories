@@ -27,4 +27,6 @@ Parked directories are stored in $HOME/.pd-data by default.
   - [ ] Install
   - [ ] Uninstall
   - [ ] How to use
+- [ ] Test with zsh
+- [ ] Ensure compatibility with Mac OS
   
