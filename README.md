@@ -35,7 +35,7 @@ Read below for more details.
 Have fun zooming around your system!
 
 ### Using Park Directories
-Geting started is easy.  You can read everything you need to know from the command's help.
+Getting started is easy.  You can read everything you need to know from the command's help.
 ```bash
 pd -h
 Park Directories
@@ -69,12 +69,12 @@ You're working on a particular dev project, so you go there and park that direct
 cd my_project
 pd -a proj
 ```
-You app logs are stored in _/var/log/my_project/_.  Let's head there and park that directory.
+Your app logs are stored in _/var/log/my_project_.  Let's head there and park that directory.
 ```bash
 cd /var/log/my_project
 pd -a log
 ```
-You're developing a website, so your output will go to _/var/www/html/my_project/_, so let's head there and park that, too.
+You're developing a website, so your output will go to _/var/www/html/my_project_, so let's head there and park that, too.
 ```bash
 cd /var/www/html/my_project
 pd -a html
@@ -96,7 +96,7 @@ Something is going wrong, so you want to check out the logs for a bit.
 ```bash
 pd log
 ```
-It looks like there might be a deployment issue, so you want to take a look at what was deployed to _/var/www/html/my_project/_.
+It looks like there might be a deployment issue, so you want to take a look at what was deployed to _/var/www/html/my_project_.
 ```bash
 pd html
 ```
@@ -127,7 +127,8 @@ pd -c
   - [x] Introduction
   - [ ] Install
   - [ ] Uninstall
-  - [ ] How to use
+  - [x] How to use
+- [ ] Delete multiple references with the same command.  Use space-delimited list.
 - [ ] Test with zsh
 - [ ] Ensure compatibility with Mac OS
   
