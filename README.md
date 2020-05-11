@@ -26,7 +26,7 @@ source ~/.bash_profile
 
 Without any switches, _.install.sh_ will add the _pd_ command to the environment, place the Bash executable in your `$HOME` directory, and place the bootstrap code in the _.bash_profile_ file.  Installation is fast!  Follow the instructions at the end of installation and run `source ~/.bash_profile` or restart your terminal to bootstrap the command.  
 
-*WARNING*:  Installation creates a _pd.log_ file in the same directory as _install.sh_.  *DO NOT* delete this file.  It is necessary for _uninstall.sh_ to work correctly
+**WARNING**:  Installation creates a _pd.log_ file in the same directory as _install.sh_.  **DO NOT** delete this file.  It is necessary for _uninstall.sh_ to work correctly
 
 The first time you run _pd_ with any of its options (_e.g._ `pd -h` to see the help information), the data file (_.pd-data_ by default) will be created in the same directory as the executable.  The command is not complicated, so just run `pd -h` to see all of the options in a quick view.
 
