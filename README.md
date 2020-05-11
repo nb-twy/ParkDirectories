@@ -88,7 +88,7 @@ pd -l
   log /var/log/my_project
   html /var/www/html/my_project
 ```
-Right, _proj_
+Right, _proj_!
 ```bash
 pd proj
 ```
