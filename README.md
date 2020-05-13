@@ -122,7 +122,7 @@ pd -c
 The install script, _install.sh_, has several options that allow you to customize your installation.  Let's walk through each of these options.
 
 **Bootstrap from .bashrc**  
-The default behavior is to append the bootstrap code in your `$HOME/.bash_profile` script.  This code checks that the executable, _pd.sh_, exists and runs it.  If you'd like to have this code appended to your `$HOME/.bashrc` file instead, use the `--bashrc` option:
+The default behavior is to append the bootstrap code in your `$HOME/.bash_profile` script.  This code checks that the executable, _pd.sh_, exists and runs it.  If you'd like to have this code appended to your `$HOME/.bashrc` file instead, use the `--bashrc` option.
 ```bash
 ./install.sh --bashrc
 ```
@@ -146,21 +146,25 @@ The default name of the file used to store the nickname and full path pairs is _
 ```
 
 **Use as Many Options as You'd Like**  
-You can mix and match as many of the options as you'd like.  We can place the bootstrap code in `$HOME/.bashrc`, the executable in `$HOME/savedDirs`, rename the data file _.savedDirs_, and use _sd_ as the function name:
+You can mix and match as many of the options as you'd like.  We can place the bootstrap code in `$HOME/.bashrc`, the executable in `$HOME/savedDirs`, rename the data file _.savedDirs_, and use _sd_ as the function name.
 ```bash
 ./install.sh --bashrc -d $HOME/savedDirs -f .savedDirs --func sd
 ```
 
 ## Advanced Uninstall
+I don't know why you'd ever want to uninstall Park Directories, but if you must... ;)  
+Just run `./uninstall.sh`.  
+There are no options for this command, but let's talk about what it will do in case something goes wrong.  The command needs to remove the executable and data files, remove the directory these are in if it is empty, remove the bootstrap code from `$HOME/.bash_profile` or `$HOME/.bashrc`, and remove `pd.log`.  If `pd.log` exists and not corrupted, everything will go smoothly.  The script uses `pd.log` to know where the executable and data files are located, if we used a custom name for the data file, in which profile script the bootstrap code was placed, and the name of the function.  If `pd.log` is missing, the script will ask if it should attempt to uninstall using the default configuration.  If you say, "yes", it will attempt to uninstall Park Directories as if it had been installed with the default configuration.  If you say, "no", it will exit, and you will have to try and clean it up on your own.  All hope is not lost, though.  The installation script checks to see if it can find a partial install somewhere before continuing with the install and will tell you where there are artifacts that need to be cleaned up before a fresh install can continue.  If you remove the artifacts that `install.sh` finds, you'll catch most things.  If the executable and data file were placed in a custom directory and `pd.log` is missing, so you have to try to uninstall Park Directories on your own, and you don't remember where you put it, you'll leave those two files sitting there.  That's not so bad.  They won't get in the way of a new install, and if you just leave them, they are tiny files, not enough to worry about.  One more thing: if the executable and data files were placed in a custom directory and after removing them the directory is now empty, `uninstall.sh` will ask if you want to remove the directory.
 
 ## To Do
-- [ ] Update README
+- [x] Update README
   - [x] Introduction
   - [x] Install
-  - [ ] Uninstall
+  - [x] Uninstall
   - [x] How to use
 - [ ] Delete multiple references with the same command.  Use space-delimited list.
 - [ ] Add option to install.sh allowing you to rename the function without having to uninstall and reinstall.
+- [ ] If the user created a custom directory tree, remove the entire tree if it is empty.  Don't leave any orphaned directories.
 - [ ] Test with zsh
 - [ ] Ensure compatibility with Mac OS
   
