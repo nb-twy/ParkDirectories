@@ -170,7 +170,9 @@ If `pd.log` exists and is not corrupted, everything will go smoothly.  The scrip
 
 If `pd.log` is missing, the script will ask if it should attempt to uninstall using the default configuration.  If you say, "yes", it will attempt to uninstall Park Directories as if it had been installed with the default configuration.  If you say, "no", it will exit, and you will have to try and clean it up on your own.  All hope is not lost, though.  The installation script checks to see if it can find a partial install somewhere before continuing with the install and will tell you where there are artifacts that need to be cleaned up before a fresh install can continue.  If you remove the artifacts that `install.sh` finds, you'll catch most things.  If the executable and data file were placed in a custom directory and `pd.log` is missing, so you have to try to uninstall Park Directories on your own, and you don't remember where you put it, you'll leave those two files sitting there.  That's not so bad.  They won't get in the way of a new install, and if you just leave them, they are tiny files, not enough to worry about.
 
-One more thing: if the executable and data files were placed in a custom directory and after removing them the directory is empty, `uninstall.sh` will ask if you want to remove the directory.
+If the executable and data files were placed in a custom directory and after removing them the directory is empty, `uninstall.sh` will ask if you want to remove the directory.
+
+One more thing.  When `uninstall.sh` runs successfully, it will tell you that you can either restart your terminal or run `unset -f {command_name}` to remove the command from your environment.  This is not entirely necessary, but it is the last bit of housekeeping necessary.
 
 ## To Do
 - [ ] Delete multiple references with the same command.  Use space-delimited list.
