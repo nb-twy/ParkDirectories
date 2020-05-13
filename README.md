@@ -173,11 +173,6 @@ If `pd.log` is missing, the script will ask if it should attempt to uninstall us
 One more thing: if the executable and data files were placed in a custom directory and after removing them the directory is empty, `uninstall.sh` will ask if you want to remove the directory.
 
 ## To Do
-- [x] Update README
-  - [x] Introduction
-  - [x] Install
-  - [x] Uninstall
-  - [x] How to use
 - [ ] Delete multiple references with the same command.  Use space-delimited list.
 - [ ] Add option to install.sh allowing you to rename the function without having to uninstall and reinstall.
 - [ ] If the user created a custom directory tree, remove the entire tree if it is empty.  Don't leave any orphaned directories.
