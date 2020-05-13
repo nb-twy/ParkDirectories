@@ -119,16 +119,48 @@ pd -c
 ```
 
 ## Advanced Install
+The install script, _install.sh_, has several options that allow you to customize your installation.  Let's walk through each of these options.
+
+**Bootstrap from .bashrc**  
+The default behavior is to append the bootstrap code in your `$HOME/.bash_profile` script.  This code checks that the executable, _pd.sh_, exists and runs it.  If you'd like to have this code appended to your `$HOME/.bashrc` file instead, use the `--bashrc` option:
+```bash
+./install.sh --bashrc
+```
+
+**Location of the Executable and Data Files**  
+_pd.sh_ and _.pd-data_ are placed in your `$HOME` directory, by default.  Some might find it cleaner to place both in a different directory, maybe in `$HOME/pd` or in `$HOME/.local/bin`, perhaps.  Whatever your fancy, use the `-d|--dir` option to choose where you'd like the files placed.  The entire directory tree will be created automatically if it doesn't exist.
+```bash
+./install.sh -d $HOME/scripts/pd
+```
+
+**Name of the Function**  
+The function name, _pd_ by default, becomes a part of your environment every time your terminal loads.  With a short name like _pd_, it is possible to collide with another piece of software, function, or alias with the name _pd_.  In addition to being the initials of the name of the software (**p**ark **d**irectories), _pd_ was also chosen because the letters are typed from both hands, making it convenient and comfortable to type over and over.  You might like to use _kd_, for example, because it keeps your hands on the home keys.  Or maybe you use a different keyboard layout or speak a different language where a different mnemonic makes sense. For these reasons, among others, you can choose the name of the function by using the `--func` option.
+```bash
+./install.sh --func kd
+```
+
+**Name of the Data File**  
+The default name of the file used to store the nickname and full path pairs is _.pd-data_.  If you'd like to pick a different name for that file, use the `-f|--file` option.  There is rarely a strong need for this, as choosing a custom location solves most concerns, but if, for example, you prefer to call the file _.savedDirs_, you can.  Please note that the option only takes the **name** of the file, NOT a full path.
+```bash
+./install.sh -f .savedDirs
+```
+
+**Use as Many Options as You'd Like**  
+You can mix and match as many of the options as you'd like.  We can place the bootstrap code in `$HOME/.bashrc`, the executable in `$HOME/savedDirs`, rename the data file _.savedDirs_, and use _sd_ as the function name:
+```bash
+./install.sh --bashrc -d $HOME/savedDirs -f .savedDirs --func sd
+```
 
 ## Advanced Uninstall
 
 ## To Do
 - [ ] Update README
   - [x] Introduction
-  - [ ] Install
+  - [x] Install
   - [ ] Uninstall
   - [x] How to use
 - [ ] Delete multiple references with the same command.  Use space-delimited list.
+- [ ] Add option to install.sh allowing you to rename the function without having to uninstall and reinstall.
 - [ ] Test with zsh
 - [ ] Ensure compatibility with Mac OS
   
