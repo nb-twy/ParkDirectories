@@ -175,7 +175,7 @@ When `uninstall.sh` runs successfully, it will tell you that you can either rest
 If `pd.log` is missing, the script will ask if it should attempt to uninstall using the default configuration.  If you say, "yes", it will attempt to uninstall Park Directories as if it had been installed with the default configuration.  If you say, "no", it will exit, and you will have to try and clean it up on your own.  All hope is not lost, though.  Run `pd -h` (or use the custom command you chose).  At the end of the help text, it tells you where the data file is located.  That's where the executable is, too.  Go delete them and the directory they are in, if it was a custom directory and is empty.  The bootstrap code is in either `$HOME/.bash_profile` or `$HOME/.bashrc`, most likely at the end.  It's easy to find because the section begins with `## Parked Directories ##`, ends with `## End ##`, and is only 7 lines long.  If `pd.log` exists but is corrupt, delete it.
 
 ## To Do
-- [ ] We want Park Directories to load with every each terminal instance.  Need to add the correct options and even defaults to make sure that it is being loaded properly.
+- [ ] We want Park Directories to load with every terminal instance.  Need to add the correct options and even defaults to make sure that it is being loaded properly.
     - [ ] Research DotFiles and how they are handled in Bash
     - [ ] Confirm experience on Ubuntu
     - [ ] Confirm experience on Fedora
@@ -185,6 +185,8 @@ If `pd.log` is missing, the script will ask if it should attempt to uninstall us
 - [ ] Add -v, --version option to command to report the version.
 - [ ] Delete multiple references with the same command.  Use space-delimited list.
 - [ ] Add parked directory that is not the current directory.  Allow -a option to take 2 parameters.
+- [ ] Seed the data file with entries from a specified file.  This could be useful when scripting the setup of a new machine.
+- [ ] Have a preconfigured set of entries for often used places around the system's directory structure that are not so easy to reach or remember.
 - [ ] Add option to install.sh allowing you to rename the function without having to uninstall and reinstall.
 - [ ] Add update feature to install.sh (i.e. `./install.sh -u`), allowing user to update to new features without losing any currently parked directories.
 - [ ] If the user created a custom directory tree, remove the entire tree if it is empty.  Don't leave any orphaned directories.
