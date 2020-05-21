@@ -181,8 +181,12 @@ If `pd.log` is missing, the script will ask if it should attempt to uninstall us
     - [ ] Confirm experience on Fedora
     - [ ] Confirm experience on WSL (Ubuntu)
     - [ ] Update logic to have the best experience
+- [ ] Report version in help
+- [ ] Add -v, --version option to command to report the version.
 - [ ] Delete multiple references with the same command.  Use space-delimited list.
+- [ ] Add parked directory that is not the current directory.  Allow -a option to take 2 parameters.
 - [ ] Add option to install.sh allowing you to rename the function without having to uninstall and reinstall.
+- [ ] Add update feature to install.sh (i.e. `./install.sh -u`), allowing user to update to new features without losing any currently parked directories.
 - [ ] If the user created a custom directory tree, remove the entire tree if it is empty.  Don't leave any orphaned directories.
 - [ ] Test with zsh
 - [ ] Ensure compatibility with Mac OS
