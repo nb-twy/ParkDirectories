@@ -1,6 +1,6 @@
 # Park Directories
 Park Directories allows a user to navigate to any directory on their system
-with the simplicity of the semantics of the _cd_ command.  Do you have a a few directories in which you work commonly: the root to your _dev_ directory, _/var/log_, the root directory of your current project?  When you open your terminal, how do you jump to one of these?  Do you have aliases for them in _.bashrc_ or _.bash_profile_?  Do you have to type them out with tab completion a lot?  Does it get tedious?  When you want to jump to another part of your system and stay there for a  while, are you tempted to open a new terminal window or another tab, or another _tmux_ pane so that you can come back to where you are without having to navigate back tediously?
+with the simplicity of the semantics of the _cd_ command.  Do you have a a few directories in which you work commonly: the root to your _dev_ directory, _/var/log_, the root directory of your current project?  When you open your terminal, how do you jump to one of these?  Do you have aliases for them?  Do you have to type them out with tab completion a lot?  Does it get tedious?  When you want to jump to another part of your system and stay there for a  while, are you tempted to open a new terminal window or another tab, or another _tmux_ pane so that you can come back to where you are without having to navigate back tediously?
 
 There are a few popular implementations that allow us to go back to the last directory easily using the command `cd -`.  This is really handy, but what happens when you need to navigate around the tree for a bit before going back to where you were?
 
@@ -8,7 +8,7 @@ With Park Directories, this is easy.  Park (_i.e._ bookmark) the current directo
 
 The references persist across instances of the terminal and reboots.
 
-Easily remove a bookmark with `pd -d NAME`.  Show the list of all parked directories with `pd -l`, and when you want to totally clear house, just type `pd -c` and all of the references will be removed.
+Easily remove a bookmark with `pd -d NAME`.  Show the list of all parked directories with `pd -l`, and when you want to totally clean house, just type `pd -c` and all of the references will be removed.
 
 Park Directories was written for Bash.  I would like to make it available for _zsh_ and _Mac OS_, as well, but we'll see what time allows.
 
@@ -21,12 +21,12 @@ Download or clone the repository, and then install it.
 git clone https://github.com/nb-twy/ParkDirectories.git
 cd ParkDirectories
 ./install.sh
-source ~/.bash_profile
+source ~/.bashrc
 ```
 
-Without any switches, _.install.sh_ will add the _pd_ command to the environment, place the Bash executable in your `$HOME` directory, and place the bootstrap code in the _.bash_profile_ file.  Installation is fast!  Follow the instructions at the end of installation and run `source ~/.bash_profile` or restart your terminal to bootstrap the command.  
+Without any switches, _.install.sh_ will add the _pd_ command to the environment, place the Bash executable in your `$HOME` directory, and place the bootstrap code in the _.bashrc_ file.  Installation is fast!  Follow the instructions at the end of installation and run `source ~/.bashrc` or restart your terminal to bootstrap the command.  
 
-**WARNING**:  Installation creates a _pd.log_ file in the same directory as _install.sh_.  **DO NOT** delete this file.  It is necessary for _uninstall.sh_ to work correctly
+**WARNING**:  Installation creates a _pd.log_ file in the same directory as _install.sh_.  **DO NOT** delete this file.  It is necessary for _uninstall.sh_ to work correctly.
 
 The first time you run _pd_ with any of its options (_e.g._ `pd -h` to see the help information), the data file (_.pd-data_ by default) will be created in the same directory as the executable.  The command is not complicated, so just run `pd -h` to see all of the options in a quick view.
 
@@ -121,10 +121,10 @@ pd -c
 ## Advanced Install
 The install script, _install.sh_, has several options that allow you to customize your installation.  Let's walk through each of these options.
 
-**Bootstrap from .bashrc**  
-The default behavior is to append the bootstrap code in your `$HOME/.bash_profile` script.  This code checks that the executable, _pd.sh_, exists and runs it.  If you'd like to have this code appended to your `$HOME/.bashrc` file instead, use the `--bashrc` option.
+**Bootstrap from a Specific Profile File**  
+The default behavior is to append the bootstrap code in your `$HOME/.bashrc` script.  This code checks that the executable, _pd.sh_, exists and runs it.  If you'd like to have this code appended to another one of the profile scripts, use the `-p, --profile` flag:
 ```bash
-./install.sh --bashrc
+./install.sh -p ~/.bash_profile
 ```
 
 **Location of the Executable and Data Files**  
@@ -148,7 +148,7 @@ The default name of the file used to store the nickname and full path pairs is _
 **Use as Many Options as You'd Like**  
 You can mix and match as many of the options as you'd like.  We can place the bootstrap code in `$HOME/.bashrc`, the executable in `$HOME/savedDirs`, rename the data file _.savedDirs_, and use _sd_ as the function name.
 ```bash
-./install.sh --bashrc -d $HOME/savedDirs -f .savedDirs --func sd
+./install.sh -p $HOME/.bash_profile -d $HOME/savedDirs -f .savedDirs --func sd
 ```
 
 ## Advanced Uninstall
@@ -158,7 +158,7 @@ There are no options for this command, but let's talk about what it will do in c
 
 1. remove the executable and data files
 2. remove the directory these are in, if it is empty
-3. remove the bootstrap code from `$HOME/.bash_profile` or `$HOME/.bashrc`
+3. remove the bootstrap code from the profile file
 4. remove `pd.log`.
 
 If `pd.log` exists and is not corrupted, everything will go smoothly.  The script uses `pd.log` to know
@@ -172,7 +172,7 @@ If the executable and data files were placed in a custom directory and after rem
 
 When `uninstall.sh` runs successfully, it will tell you that you can either restart your terminal or run `unset -f {command_name}` to remove the command from your environment.  This is not entirely necessary, but it is the last bit of housekeeping necessary.
 
-If `pd.log` is missing, the script will ask if it should attempt to uninstall using the default configuration.  If you say, "yes", it will attempt to uninstall Park Directories as if it had been installed with the default configuration.  If you say, "no", it will exit, and you will have to try and clean it up on your own.  All hope is not lost, though.  Run `pd -h` (or use the custom command you chose).  At the end of the help text, it tells you where the data file is located.  That's where the executable is, too.  Go delete them and the directory they are in, if it was a custom directory and is empty.  The bootstrap code is in either `$HOME/.bash_profile` or `$HOME/.bashrc`, most likely at the end.  It's easy to find because the section begins with `## Parked Directories ##`, ends with `## End ##`, and is only 7 lines long.  If `pd.log` exists but is corrupt, delete it.
+If `pd.log` is missing, the script will ask if it should attempt to uninstall using the default configuration.  If you say, "yes", it will attempt to uninstall Park Directories as if it had been installed with the default configuration.  If you say, "no", it will exit, and you will have to try and clean it up on your own.  All hope is not lost, though.  Run `pd -h` (or use the custom command you chose).  At the end of the help text, it tells you where the data file is located.  That's where the executable is, too.  Go delete them and the directory they are in, if it was a custom directory and is empty.  The bootstrap code is most likey in `$HOME/.bashrc`, most likely at the end.  It's easy to find because the section begins with `## Parked Directories ##`, ends with `## End ##`, and is only 7 lines long.  If `pd.log` exists but is corrupt, delete it.
 
 ## To Do
 - [x] We want Park Directories to load with every terminal instance.  Need to add the correct options and even defaults to make sure that it is being loaded properly.
@@ -182,6 +182,7 @@ If `pd.log` is missing, the script will ask if it should attempt to uninstall us
     - [x] Confirm experience on WSL (Ubuntu)
     - [x] Update to use `.bashrc` by default
     - [x] Allow user to set the destination with -p, --profile
+    - [x] Update README
 - [ ] Report version in help
 - [ ] Add -v, --version option to command to report the version.
 - [ ] Delete multiple references with the same command.  Use space-delimited list.
