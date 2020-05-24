@@ -6,8 +6,7 @@ EXECUTABLE_SOURCE="pd-source.sh"
 EXECUTABLE_DEST="pd.sh"
 LOGFILE="pd.log"
 BASHRC="$HOME/.bashrc"
-BASHPROFILE="$HOME/.bash_profile"
-PROFILE="$BASHPROFILE"
+PROFILE="$BASHRC"
 TARGET_DIR="$HOME"
 DATA_FILE=".pd-data"
 FUNC_NAME="pd"
@@ -26,9 +25,11 @@ usage: install [OPTIONS]
 
 OPTIONS:
 -h, --help      Display this help message and exit
---bashrc        Use .bashrc to load file (default: .bash_profile)
 -d, --dir       Set the directory where the data file and executable
                 will be written (default: $HOME)
+-p, --profile   Install the bootstrap code in the specified profile file
+                Requires full path (e.g. ~/.bash_profile, ~/.bash_login)
+                (default: ~/.bashrc)
 -f, --file      Set the name of the file to be used to store the
                 parked directory references (default: .pd-data)
 --func          Set the command name (default: pd)
@@ -40,9 +41,14 @@ while (( "$#" )); do
         -h|--help)      # Display help and exit
             usage && exit 0
         ;;
-        --bashrc)       # Use .bashrc to load file instead of .bash_profile
-            PROFILE="$BASHRC"
-            shift
+        -p|--profile)       # Install the bootstrap code in the user-specified file
+            PROFILE="$2"
+            # Make sure the profile file exists.  If it doesn't raise error and exit.
+            if [[ ! -f "$PROFILE" ]]; then
+                echo "ERROR: The specified profile file does not exist."
+                exit 103
+            fi
+            shift 2
         ;;
         -d|--dir)       # Set the directory where the data file and executable will be written
             TARGET_DIR="${2%/}"  # Remove a trailing / if there
@@ -60,12 +66,12 @@ while (( "$#" )); do
             shift 2
         ;;
         -*|--*=)   # unsupported flags
-            echo -e "Error: Unsupported flag $1 \n" >&2
+            echo -e "ERROR: Unsupported flag $1 \n" >&2
             usage
             exit 101
             ;;
         *)              # No positional paramenters supported
-            echo -e "Error: No positional parameters defined.\n" >&2
+            echo -e "ERROR: No positional parameters defined.\n" >&2
             usage
             exit 102
             ;;
@@ -169,6 +175,7 @@ EOF
     cp "$EXECUTABLE_SOURCE" "$TARGET_DIR/$EXECUTABLE_DEST" || exit 202
     # Write the sourcing code to the specified profile script
     cat << EOF >> "$PROFILE" || exit 203
+
 ## Parked Directories ##
 # Load script
 PD="$TARGET_DIR/$EXECUTABLE_DEST"
