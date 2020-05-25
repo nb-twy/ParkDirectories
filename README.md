@@ -62,27 +62,31 @@ Parked directories are stored in "/your/home/directory/.pd-data"
 ### Example
 Let's park the root of your dev directory with the name _dev_.  First navigate to this directory.  Then execute
 ```bash
-pd -a dev
+$ pd -a dev
+dev --> /home/user/nix0/mydocs/dev
 ```
 You're working on a particular dev project, so you go there and park that directory.
 ```bash
-cd my_project
-pd -a proj
+$ cd my_project
+$ pd -a proj
+proj --> /home/user/nix0/mydocs/dev/my_project
 ```
 Your app logs are stored in _/var/log/my_project_.  Let's head there and park that directory.
 ```bash
-cd /var/log/my_project
-pd -a log
+$ cd /var/log/my_project
+$ pd -a log
+log --> /var/log/my_project
 ```
 You're developing a website, so your output will go to _/var/www/html/my_project_, so let's head there and park that, too.
 ```bash
-cd /var/www/html/my_project
-pd -a html
+$ cd /var/www/html/my_project
+$ pd -a html
+html --> /var/www/html/my_project
 ```
 Let's head back and work on _my_project_ for a while.
 What did we name the bookmark for _my_project_ code?
 ```bash
-pd -l
+$ pd -l
   dev /home/jsmith/documents/dev
   proj /home/jsmith/documents/dev/my_project
   log /var/log/my_project
@@ -90,31 +94,31 @@ pd -l
 ```
 Right, _proj_!
 ```bash
-pd proj
+$ pd proj
 ```
 Something is going wrong, so you want to check out the logs for a bit.
 ```bash
-pd log
+$ pd log
 ```
 It looks like there might be a deployment issue, so you want to take a look at what was deployed to _/var/www/html/my_project_.
 ```bash
-pd html
+$ pd html
 ```
 You identify the problem and want to get back to your code.
 ```bash
-pd proj
+$ pd proj
 ```
 In a couple of weeks, you're done working on this project and don't need the bookmarks anymore.
 ```bash
-pd -d proj
-pd -d html
-pd -d log
-pd -l
+$ pd -d proj
+$ pd -d html
+$ pd -d log
+$ pd -l
   dev /home/jsmith/documents/dev
 ```
 If you don't need any of the bookmarks anymore, you can clear the entire list quickly.
 ```bash
-pd -c
+$ pd -c
   Removed all parked directories
 ```
 

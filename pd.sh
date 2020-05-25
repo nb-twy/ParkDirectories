@@ -37,7 +37,9 @@ EOF
             if [[ $(grep -Pc "^$ref .*$" "$pdFile") -gt 0 ]]; then
                 echo "Name already used"
             else
-                echo "$ref" "$(pwd)" >> "$pdFile"
+                TARGET=$(pwd)
+                echo "$ref" "$TARGET" >> "$pdFile" || exit 201
+                echo "$ref --> $TARGET"
             fi
             ;;
         -d|--del)   # Delete a bookmarked directory
@@ -69,7 +71,7 @@ EOF
             # Command format: pd {unique name}
             path=$(grep -P "^$ref .*$" "$pdFile" | cut -d' ' -f2)
             if [[ ${#path} -gt 0 ]]; then
-                cd "$path" || exit
+                cd "$path" || exit 101
             else
                 echo "No parked directory with that name"
             fi
