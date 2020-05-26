@@ -63,7 +63,9 @@ EOF
             ;;
         -l|--list)  # List all of the bookmarked directories
             # List all parked directories
+            echo
             cat "$pdFile" || return 30
+            echo
             ;;
         -c|--clear) # Clear the entire list of bookmarked directories
             # Clear all parked director entries
