@@ -29,17 +29,23 @@ Parked directories are stored in "$pdFile"
 EOF
             ;;
         -a|--add)   # Add a bookmarked directory
-            ref="$2"
             # Park a directory by name
             # Command format: pd -a|--add {unique name}
             # Add it to $pdFile
             # Format {unique name} {full directory path}
-            if [[ $(grep -Pc "^$ref .*$" "$pdFile") -gt 0 ]]; then
-                echo "Name already used"
+            
+            # Command requires at least one argument following -a
+            if [[ $# < 2 ]]; then
+                echo "ERROR: Name required to park the current directory."
             else
-                ADD_TARGET=$(pwd)
-                echo "$ref" "$ADD_TARGET" >> "$pdFile" || exit 201
-                echo "Added: $ref --> $ADD_TARGET"
+                ref="$2"
+                if [[ $(grep -Pc "^$ref .*$" "$pdFile") -gt 0 ]]; then
+                    echo "Name already used"
+                else
+                    ADD_TARGET=$(pwd)
+                    echo "$ref" "$ADD_TARGET" >> "$pdFile" || exit 201
+                    echo "Added: $ref --> $ADD_TARGET"
+                fi
             fi
             ;;
         -d|--del)   # Delete a bookmarked directory
