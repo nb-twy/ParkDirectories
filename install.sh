@@ -35,53 +35,6 @@ OPTIONS:
 -u, --update    Perform an in-place update
 EOF
 }
-
-while (( "$#" )); do
-    case "$1" in
-        -h|--help)      # Display help and exit
-            usage && exit 0
-        ;;
-        -p|--profile)       # Install the bootstrap code in the user-specified file
-            PROFILE="$2"
-            # Make sure the profile file exists.  If it doesn't raise error and exit.
-            if [[ ! -f "$PROFILE" ]]; then
-                echo "ERROR: The specified profile file does not exist."
-                exit 10
-            fi
-            shift 2
-        ;;
-        -d|--dir)       # Set the directory where the data file and executable will be written
-            TARGET_DIR="${2%/}"  # Remove a trailing / if there
-            CH_TARGET_DIR=1
-            shift 2
-        ;;
-        -f|--file)      # Set the name of the file to be used to store the parked directory references
-            DATA_FILE="$2"
-            CH_DATA_FILE=1
-            shift 2
-        ;;
-        --func)         # Set the command name
-            FUNC_NAME="$2"
-            CH_FUNC_NAME=1
-            shift 2
-        ;;
-        -u|--update)    # Perform an in-place update
-            ACTION="UPDATE"
-            shift 1
-        ;;
-        -*|--*=)   # unsupported flags
-            echo -e "ERROR: Unsupported flag $1 \n" >&2
-            usage
-            exit 11
-        ;;
-        *)              # No positional paramenters supported
-            echo -e "ERROR: No positional parameters defined.\n" >&2
-            usage
-            exit 12
-        ;;
-    esac
-done
-
 function logfile_exists {
     # Check if the installation log file exists
     if [[ $INSTALLED -eq 0 && -f "$LOGFILE" ]]; then
@@ -251,6 +204,54 @@ function install {
     cleanup
 }
 
+## Parse command line arguments
+while (( "$#" )); do
+    case "$1" in
+        -h|--help)      # Display help and exit
+            usage && exit 0
+        ;;
+        -p|--profile)       # Install the bootstrap code in the user-specified file
+            PROFILE="$2"
+            # Make sure the profile file exists.  If it doesn't raise error and exit.
+            if [[ ! -f "$PROFILE" ]]; then
+                echo "ERROR: The specified profile file does not exist."
+                exit 10
+            fi
+            shift 2
+        ;;
+        -d|--dir)       # Set the directory where the data file and executable will be written
+            TARGET_DIR="${2%/}"  # Remove a trailing / if there
+            CH_TARGET_DIR=1
+            shift 2
+        ;;
+        -f|--file)      # Set the name of the file to be used to store the parked directory references
+            DATA_FILE="$2"
+            CH_DATA_FILE=1
+            shift 2
+        ;;
+        --func)         # Set the command name
+            FUNC_NAME="$2"
+            CH_FUNC_NAME=1
+            shift 2
+        ;;
+        -u|--update)    # Perform an in-place update
+            ACTION="UPDATE"
+            shift 1
+        ;;
+        -*|--*=)   # unsupported flags
+            echo -e "ERROR: Unsupported flag $1 \n" >&2
+            usage
+            exit 11
+        ;;
+        *)              # No positional paramenters supported
+            echo -e "ERROR: No positional parameters defined.\n" >&2
+            usage
+            exit 12
+        ;;
+    esac
+done
+
+# Install or Update
 if [[ "$ACTION" == "INSTALL" ]]; then
     # Check for previous installation
     # If already installed, encourage user to run uninstall.sh
