@@ -28,7 +28,7 @@ else
                 ;;
             n|N)
                 echo -e "Uninstall aborted!"
-                return 20
+                exit 20
                 ;;
             *)
                 echo "[!] Please answer y or n."
@@ -42,11 +42,11 @@ if [[ $UNINSTALL -eq 1 ]]; then
     echo -e "\nUninstalling Parked Directories...\n"
 
     # Remove executable
-    rm "$EXEC" || return 30
+    rm "$EXEC" || exit 30
     echo "Removed executable: $EXEC."
 
     # Remove data file
-    rm "$DATA" || return 31
+    rm "$DATA" || exit 31
     echo "Removed data file: $DATA."
 
     # Remove sourcing from profile script
@@ -57,7 +57,7 @@ if [[ $UNINSTALL -eq 1 ]]; then
 
     # Remove log file
     if [[ -f "$LOG_FILE" ]]; then
-        rm "$LOG_FILE" || return 32
+        rm "$LOG_FILE" || exit 32
         echo "Removed installation log file: $LOG_FILE"
     fi
 
@@ -71,7 +71,7 @@ if [[ $UNINSTALL -eq 1 ]]; then
             read -n1 -p "Would you like to delete this directory? (y/n) " DEL_DIR
             case $DEL_DIR in
                 y|Y)
-                    rmdir "$DIR" || return 33
+                    rmdir "$DIR" || exit 33
                     echo -e "$DIR removed\n"
                     break
                     ;;

@@ -39,14 +39,14 @@ EOF
 while (( "$#" )); do
     case "$1" in
         -h|--help)      # Display help and exit
-            usage && return 0
+            usage && exit 0
         ;;
         -p|--profile)       # Install the bootstrap code in the user-specified file
             PROFILE="$2"
             # Make sure the profile file exists.  If it doesn't raise error and exit.
             if [[ ! -f "$PROFILE" ]]; then
                 echo "ERROR: The specified profile file does not exist."
-                return 10
+                exit 10
             fi
             shift 2
         ;;
@@ -72,12 +72,12 @@ while (( "$#" )); do
         -*|--*=)   # unsupported flags
             echo -e "ERROR: Unsupported flag $1 \n" >&2
             usage
-            return 11
+            exit 11
         ;;
         *)              # No positional paramenters supported
             echo -e "ERROR: No positional parameters defined.\n" >&2
             usage
-            return 12
+            exit 12
         ;;
     esac
 done
@@ -166,7 +166,7 @@ function install {
     if [[ $CH_TARGET_DIR -eq 1 ]]; then
         # Make sure the target directory exists
         if [[ ! -d "$TARGET_DIR" ]]; then
-            mkdir -p "$TARGET_DIR" || return 20
+            mkdir -p "$TARGET_DIR" || exit 20
         fi
     fi
         
@@ -181,7 +181,7 @@ EOF
     # Write the output to a new file so that the original is not altered.
     if [[ $CH_TARGET_DIR -eq 1 || $CH_DATA_FILE -eq 1 ]]; then
         # Make a copy of the executable
-        cp "$EXECUTABLE_SOURCE" tmp.sh || return 30
+        cp "$EXECUTABLE_SOURCE" tmp.sh || exit 30
         local SOURCE="tmp.sh"
         sed -e "0,/^pdFile=.*$/ s||pdFile=$TARGET_DIR/$DATA_FILE|" "$SOURCE" > "$EXECUTABLE_SOURCE"
         # Remove the tmp file
@@ -191,7 +191,7 @@ EOF
     # Change the name of the function (default: pd), if necessary
     if [[ $CH_FUNC_NAME -eq 1 ]]; then
         # Make a copy of the executable
-        cp "$EXECUTABLE_SOURCE" tmp.sh || return 31
+        cp "$EXECUTABLE_SOURCE" tmp.sh || exit 31
         local SOURCE="tmp.sh"
         sed -r -e "s|pd\(\) \{|$FUNC_NAME\(\) \{|" -e "s|(usage: )pd|\1$FUNC_NAME|" -e "s|(\s+)pd( -?[ad]? ?dev)|\1$FUNC_NAME\2|" "$SOURCE" > "$EXECUTABLE_SOURCE"
         # Remove the tmp file
@@ -199,15 +199,15 @@ EOF
     fi
     
     # Copy the executable to target directory
-    cp "$EXECUTABLE_SOURCE" "$TARGET_DIR/$EXECUTABLE_DEST" || return 40
+    cp "$EXECUTABLE_SOURCE" "$TARGET_DIR/$EXECUTABLE_DEST" || exit 40
     # Write the sourcing code to the specified profile script
-    cat << EOF >> "$PROFILE" || return 41
+    cat << EOF >> "$PROFILE" || exit 41
 
 ## Parked Directories ##
 # Load script
 PD="$TARGET_DIR/$EXECUTABLE_DEST"
 EOF
-    cat << 'EOF' >> "$PROFILE" || return 42
+    cat << 'EOF' >> "$PROFILE" || exit 42
 if [ -f "$PD" ]; then
     . "$PD"
 fi
@@ -234,7 +234,7 @@ if [[ "$ACTION" == "INSTALL" ]]; then
     else
         echo -e "\nIt looks like Park Directories is already installed."
         echo "Please run uninstall.sh to uninstall Park Directories before running install.sh again."
-        return 13
+        exit 13
     fi
 fi
 
