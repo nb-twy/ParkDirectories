@@ -130,6 +130,63 @@ function datafile_exists {
     fi
 }
 
+function create_logfile {
+    # Create the log file
+    cat << EOF >> "$LOGFILE" || exit 50
+path_to_executable $TARGET_DIR/$EXECUTABLE_DEST
+path_to_data_file $TARGET_DIR/$DATA_FILE
+profile $PROFILE
+func_name $FUNC_NAME
+EOF
+}
+
+function ch_datafile_loc {
+    # Change the location where the data file is stored
+    # Write the output to a new file so that the original is not altered.
+    if [[ $CH_TARGET_DIR -eq 1 || $CH_DATA_FILE -eq 1 ]]; then
+        # Make a copy of the executable
+        cp "$EXECUTABLE_SOURCE" tmp.sh || exit 30
+        local SOURCE="tmp.sh"
+        sed -e "0,/^pdFile=.*$/ s||pdFile=$TARGET_DIR/$DATA_FILE|" "$SOURCE" > "$EXECUTABLE_SOURCE"
+        # Remove the tmp file
+        rm tmp.sh
+    fi
+}
+
+function ch_func_name {
+    # Change the name of the function (default: pd), if necessary
+    if [[ $CH_FUNC_NAME -eq 1 ]]; then
+        # Make a copy of the executable
+        cp "$EXECUTABLE_SOURCE" tmp.sh || exit 31
+        local SOURCE="tmp.sh"
+        sed -r -e "s|pd\(\) \{|$FUNC_NAME\(\) \{|" -e "s|(usage: )pd|\1$FUNC_NAME|" -e "s|(\s+)pd( -?[ad]? ?dev)|\1$FUNC_NAME\2|" "$SOURCE" > "$EXECUTABLE_SOURCE"
+        # Remove the tmp file
+        rm tmp.sh
+    fi
+}
+
+function write_bootstrap {
+    # Write the sourcing code to the specified profile script
+    cat << EOF >> "$PROFILE" || exit 41
+
+## Parked Directories ##
+# Load script
+PD="$TARGET_DIR/$EXECUTABLE_DEST"
+EOF
+    cat << 'EOF' >> "$PROFILE" || exit 42
+if [ -f "$PD" ]; then
+    . "$PD"
+fi
+## End ##
+EOF
+}
+
+function cleanup {
+    ## Clean up
+    # Remove temporary executable source
+    rm "$EXECUTABLE_SOURCE"
+}
+
 function is_installed {
     INSTALLED=0
     local id_str="## Parked Directories ##"
@@ -171,56 +228,27 @@ function install {
     fi
         
     # Create the log file
-    cat << EOF >> "$LOGFILE"
-path_to_executable $TARGET_DIR/$EXECUTABLE_DEST
-path_to_data_file $TARGET_DIR/$DATA_FILE
-profile $PROFILE
-func_name $FUNC_NAME
-EOF
+    create_logfile
+
     # Change the location where the data file is stored
     # Write the output to a new file so that the original is not altered.
-    if [[ $CH_TARGET_DIR -eq 1 || $CH_DATA_FILE -eq 1 ]]; then
-        # Make a copy of the executable
-        cp "$EXECUTABLE_SOURCE" tmp.sh || exit 30
-        local SOURCE="tmp.sh"
-        sed -e "0,/^pdFile=.*$/ s||pdFile=$TARGET_DIR/$DATA_FILE|" "$SOURCE" > "$EXECUTABLE_SOURCE"
-        # Remove the tmp file
-        rm tmp.sh
-    fi
+    ch_datafile_loc
 
     # Change the name of the function (default: pd), if necessary
-    if [[ $CH_FUNC_NAME -eq 1 ]]; then
-        # Make a copy of the executable
-        cp "$EXECUTABLE_SOURCE" tmp.sh || exit 31
-        local SOURCE="tmp.sh"
-        sed -r -e "s|pd\(\) \{|$FUNC_NAME\(\) \{|" -e "s|(usage: )pd|\1$FUNC_NAME|" -e "s|(\s+)pd( -?[ad]? ?dev)|\1$FUNC_NAME\2|" "$SOURCE" > "$EXECUTABLE_SOURCE"
-        # Remove the tmp file
-        rm tmp.sh
-    fi
+    ch_func_name
     
     # Copy the executable to target directory
     cp "$EXECUTABLE_SOURCE" "$TARGET_DIR/$EXECUTABLE_DEST" || exit 40
+    
     # Write the sourcing code to the specified profile script
-    cat << EOF >> "$PROFILE" || exit 41
+    write_bootstrap
 
-## Parked Directories ##
-# Load script
-PD="$TARGET_DIR/$EXECUTABLE_DEST"
-EOF
-    cat << 'EOF' >> "$PROFILE" || exit 42
-if [ -f "$PD" ]; then
-    . "$PD"
-fi
-## End ##
-EOF
     echo -e "\nInstallation complete!"
     echo "Please execute the following command to use Park Directories:"
     echo -e "\tsource $PROFILE"
     
-
     ## Clean up
-    # Remove temporary executable source
-    rm "$EXECUTABLE_SOURCE"
+    cleanup
 }
 
 if [[ "$ACTION" == "INSTALL" ]]; then
