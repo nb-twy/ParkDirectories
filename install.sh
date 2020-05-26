@@ -82,26 +82,17 @@ while (( "$#" )); do
     esac
 done
 
-function is_installed() {
-    INSTALLED=0
-    local id_str="## Parked Directories ##"
-
+function logfile_exists {
     # Check if the installation log file exists
     if [[ $INSTALLED -eq 0 && -f "$LOGFILE" ]]; then
         echo "[!] Installation log file (pd.log) exists from a previous install."
         INSTALLED=1
     fi
+}
 
-    # Check .bash_profile for identifying line
-    if [[ $INSTALLED -eq 0 && -f "$BASHRC" ]]; then
-        local bash_installed=$(grep -c "$id_str" "$BASHRC")
-        if [[ $bash_installed -gt 0 ]]; then
-            echo "[!] Park Directories bootstrap script found in $BASHRC."
-            INSTALLED=1
-        fi
-    fi
-
-    # Check .bashrc for identifying line
+function bootstrap_in_bashrc {
+    # Check for default installation
+    local id_str="$1"
     if [[ $INSTALLED -eq 0 && -f "$BASHPROFILE" ]]; then
         local profile_installed=$(grep -c "$id_str" "$BASHPROFILE")
         if [[ $profile_installed -gt 0 ]]; then
@@ -109,22 +100,56 @@ function is_installed() {
             INSTALLED=1
         fi
     fi
+}
 
-    # If the log file does not exist, check for the defaults
-    # $HOME/pd.sh and $HOME/.pd-data
+function bootstrap_in_bashprofile {
+    # Check .bash_profile for identifying line
+    local id_str="$1"
+    if [[ $INSTALLED -eq 0 && -f "$BASHRC" ]]; then
+        local bash_installed=$(grep -c "$id_str" "$BASHRC")
+        if [[ $bash_installed -gt 0 ]]; then
+            echo "[!] Park Directories bootstrap script found in $BASHRC."
+            INSTALLED=1
+        fi
+    fi
+}
 
+function pd_exec_exists {
+    # Check for default installation of executable
     if [[ $INSTALLED -eq 0 && -f "$HOME/pd.sh" ]]; then
         echo "[!] Park Directories is at least partially installed: $HOME/pd.sh exists."
         INSTALLED=1
     fi
+}
 
+function datafile_exists {
+    # Check for default installation of data file
     if [[ $INSTALLED -eq 0 && -f "$HOME/.pd-data" ]]; then
         echo "[!] Park Directories is at least partially installed: $HOME/.pd-data exists."
         INSTALLED=1
     fi
 }
 
-function install() {
+function is_installed {
+    INSTALLED=0
+    local id_str="## Parked Directories ##"
+
+    # Check if the installation log file exists
+    logfile_exists
+
+    # Check .bashrc for identifying line
+    bootstrap_in_bashrc "$id_str"
+    
+    # Check .bash_profile for identifying line
+    bootstrap_in_bashprofile "$id_str"
+    
+    # If the log file does not exist, check for the defaults
+    # $HOME/pd.sh and $HOME/.pd-data
+    pd_exec_exists
+    datafile_exists
+}
+
+function install {
     # If we are confident that it is not installed,
     # 1) Modify the executable, if necessary:
     #   a) Update command name
@@ -207,7 +232,7 @@ if [[ "$ACTION" == "INSTALL" ]]; then
         # If PD is not installed, install it.
         install
     else
-        echo "It looks like Park Directories is already installed."
+        echo -e "\nIt looks like Park Directories is already installed."
         echo "Please run uninstall.sh to uninstall Park Directories before running install.sh again."
         return 13
     fi
