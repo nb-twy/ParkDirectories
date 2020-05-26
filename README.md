@@ -63,25 +63,25 @@ Parked directories are stored in "/your/home/directory/.pd-data"
 Let's park the root of your dev directory with the name _dev_.  First navigate to this directory.  Then execute
 ```bash
 $ pd -a dev
-dev --> /home/user/nix0/mydocs/dev
+Added: dev --> /home/user/nix0/mydocs/dev
 ```
 You're working on a particular dev project, so you go there and park that directory.
 ```bash
 $ cd my_project
 $ pd -a proj
-proj --> /home/user/nix0/mydocs/dev/my_project
+Added: proj --> /home/user/nix0/mydocs/dev/my_project
 ```
 Your app logs are stored in _/var/log/my_project_.  Let's head there and park that directory.
 ```bash
 $ cd /var/log/my_project
 $ pd -a log
-log --> /var/log/my_project
+Added: log --> /var/log/my_project
 ```
 You're developing a website, so your output will go to _/var/www/html/my_project_, so let's head there and park that, too.
 ```bash
 $ cd /var/www/html/my_project
 $ pd -a html
-html --> /var/www/html/my_project
+Added: html --> /var/www/html/my_project
 ```
 Let's head back and work on _my_project_ for a while.
 What did we name the bookmark for _my_project_ code?
@@ -111,8 +111,11 @@ $ pd proj
 In a couple of weeks, you're done working on this project and don't need the bookmarks anymore.
 ```bash
 $ pd -d proj
+Removed: proj --> /home/jsmith/documents/dev/my_project
 $ pd -d html
+Removed: html --> /var/www/html/my_project
 $ pd -d log
+Removed: log --> /var/log/my_project
 $ pd -l
   dev /home/jsmith/documents/dev
 ```

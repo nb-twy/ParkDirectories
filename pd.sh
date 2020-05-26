@@ -37,17 +37,19 @@ EOF
             if [[ $(grep -Pc "^$ref .*$" "$pdFile") -gt 0 ]]; then
                 echo "Name already used"
             else
-                TARGET=$(pwd)
-                echo "$ref" "$TARGET" >> "$pdFile" || exit 201
-                echo "$ref --> $TARGET"
+                ADD_TARGET=$(pwd)
+                echo "$ref" "$ADD_TARGET" >> "$pdFile" || exit 201
+                echo "Added: $ref --> $ADD_TARGET"
             fi
             ;;
         -d|--del)   # Delete a bookmarked directory
             ref="$2"
             # Remove the parked directory by name
             # Command format: pd -d|--del {unique name}
-            if [[ $(grep -Pc "^$ref .*$" "$pdFile") -gt 0 ]]; then
-                sed -i "/^$ref .*$/d" "$pdFile"
+            DEL_TARGET=$(grep -P "^$ref .*$" $pdFile)
+            if [[ "$DEL_TARGET" == $ref* && ${#DEL_TARGET} -gt ${#ref} ]]; then
+                sed -i "/^$ref .*$/d" "$pdFile" || exit 301
+                echo "Removed: ${DEL_TARGET/ / --> }"
             else
                 echo "No parked directory with that name"
             fi
