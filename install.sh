@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # The log file needs to be written in the same directory as install.sh & uninstall.sh.
+ACTION="INSTALL"
 ORIGINAL_EX="pd.sh"
 EXECUTABLE_SOURCE="pd-source.sh"
 EXECUTABLE_DEST="pd.sh"
@@ -14,8 +15,6 @@ FUNC_NAME="pd"
 CH_TARGET_DIR=0
 CH_DATA_FILE=0
 CH_FUNC_NAME=0
-
-UNSET_FUNCS="usage"
 
 function usage() {
     cat << EOF
@@ -33,6 +32,7 @@ OPTIONS:
 -f, --file      Set the name of the file to be used to store the
                 parked directory references (default: .pd-data)
 --func          Set the command name (default: pd)
+-u, --update    Perform an in-place update
 EOF
 }
 
@@ -65,72 +65,74 @@ while (( "$#" )); do
             CH_FUNC_NAME=1
             shift 2
         ;;
+        -u|--update)    # Perform an in-place update
+            ACTION="UPDATE"
+            shift 1
+        ;;
         -*|--*=)   # unsupported flags
             echo -e "ERROR: Unsupported flag $1 \n" >&2
             usage
             return 11
-            ;;
+        ;;
         *)              # No positional paramenters supported
             echo -e "ERROR: No positional parameters defined.\n" >&2
             usage
             return 12
-            ;;
+        ;;
     esac
 done
 
-# Check for previous installation
-# If already installed, encourage user to run uninstall.sh
-# before running, install.sh again.
+function is_installed() {
+    INSTALLED=0
+    local id_str="## Parked Directories ##"
 
-INSTALLED=0
-id_str="## Parked Directories ##"
-
-# Check if the installation log file exists
-if [[ $INSTALLED -eq 0 && -f "$LOGFILE" ]]; then
-    echo "[!] Installation log file (pd.log) exists from a previous install."
-    INSTALLED=1
-fi
-
-# Check .bash_profile for identifying line
-if [[ $INSTALLED -eq 0 && -f "$BASHRC" ]]; then
-    bash_installed=$(grep -c "$id_str" "$BASHRC")
-    if [[ $bash_installed -gt 0 ]]; then
-        echo "[!] Park Directories bootstrap script found in $BASHRC."
+    # Check if the installation log file exists
+    if [[ $INSTALLED -eq 0 && -f "$LOGFILE" ]]; then
+        echo "[!] Installation log file (pd.log) exists from a previous install."
         INSTALLED=1
     fi
-fi
 
-# Check .bashrc for identifying line
-if [[ $INSTALLED -eq 0 && -f "$BASHPROFILE" ]]; then
-    profile_installed=$(grep -c "$id_str" "$BASHPROFILE")
-    if [[ $profile_installed -gt 0 ]]; then
-        echo "[!] Park Directories bootstrap script found in $BASHPROFILE."
+    # Check .bash_profile for identifying line
+    if [[ $INSTALLED -eq 0 && -f "$BASHRC" ]]; then
+        local bash_installed=$(grep -c "$id_str" "$BASHRC")
+        if [[ $bash_installed -gt 0 ]]; then
+            echo "[!] Park Directories bootstrap script found in $BASHRC."
+            INSTALLED=1
+        fi
+    fi
+
+    # Check .bashrc for identifying line
+    if [[ $INSTALLED -eq 0 && -f "$BASHPROFILE" ]]; then
+        local profile_installed=$(grep -c "$id_str" "$BASHPROFILE")
+        if [[ $profile_installed -gt 0 ]]; then
+            echo "[!] Park Directories bootstrap script found in $BASHPROFILE."
+            INSTALLED=1
+        fi
+    fi
+
+    # If the log file does not exist, check for the defaults
+    # $HOME/pd.sh and $HOME/.pd-data
+
+    if [[ $INSTALLED -eq 0 && -f "$HOME/pd.sh" ]]; then
+        echo "[!] Park Directories is at least partially installed: $HOME/pd.sh exists."
         INSTALLED=1
     fi
-fi
 
-# If the log file does not exist, check for the defaults
-# $HOME/pd.sh and $HOME/.pd-data
+    if [[ $INSTALLED -eq 0 && -f "$HOME/.pd-data" ]]; then
+        echo "[!] Park Directories is at least partially installed: $HOME/.pd-data exists."
+        INSTALLED=1
+    fi
+}
 
-if [[ $INSTALLED -eq 0 && -f "$HOME/pd.sh" ]]; then
-    echo "[!] Park Directories is at least partially installed: $HOME/pd.sh exists."
-    INSTALLED=1
-fi
+function install() {
+    # If we are confident that it is not installed,
+    # 1) Modify the executable, if necessary:
+    #   a) Update command name
+    #   b) Update data file path
+    # 2) Create the log file
+    # 3) Copy the executable to the target directory
+    # 4) Write the sourcing code into the specified profile script
 
-if [[ $INSTALLED -eq 0 && -f "$HOME/.pd-data" ]]; then
-    echo "[!] Park Directories is at least partially installed: $HOME/.pd-data exists."
-    INSTALLED=1
-fi
-
-# If we are confident that it is not installed,
-# 1) Modify the executable, if necessary:
-#   a) Update command name
-#   b) Update data file path
-# 2) Create the log file
-# 3) Copy the executable to the target directory
-# 4) Write the sourcing code into the specified profile script
-
-if [[ $INSTALLED -eq 0 ]]; then
     echo "Installing Park Directories..."
     
     # Make a copy of the executable to protect the original
@@ -142,7 +144,7 @@ if [[ $INSTALLED -eq 0 ]]; then
             mkdir -p "$TARGET_DIR" || return 20
         fi
     fi
-    
+        
     # Create the log file
     cat << EOF >> "$LOGFILE"
 path_to_executable $TARGET_DIR/$EXECUTABLE_DEST
@@ -155,7 +157,7 @@ EOF
     if [[ $CH_TARGET_DIR -eq 1 || $CH_DATA_FILE -eq 1 ]]; then
         # Make a copy of the executable
         cp "$EXECUTABLE_SOURCE" tmp.sh || return 30
-        SOURCE="tmp.sh"
+        local SOURCE="tmp.sh"
         sed -e "0,/^pdFile=.*$/ s||pdFile=$TARGET_DIR/$DATA_FILE|" "$SOURCE" > "$EXECUTABLE_SOURCE"
         # Remove the tmp file
         rm tmp.sh
@@ -165,7 +167,7 @@ EOF
     if [[ $CH_FUNC_NAME -eq 1 ]]; then
         # Make a copy of the executable
         cp "$EXECUTABLE_SOURCE" tmp.sh || return 31
-        SOURCE="tmp.sh"
+        local SOURCE="tmp.sh"
         sed -r -e "s|pd\(\) \{|$FUNC_NAME\(\) \{|" -e "s|(usage: )pd|\1$FUNC_NAME|" -e "s|(\s+)pd( -?[ad]? ?dev)|\1$FUNC_NAME\2|" "$SOURCE" > "$EXECUTABLE_SOURCE"
         # Remove the tmp file
         rm tmp.sh
@@ -189,15 +191,28 @@ EOF
     echo -e "\nInstallation complete!"
     echo "Please execute the following command to use Park Directories:"
     echo -e "\tsource $PROFILE"
-else
-    echo "It looks like Park Directories is already installed."
-    echo "Please run uninstall.sh to uninstall Park Directories before running install.sh again."
-    return 13
+    
+
+    ## Clean up
+    # Remove temporary executable source
+    rm "$EXECUTABLE_SOURCE"
+}
+
+if [[ "$ACTION" == "INSTALL" ]]; then
+    # Check for previous installation
+    # If already installed, encourage user to run uninstall.sh
+    # before running, install.sh again.
+    is_installed
+    if [[ $INSTALLED -eq 0 ]]; then
+        # If PD is not installed, install it.
+        install
+    else
+        echo "It looks like Park Directories is already installed."
+        echo "Please run uninstall.sh to uninstall Park Directories before running install.sh again."
+        return 13
+    fi
 fi
 
-## Clean up
-# Remove temporary executable source
-rm "$EXECUTABLE_SOURCE"
-
-# Remove all functions from the environment
-eval "unset -f $UNSET_FUNCS"
+if [[ "$ACTION" == "UPDATE" ]]; then
+    echo "Update Park Directories..."
+fi
