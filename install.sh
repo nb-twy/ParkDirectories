@@ -36,6 +36,10 @@ OPTIONS:
 EOF
 }
 
+function get_executable_loc {
+    grep "path_to_executable" "$LOGFILE" | cut -d' ' -f2
+}
+
 function logfile_exists {
     # Check if the installation log file exists
     if [[ -f "$LOGFILE" ]]; then
@@ -44,6 +48,7 @@ function logfile_exists {
         echo 0
     fi
 }
+
 function bootstrap_in_profile {
     # Check for bootstrap code in profile file
     local PROFILE=( "$HOME/.bash_profile" "$HOME/.bashrc" )
@@ -61,7 +66,8 @@ function bootstrap_in_profile {
 
 function pd_exec_exists {
     # Check for default installation of executable
-    if [[ -f "$HOME/pd.sh" ]]; then
+    local EXEC_LOC=$1
+    if [[ -f "$EXEC_LOC" ]]; then
         echo 1
     else
         echo 0
@@ -70,7 +76,8 @@ function pd_exec_exists {
 
 function datafile_exists {
     # Check for default installation of data file
-    if [[ -f "$HOME/.pd-data" ]]; then
+    local DATAFILE_LOC=$1
+    if [[ -f "$DATAFILE_LOC" ]]; then
         echo 1
     else
         echo 0
@@ -134,7 +141,29 @@ function cleanup {
     rm "$EXECUTABLE_SOURCE"
 }
 
+function is_standard_installed {
+    # 1) Check if the installation log file exists
+    local LOGFILE_EXISTS=$(logfile_exists)
+    if [[ $LOGFILE_EXISTS -eq 1 ]]; then
+        # Validate the rest of the installation using the information pd.log.
+        # 2) Check that the executable exists
+        local EXEC_LOC=$(get_executable_loc)
+        pd_exec_exists "$EXEC_LOC"
+        # 3) Check that the data file exists
+
+    else
+        # Report at best partial, corrupt installation.
+    fi
+}
+
+function report_standard_installation {
+
+}
+
 function is_installed {
+    # First check if the standard installation is correct
+    STANDARD_INSTALL=$(is_standard_installed)
+
     LOGFILE_MSG="[!] Installation log file (pd.log) exists from a previous install."
     PROFILE_MSG=
     EXEC_MSG="[!] Park Directories is at least partially installed: $HOME/pd.sh exists."
@@ -142,8 +171,7 @@ function is_installed {
 
     INSTALLED=0
 
-    # Check if the installation log file exists
-    LOGFILE_EXISTS=$(logfile_exists)
+    
 
     # If the log file does not exist, check for the defaults
     # $HOME/pd.sh and $HOME/.pd-data
@@ -194,10 +222,6 @@ function install {
     
     ## Clean up
     cleanup
-}
-
-function get_executable_loc {
-    grep "path_to_executable" "$LOGFILE" | cut -d' ' -f2
 }
 
 ## Parse command line arguments
