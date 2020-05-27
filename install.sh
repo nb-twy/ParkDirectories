@@ -40,15 +40,6 @@ function get_executable_loc {
     grep "path_to_executable" "$LOGFILE" | cut -d' ' -f2
 }
 
-function logfile_exists {
-    # Check if the installation log file exists
-    if [[ -f "$LOGFILE" ]]; then
-        echo 1
-    else
-        echo 0
-    fi
-}
-
 function bootstrap_in_profile {
     # Check for bootstrap code in profile file
     local PROFILE=( "$HOME/.bash_profile" "$HOME/.bashrc" )
@@ -62,26 +53,6 @@ function bootstrap_in_profile {
             fi
         fi
     done
-}
-
-function pd_exec_exists {
-    # Check for default installation of executable
-    local EXEC_LOC=$1
-    if [[ -f "$EXEC_LOC" ]]; then
-        echo 1
-    else
-        echo 0
-    fi
-}
-
-function datafile_exists {
-    # Check for default installation of data file
-    local DATAFILE_LOC=$1
-    if [[ -f "$DATAFILE_LOC" ]]; then
-        echo 1
-    else
-        echo 0
-    fi
 }
 
 function create_logfile {
@@ -143,13 +114,34 @@ function cleanup {
 
 function is_standard_installed {
     # 1) Check if the installation log file exists
-    local LOGFILE_EXISTS=$(logfile_exists)
-    if [[ $LOGFILE_EXISTS -eq 1 ]]; then
+    #    RESULT += 1
+    #    If it does, 
+    #    2) Check that the executable is where the log file indicates.
+    #       RESULT += 2
+    #    3) Check that the command stipiluated in the log is present in the environment
+    #       RESULT += 4
+    #    4) Check that the data file is where the log file indicates.
+    #       RESULT += 8
+    #    5) Check that the bootstrap code is in the profile file indicated.
+    #       RESULT += 16
+    # If everything checks out, RESULT = 31
+    # If not, the caller will know where the problems are by the unset bits.
+    # I don't like the way this is going!  The client is too tightly coupled with
+    # the function's output and the order of operations.  If I want to remove a check
+    # or reorder the check, the client will have to know, too, and ajust its implementation.
+    RESULT=0
+    if [[ -f "pd.log" ]]; then
+        (( RESULT += 1 ))
         # Validate the rest of the installation using the information pd.log.
         # 2) Check that the executable exists
         local EXEC_LOC=$(get_executable_loc)
-        pd_exec_exists "$EXEC_LOC"
-        # 3) Check that the data file exists
+        if [[ -f "$EXEC_LOC" ]]; then
+            (( RESULT += 2 ))
+        fi
+        
+        # 3) Check that the 
+        # 4) Check that the data file exists
+
 
     else
         # Report at best partial, corrupt installation.
