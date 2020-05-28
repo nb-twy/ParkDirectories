@@ -40,6 +40,18 @@ function get_executable_loc {
     grep "path_to_executable" "$LOGFILE" | cut -d' ' -f2
 }
 
+function get_datafile_loc {
+    grep "path_to_data_file" "$LOGFILE" | cut -d' ' -f2
+}
+
+function get_profile_loc {
+    grep "profile" "$LOGFILE" | cut -d' ' -f2
+}
+
+function get_func_name {
+    grep "func_name" "$LOGFILE" | cut -d' ' -f2
+}
+
 function bootstrap_in_profile {
     # Check for bootstrap code in profile file
     local PROFILE=( "$HOME/.bash_profile" "$HOME/.bashrc" )
@@ -125,22 +137,23 @@ function is_standard_installed {
     #    5) Check that the bootstrap code is in the profile file indicated.
     #       RESULT += 16
     # If everything checks out, RESULT = 31
-    # If not, the caller will know where the problems are by the unset bits.
-    # I don't like the way this is going!  The client is too tightly coupled with
-    # the function's output and the order of operations.  If I want to remove a check
-    # or reorder the check, the client will have to know, too, and ajust its implementation.
-    RESULT=0
+    STANDARD_INSTALL_VALID=31   # Set global for later comparison without having to know the actual value
+    local RESULT=0
     if [[ -f "pd.log" ]]; then
         (( RESULT += 1 ))
         # Validate the rest of the installation using the information pd.log.
         # 2) Check that the executable exists
-        local EXEC_LOC=$(get_executable_loc)
-        if [[ -f "$EXEC_LOC" ]]; then
+        local VER_EXEC_LOC=$(get_executable_loc)
+        if [[ -f "$VER_EXEC_LOC" ]]; then
             (( RESULT += 2 ))
         fi
         
-        # 3) Check that the 
+        # 3) Check that the function exists in the environment
+        local VER_FUNC_NAME=$(get_func_name)
+        if [[ $(command -v "$VER_FUNC_NAME") == "$VER_FUNC_NAME" ]]; then
+            (( RESULT += 4 ))
         # 4) Check that the data file exists
+        # 5) Check that the bootstrap code is where it is supposed to be
 
 
     else
@@ -154,7 +167,7 @@ function report_standard_installation {
 
 function is_installed {
     # First check if the standard installation is correct
-    STANDARD_INSTALL=$(is_standard_installed)
+    local STANDARD_INSTALL=$(is_standard_installed)
 
     LOGFILE_MSG="[!] Installation log file (pd.log) exists from a previous install."
     PROFILE_MSG=
