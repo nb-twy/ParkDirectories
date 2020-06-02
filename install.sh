@@ -26,7 +26,8 @@ CHAR_FAIL="\xE2\x9D\x8C"
 
 function usage() {
     cat << EOF
-Install Park Directories
+
+>>>> Install Park Directories <<<<
 
 usage: install [OPTIONS]
 
@@ -41,6 +42,9 @@ OPTIONS:
                 parked directory references (default: .pd-data)
 --func          Set the command name (default: pd)
 -u, --update    Perform an in-place update
+--verify        Look for the installation components of Park Directories
+                and report on the health of the installation.
+
 EOF
 }
 
@@ -220,7 +224,7 @@ function report_installed_comps {
     # Final assessment
     if [[ $INSTALLED_COMPS_CODE -eq $INSTALL_VALID ]]; then
         echo -e "All components are installed as expected.\n"
-    elif [[ $INSTALLED_COMPS_CODE -gt 0 && $INSTALLED_COMPS_CODE -lt $INSTALL_VALID ]]; then
+    elif [[ $INSTALLED_COMPS_CODE -gt $COMP_NONE && $INSTALLED_COMPS_CODE -lt $INSTALL_VALID ]]; then
         echo -e "Park Directories is only partially installed."
         echo -e "Please review the list above and refer to the README for possible solutions.\n"
     elif [[ $INSTALLED_COMPS_CODE -eq $COMP_NONE ]]; then
@@ -451,9 +455,12 @@ function install {
         exit 21
     fi
 
-    # >>>> TO DO <<<<
-    # Add a test and communication for what to do if PD is only partially installed.
-    # <<<< END TO DO >>>>
+    # If Park Directories is only partially installed, report the problem and exit.
+    if [[ $INSTALLED_COMPS_CODE -gt $COMP_NONE && $INSTALLED_COMPS_CODE -lt $INSTALL_VALID ]]; then
+        report_installed_comps
+        echo -e "Installation cannot continue!\n"
+        exit 22
+    fi
 
     # Only continue with new installation if no components are found
     if [[ $INSTALLED_COMPS_CODE -eq $COMP_NONE ]]; then
@@ -494,16 +501,33 @@ function install {
 
 function update {
     # Perform an in-place update of Park Directories
-    echo -e "Updating Park Directories..."
-
+    echo -e "Updating Park Directories...\n"
+    echo -e "Checking for installed components..."
     is_installed
 
+    # If Park Directories is installed properly, continue with the udpate.
     if [[ $INSTALLED_COMPS_CODE -eq $INSTALL_VALID ]]; then
-        echo -e "Continue with update."
-    else
-        echo -e "Park Directories is not installed correctly!"
-        echo -e "Please fix the current installation before trying to upgrade.\n"
+        echo -e "Park Directories seems to be installed properly."
+        echo -e "Continuing with update..."
+       # Make a copy of the executable to protect the original
+        cp "$ORIGINAL_EX" "$EXECUTABLE_SOURCE"
+        # Copy the executable to the location of the executable recorded in the installation log file
+        cp "$EXECUTABLE_SOURCE" "${INSTALLED_COMPS['path_to_executable']}" || exit 40
+        ## Clean up
+        cleanup
+        echo -e "Update complete.\n"
+
+    # If Park Directories is only partially installed, report on the installed components and exit.
+    elif [[ $INSTALLED_COMPS_CODE -gt $COMP_NONE && $INSTALLED_COMPS_CODE -lt $INSTALL_VALID ]]; then
+        report_installed_comps
+        echo -e "Cannot continue with update until Parked Directories is properly installed.\n"
         exit 60
+
+    # If Park Directories is not installed, ask the user to install and exit.
+    elif [[ $INSTALLED_COMPS_CODE -eq $COMP_NONE ]]; then
+        echo -e "Park Directories is not yet installed."
+        echo -e "Please run ./install.sh --help to review your installation options.\n"
+        exit 61
     fi
 }
 
