@@ -51,7 +51,7 @@ if [[ $UNINSTALL -eq 1 ]]; then
 
     # Remove sourcing from profile script
     for PRF in "${PROFILE[@]}"; do
-        sed -i "/## Parked Directories ##/,+7d" "$PRF"
+        sed -i "/## Park Directories ##/,/## End Park Directories ##/d" "$PRF"
         echo "Removed sourcing script from $PRF."
     done
 
