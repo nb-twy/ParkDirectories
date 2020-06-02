@@ -64,7 +64,7 @@ function bootstrap_in_profile {
     local id_str="## Park Directories ##"
     for PRF in "${PROFILE[@]}"; do
         if [[ -f "$PRF" ]]; then
-            local profile_installed=$(grep -c "$id_str" "$PRF")
+            local profile_installed=$(grep -c "^$id_str" "$PRF")
             if [[ $profile_installed -gt 0 ]]; then
                 echo "$PRF"
                 return 0
@@ -78,6 +78,7 @@ function bootstrap_in_profile {
 # 1) Convert this to use the INSTALLED_COMPS dictionary
 # 2) Add each entry to INSTALLED_COMPS as it is completed in the installation process
 # 3) Move creating of logfile to the end of the installation process
+# <<<< END TO DO >>>>
 function create_logfile {
     # Create the log file
     cat << EOF >> "$LOGFILE" || exit 50
@@ -91,6 +92,7 @@ EOF
 # >>>> TO DO <<<<
 # This is the new implementation that uses the INSTALLED_COMPS global dictionary.
 # Remove create_logfile function when it is no longer necessary.
+# <<<< END TO DO >>>>
 function write_logfile {
     # If the log file already exists in the working directory, back it up.
     if [[ -f "$LOGFILE" ]]; then
@@ -155,47 +157,122 @@ function cleanup {
     rm "$EXECUTABLE_SOURCE"
 }
 
-function report_installation {
-    # Report if installation is complete or not
-    # and report where any pieces of an installation are.
-    local INSTALL_CODE=$INSTALLED
-    if [[ $INSTALL_CODE -eq $STANDARD_INSTALL_VALID ]]; then
-        echo -e "\nInstallation complete and valid!"
-    else
-        echo -e "\nPartial installation detected."
-    fi
-    echo -e "\nPD elements are installed as follows."
+function report_installed_comps {
 
-    # Report on pd.log file
-    if [[ $((INSTALL_CODE & 1)) -eq 1 ]]; then
-        echo "[+] Installation log file (pd.log) in current directory"
+    # Installation log file
+    if [[ $(( INSTALLED_COMPS_CODE & COMP_LOG_FILE )) -eq $COMP_LOG_FILE ]]; then
+        echo -e "$CHAR_SUCCESS  Installation log file located @ ${INSTALLED_COMPS['path_to_log_file']}"
+        if [[ ${#INSTALLED_COMPS[@]} -eq 5 ]]; then
+            echo -e "$CHAR_SUCCESS  Installation log file parsed."
+        fi
     else
-        echo "[-] Installation log file (pd.log) missing."
+        echo -e "$CHAR_FAIL  Installation log file missing. Expected location: $(pwd)/$LOGFILE"
     fi
-    (( INSTALL_CODE >> 1 ))
-    # Report on executable location
-    if [[ $((INSTALL_CODE & 1)) -eq 1 ]]; then
-        echo "[+] pd.log in current directory"
+    
+    # Executable
+    if [[ $(( INSTALLED_COMPS_CODE & COMP_EXEC )) -eq $COMP_EXEC ]]; then
+        echo -e "$CHAR_SUCCESS  Executable @ ${INSTALLED_COMPS['path_to_executable']}"
+    else
+        echo -en "$CHAR_FAIL  Executable could not be located."
+        if [[ ${#INSTALLED_COMPS[@]} -eq 5 ]]; then
+            echo -e " Expected @ ${INSTALLED_COMPS['path_to_executable']}"
+        else
+            echo -e " Default: $HOME/pd.sh"
+        fi
     fi
-    (( INSTALL_CODE >> 1 ))
-    # Report on command name
-    if [[ $((INSTALL_CODE & 1)) -eq 1 ]]; then
-        echo "[+] pd.log in current directory"
+
+    # Function
+    if [[ $(( INSTALLED_COMPS_CODE & COMP_FUNC )) -eq $COMP_FUNC ]]; then
+        echo -e "$CHAR_SUCCESS  Function active: ${INSTALLED_COMPS['func_name']}"
+    else
+        echo -en "$CHAR_FAIL  Expected function not in user environment."
+        if [[ ${#INSTALLED_COMPS[@]} -eq 5 ]]; then
+            echo -e " Expected function name: ${INSTALLED_COMPS['func_name']}"
+        else
+            echo -e " Default function name: pd"
+        fi
     fi
-    (( INSTALL_CODE >> 1 ))
-    # Report on data file location
-    if [[ $((INSTALL_CODE & 1)) -eq 1 ]]; then
-        echo "[+] pd.log in current directory"
+
+    # Data file
+    if [[ $(( INSTALLED_COMPS_CODE & COMP_DATA_FILE )) -eq $COMP_DATA_FILE ]]; then
+        echo -e "$CHAR_SUCCESS  Data file @ ${INSTALLED_COMPS['path_to_data_file']}"
+    else
+        echo -en "$CHAR_FAIL  Data file could not be located."
+        if [[ ${#INSTALLED_COMPS[@]} -eq 5 ]]; then
+            echo -e " Expected @ ${INSTALLED_COMPS['path_to_data_file']}"
+        else
+            echo -e " Default @ $HOME/.pd-data"
+        fi
     fi
-    (( INSTALL_CODE >> 1 ))
-    # Report on bootstrap location
-    if [[ $((INSTALL_CODE & 1)) -eq 1 ]]; then
-        echo "[+] pd.log in current directory"
+
+    # Bootstrap code
+    if [[ $(( INSTALLED_COMPS_CODE & COMP_BOOTSTRAP )) -eq $COMP_BOOTSTRAP ]]; then
+        echo -e "$CHAR_SUCCESS  Bootstrap code located in ${INSTALLED_COMPS['profile']}"
+    else
+        echo -en "$CHAR_FAIL  Could not locate bootstrap code in profile scripts."
+        if [[ ${#INSTALLED_COMPS[@]} -eq 5 ]]; then
+            echo -e " Expected in ${INSTALLED_COMPS['profile']}"
+        else
+            echo -e " Default: $HOME/.bashrc"
+        fi
+    fi
+
+    # Final assessment
+    if [[ $INSTALLED_COMPS_CODE -eq $INSTALL_VALID ]]; then
+        echo -e "All components are installed as expected.\n"
+    elif [[ $INSTALLED_COMPS_CODE -gt 0 && $INSTALLED_COMPS_CODE -lt $INSTALL_VALID ]]; then
+        echo -e "Park Directories is only partially installed."
+        echo -e "Please review the list above and refer to the README for possible solutions.\n"
+    elif [[ $INSTALLED_COMPS_CODE -eq $COMP_NONE ]]; then
+        echo -e "No components of Park Directories could be found."
+        echo -e "It looks like Park Directories is not installed.\n"
     fi
 }
 
 function is_installed {
-    # First check if the standard installation is correct
+    ### Discussion ###
+    # We want to know if Park Directories is already installed for the following reasons:
+    # 1) We do not want to break an existing installation.
+    # 2) We do not want to overwrite the parked directories list.
+    # 3) We need to know that PD is installed correctly if we want to complete an in-place update.
+    #
+    # Knowing that PD is installed correctly starts with checking that each of the five major components
+    # are present: the installation log file exists, the executable (pd.sh), the function in memory, 
+    # the data file, and the bootstrap code in a profile script.
+    #
+    # A complete verification would involve the following:
+    # 1) Does the installation log file exist?
+    # 2) Can it be parsed successfully?
+    # 3) Does the indicated executable exist?
+    # 4) Does that executable use the data file indicated in the log file?
+    # 5) Does the data file exist?
+    # 6) Does the data file parse successfully (i.e. is it formatted properly)?
+    # 7) Does the indicated executable reference the function name indicated in the log file?
+    # 8) Is that function present in the user's environment?
+    # 9) Does the profile script indicated in the log file include bootstrap code?
+    # 10) Does that bootstrap code reference the executable indicated in the log file?
+    # 11) Does that bootstrap code reference the function indicated in the log file?
+    # Certain aspects of this may be dependent on the version of PD that is installed.
+    # We have to be careful that the new version can uninstall and upgrade an older version.
+    #
+    # We need to segregate verification and reporting.
+    # 1) If we call is_installed when we are trying to install PD for the first time,
+    #    it should report that nothing is installed and that the installation can continue,
+    #    if it reports anything at all.
+    # 2) If we call is_installed when we are trying to install PD and there are already some
+    #    components installed, we want to report which are installed, which are not, and that
+    #    this is an error state that needs to be rectified before a proper installation can
+    #    continue.
+    # 3) If we call is_installed when we are trying to perform an in-place update, we want
+    #    is_installed to tell us that everything is properly installed.  This is a good thing
+    #    and allows the update to continue.  If something is not installed correctly, this is
+    #    an error state that needs to be corrected.
+    #
+    # If is_installed performs the tests and creates the globals INSTALLED_COMPS_CODE and
+    # INSTALLED_COMPS, then we can leave reporting up to the caller and can have 
+    # abstracted functions that can report appropriately.
+    #
+    ### End Discussion ###
     # 1) Check if the installation log file exists
     #    INSTALLED_COMPS_CODE += 1
     #    If it does, 
@@ -218,42 +295,34 @@ function is_installed {
     #   datafile = location
     #   profile = location
 
-    # >>>> Put all of the installation interrogation logic into the same function so that
-    # when it is done, all of the desired information is in one place and complete and so that
-    # the logic doesn't have to be spread out.
-    # Make INSTALL_VALID a global whose value is set in this function so that it can be referenced
-    # elsewhere but not without first calling the function.  This allows the value to change
-    # over time, if necessary, without the rest of the application having to change.
+    # >>>> Globals associated with installation interrogation <<<<
+    COMP_NONE=0
     COMP_LOG_FILE=1
     COMP_EXEC=2
     COMP_FUNC=4
     COMP_DATA_FILE=8
     COMP_BOOTSTRAP=16
     INSTALL_VALID=31
+    # >>>> End Globals <<<<
 
-    echo -e "\nChecking for installed components..."
     # Use the installation log file to determine if the regular install is complete and valid
     INSTALLED_COMPS_CODE=0
     if parse_logfile; then
         # If the log file was parsed successfully, then we know it exists and is formatted as expected.
-        echo -e "$CHAR_SUCCESS  Installation log file parsed @ ${INSTALLED_COMPS['path_to_log_file']}"
         (( INSTALLED_COMPS_CODE += COMP_LOG_FILE ))
 
         # 2) Check that the executable exists
         if [[ -f "${INSTALLED_COMPS['path_to_executable']}" ]]; then
-            echo -e "$CHAR_SUCCESS  Executable @ ${INSTALLED_COMPS['path_to_executable']}"
             (( INSTALLED_COMPS_CODE += COMP_EXEC ))
         fi
 
         # 3) Check that the function exists in the environment
         if command -v "${INSTALLED_COMPS['func_name']}" > /dev/null; then
-            echo -e "$CHAR_SUCCESS  Function active: ${INSTALLED_COMPS['func_name']}"
             (( INSTALLED_COMPS_CODE += COMP_FUNC ))
         fi
 
         # 4) Check that the data file exists
         if [[ -f "${INSTALLED_COMPS['path_to_data_file']}" ]]; then
-            echo -e "$CHAR_SUCCESS  Data file @ ${INSTALLED_COMPS['path_to_data_file']}"
             (( INSTALLED_COMPS_CODE += COMP_DATA_FILE ))
         fi
 
@@ -261,35 +330,49 @@ function is_installed {
         local VER_PROFILE="NONE"
         local VER_PROFILE=$(bootstrap_in_profile "${INSTALLED_COMPS["profile"]}")
         if [[ "$VER_PROFILE" != "NONE" ]]; then
-            echo -e "$CHAR_SUCCESS  Bootstrap code in $VER_PROFILE"
             (( INSTALLED_COMPS_CODE += COMP_BOOTSTRAP ))
         fi
     else
-        echo -e "$CHAR_FAIL  Log file not found in $(pwd)"
+        # If the log file does not exist, we have to look for a partial installation 
+        # so that a new installation isn't mangled by an existing partial installation.
+
+        # Look for installed components using command line arguments and default values
+        ## 1) Look for the executable
+        if [[ -f "$TARGET_DIR/$EXECUTABLE_DEST" ]]; then
+            (( INSTALLED_COMPS_CODE += COMP_EXEC ))
+            INSTALLED_COMPS["path_to_executable"]="$TARGET_DIR/$EXECUTABLE_DEST"
+        elif [[ "$TARGET_DIR/$EXECUTABLE_DEST" != "$HOME/pd.sh" && -f "$HOME/pd.sh" ]]; then
+            (( INSTALLED_COMPS_CODE += COMP_EXEC ))
+            INSTALLED_COMPS["path_to_executable"]="$HOME/pd.sh"
+        fi
+
+        ## 2) Look for the function in the environment
+        if command -v "$FUNC_NAME" > /dev/null; then
+            (( INSTALLED_COMPS_CODE += COMP_FUNC ))
+            INSTALLED_COMPS["func_name"]="$FUNC_NAME"
+        elif [[ "$FUNC_NAME" != "pd" ]] && command -v "pd" > /dev/null; then
+            (( INSTALLED_COMPS_CODE += COMP_FUNC ))
+            INSTALLED_COMPS["func_name"]="pd"
+        fi
+
+        ## 3) Look fo the data file
+        if [[ -f "$TARGET_DIR/$DATA_FILE" ]]; then
+            (( INSTALLED_COMPS_CODE += COMP_DATA_FILE ))
+            INSTALLED_COMPS["path_to_data_file"]="$TARGET_DIR/$DATA_FILE"
+        elif [[ "$TARGET_DIR/$DATA_FILE" != "$HOME/.pd-data" && -f "$HOME/.pd-data" ]]; then
+            (( INSTALLED_COMPS_CODE += COMP_DATA_FILE ))
+            INSTALLED_COMPS["path_to_data_file"]="$HOME/.pd-data"
+        fi
+
+        ## 4) Look for the profile file with the bootstrap code
+        local VER_PROFILE="NONE"
+        local SEARCH_PROFILES=( "$HOME/.bashrc" "$HOME/.bash_profile" "$HOME/profile" )
+        local VER_PROFILE=$(bootstrap_in_profile "${SEARCH_PROFILES[@]}")
+        if [[ "$VER_PROFILE" != "NONE" ]]; then
+            (( INSTALLED_COMPS_CODE += COMP_BOOTSTRAP ))
+            INSTALLED_COMPS["profile"]="$VER_PROFILE"
+        fi
     fi
-
-    if [[ $INSTALLED_COMPS_CODE -eq $INSTALL_VALID ]]; then
-        echo -e "All components are installed as expected.\n"
-        return 0
-    elif [[ $INSTALLED_COMPS_CODE -eq 0 ]]; then
-        echo -e "\nThe installation log file is missing."
-    fi
-
-    echo -e "Parked Directories is not installed correctly.\n"
-    return 55
-    # LOGFILE_MSG="[!] Installation log file (pd.log) exists from a previous install."
-    # PROFILE_MSG=
-    # EXEC_MSG="[!] Park Directories is at least partially installed: $HOME/pd.sh exists."
-    # DATAFILE_MSG="[!] Park Directories is at least partially installed: $HOME/.pd-data exists."
-
-    # INSTALLED=0
-
-    
-
-    # If the log file does not exist, check for the defaults
-    # $HOME/pd.sh and $HOME/.pd-data
-    # pd_exec_exists
-    # datafile_exists
 }
 
 function fix_install {
@@ -359,46 +442,54 @@ function install {
 
     echo "Installing Park Directories..."
     
+    echo -e "\nChecking for installed components..."
     is_installed
     if [[ $INSTALLED_COMPS_CODE -eq $INSTALL_VALID ]]; then
-        echo -e "Park Directories is already installed."
+        echo -e "Park Directories is already fully installed."
         echo -e "You can uninstall using the ./uninstall.sh script,"
         echo -e "or you may want to perform an in-place upgrade with ./install.sh -u.\n"
         exit 21
     fi
 
-    # Make a copy of the executable to protect the original
-    cp "$ORIGINAL_EX" "$EXECUTABLE_SOURCE"
+    # >>>> TO DO <<<<
+    # Add a test and communication for what to do if PD is only partially installed.
+    # <<<< END TO DO >>>>
 
-    if [[ $CH_TARGET_DIR -eq 1 ]]; then
-        # Make sure the target directory exists
-        if [[ ! -d "$TARGET_DIR" ]]; then
-            mkdir -p "$TARGET_DIR" || exit 20
+    # Only continue with new installation if no components are found
+    if [[ $INSTALLED_COMPS_CODE -eq $COMP_NONE ]]; then
+        # Make a copy of the executable to protect the original
+        cp "$ORIGINAL_EX" "$EXECUTABLE_SOURCE"
+
+        if [[ $CH_TARGET_DIR -eq 1 ]]; then
+            # Make sure the target directory exists
+            if [[ ! -d "$TARGET_DIR" ]]; then
+                mkdir -p "$TARGET_DIR" || exit 20
+            fi
         fi
-    fi
+            
+        # Create the log file
+        create_logfile
+
+        # Change the location where the data file is stored
+        # Write the output to a new file so that the original is not altered.
+        ch_datafile_loc
+
+        # Change the name of the function (default: pd), if necessary
+        ch_func_name
         
-    # Create the log file
-    create_logfile
+        # Copy the executable to target directory
+        cp "$EXECUTABLE_SOURCE" "$TARGET_DIR/$EXECUTABLE_DEST" || exit 40
+        
+        # Write the sourcing code to the specified profile script
+        write_bootstrap
 
-    # Change the location where the data file is stored
-    # Write the output to a new file so that the original is not altered.
-    ch_datafile_loc
-
-    # Change the name of the function (default: pd), if necessary
-    ch_func_name
-    
-    # Copy the executable to target directory
-    cp "$EXECUTABLE_SOURCE" "$TARGET_DIR/$EXECUTABLE_DEST" || exit 40
-    
-    # Write the sourcing code to the specified profile script
-    write_bootstrap
-
-    echo -e "\nInstallation complete!"
-    echo "Please execute the following command to use Park Directories:"
-    echo -e "\tsource $PROFILE"
-    
-    ## Clean up
-    cleanup
+        echo -e "\nInstallation complete!"
+        echo "Please execute the following command to use Park Directories:"
+        echo -e "\tsource $PROFILE"
+        
+        ## Clean up
+        cleanup
+    fi
 }
 
 function update {
@@ -414,6 +505,15 @@ function update {
         echo -e "Please fix the current installation before trying to upgrade.\n"
         exit 60
     fi
+}
+
+function verify {
+    # Check installation and report findings without attempting any changes
+    echo -e "Checking for installed components of Park Directories..."
+
+    is_installed
+
+    report_installed_comps
 }
 
 ## Parse command line arguments
@@ -450,6 +550,10 @@ while (( "$#" )); do
             ACTION="UPDATE"
             shift 1
         ;;
+        --verify)   # verify installation
+            ACTION="VERIFY"
+            shift 1
+        ;;
         -*|--*=)   # unsupported flags
             echo -e "ERROR: Unsupported flag $1 " >&2
             usage
@@ -466,6 +570,10 @@ done
 # Install or Update
 if [[ "$ACTION" == "INSTALL" ]]; then
     install
+fi
+
+if [[ "$ACTION" == "VERIFY" ]]; then
+    verify
 fi
 
 if [[ "$ACTION" == "UPDATE" ]]; then
