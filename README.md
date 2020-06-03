@@ -6,6 +6,26 @@ There are a few popular implementations that allow us to go back to the last dir
 
 With Park Directories, this is easy.  Park (_i.e._ bookmark) the current directory by typing `pd -a NAME`.  Go wherever you'd like on your system.  When you're ready to return to where you were, type `pd NAME`, and you're back!
 
+You can park any directory by providing the full path to the directory: `pd -a NAME FULL_PATH`.  This could be useful when you are getting ready to work on a project and want to park your project root, the debug build directory, the release build directory, the log directory, and maybe the deploy directory.  You could use the same generic names to reference all of these and use a script to set up your environment.  Something like the following:
+```bash
+#!/bin/bash
+
+# Release references
+pd -d proj
+pd -d dbg
+pd -d rel
+pd -d log
+pd -d dep
+
+# Add references
+pd -a proj /home/user/docs/dev/super-awesome-project  # project directory
+pd -a dbg /home/user/docs/dev/super-awesome-project/bin/debug   # debug build directory
+pd -a rel /home/user/docs/dev/super-awesome-project/bin/release   # debug build directory
+pd -a log /home/user/log   # log directory
+pd -a dep /var/www/html/super-awesome-project   # deploy directory
+```
+> **Coming Soon:** You'll be able to perform multiple actions with a single invocation.
+
 The references persist across instances of the terminal and reboots.
 
 Easily remove a bookmark with `pd -d NAME`.  Show the list of all parked directories with `pd -l`, and when you want to totally clean house, just type `pd -c` and all of the references will be removed.
@@ -26,7 +46,7 @@ source ~/.bashrc
 
 Without any switches, _.install.sh_ will add the _pd_ command to the environment, place the Bash executable in your `$HOME` directory, and place the bootstrap code in the _.bashrc_ file.  Installation is fast!  Follow the instructions at the end of installation and run `source ~/.bashrc` or restart your terminal to bootstrap the command.  
 
-**WARNING**:  Installation creates a _pd.log_ file in the same directory as _install.sh_.  **DO NOT** delete this file.  It is necessary for _uninstall.sh_ to work correctly.
+> **WARNING**:  Installation creates a _pd.log_ file in the same directory as _install.sh_.  **DO NOT** delete this file.  It is necessary for several features to work correctly, like verifying the installation, performing an in-place update, and uninstalling.
 
 The first time you run _pd_ with any of its options (_e.g._ `pd -h` to see the help information), the data file (_.pd-data_ by default) will be created in the same directory as the executable.  The command is not complicated, so just run `pd -h` to see all of the options in a quick view.
 
@@ -37,7 +57,7 @@ Have fun zooming around your system!
 ### Using Park Directories
 You can read everything you need to know from the command's help.
 ```bash
-pd -h
+$ pd -h
 Park Directories
 Park (bookmark) directories so that we can quickly navigate
 to them from anywhere else using a short reference name.
@@ -45,23 +65,26 @@ The references persist across bash sessions.
 
 usage: pd [OPTION] [REF]
 
--h, --help      Display this help message
--a, --add NAME  Park a directory referenced by NAME
--d, --del NAME  Remove the directory referenced by NAME
--l, --list      Display the entire list of parked directories
--c, --clear     Clear the entire list of parked directories
+-h, --help              Display this help message
+-a, --add NAME [PATH]   Given just NAME, park the current directory with reference NAME
+                        Given NAME & PATH, park PATH with reference NAME
+-d, --del NAME          Remove the directory referenced by NAME
+-l, --list              Display the entire list of parked directories
+-c, --clear             Clear the entire list of parked directories
 
 examples:
-    pd dev      Navigate to directory saved with the ref name dev
-    pd -a dev   Park the current directory with the ref name dev
-    pd -d dev   Remove the directory referenced by the name dev from
-                the parked directories list
+    pd dev              Navigate to directory saved with the ref name dev
+    pd -a dev           Park the current directory with the ref name dev
+    pd -a log /var/log  Park /var/log with ref name log
+    pd -d dev           Remove the directory referenced by the name dev from
+                        the parked directories list
 
-Parked directories are stored in "/your/home/directory/.pd-data"
+Parked directories are stored in "/home/username/.pd-data"
 ```
 ### Example
 Let's park the root of your dev directory with the name _dev_.  First navigate to this directory.  Then execute
 ```bash
+$ cd /home/user/nix0/mydocs/dev
 $ pd -a dev
 Added: dev --> /home/user/nix0/mydocs/dev
 ```
@@ -71,16 +94,14 @@ $ cd my_project
 $ pd -a proj
 Added: proj --> /home/user/nix0/mydocs/dev/my_project
 ```
-Your app logs are stored in _/var/log/my_project_.  Let's head there and park that directory.
+Your app logs are stored in _/var/log/my_project_.  We don't have to go there.  Let's just park it from here.
 ```bash
-$ cd /var/log/my_project
-$ pd -a log
+$ pd -a log /var/log/my_project
 Added: log --> /var/log/my_project
 ```
-You're developing a website, so your output will go to _/var/www/html/my_project_, so let's head there and park that, too.
+You're developing a website, so your output will go to _/var/www/html/my_project_, so let's park that, too, without traveling there.
 ```bash
-$ cd /var/www/html/my_project
-$ pd -a html
+$ pd -a html /var/www/html/my_project
 Added: html --> /var/www/html/my_project
 ```
 Let's head back and work on _my_project_ for a while.
@@ -152,11 +173,73 @@ The default name of the file used to store the nickname and full path pairs is _
 ./install.sh -f .savedDirs
 ```
 
+**Verify Installation**  
+If you would just like to check that all the components of Park Directories are installed correctly, you can run `./install.sh --verify`.  It will check for the components and report their status.  The report for a proper installation looks like this.
+
+```bash
+$ ./install.sh --verify
+Checking for installed components of Park Directories...
+✔  Installation log file located @ /home/user/dev/ParkDirectories/pd.log
+✔  Installation log file parsed.
+✔  Executable @ /home/user/pd.sh
+✔  Function active: pd
+✔  Data file @ /home/user/.pd-data
+✔  Bootstrap code located in /home/user/.bashrc
+All components are installed as expected.
+```
+
+If components are missing, the report looks like this.
+```bash
+$ ./install.sh --verify
+Checking for installed components of Park Directories...
+✔  Installation log file located @ /home/user/dev/ParkDirectories/pd.log
+✔  Installation log file parsed.
+❌  Executable could not be located. Expected @ /home/user/pd.sh
+✔  Function active: pd
+❌  Data file could not be located. Expected @ /home/user/.pd-data
+✔  Bootstrap code located in /home/user/.bashrc
+Park Directories is only partially installed.
+Please review the list above and refer to the README for possible solutions.
+```
+
+**Perform an In-place Update**  
+As new features are added, enhancements made, and bugs fixed, you'll want to update Park Directories without having to uninstall and re-install.  Use the `-u, --update` option.
+If it detects an incorrect installation, it will not continue.
+```bash
+$ ./install.sh -u
+Updating Park Directories...
+
+Checking for installed components...
+✔  Installation log file located @ /mnt/c/Users/ksmor/Documents/dev/ParkDirectories/pd.log
+✔  Installation log file parsed.
+❌  Executable could not be located. Expected @ /home/kschoener/pd.sh
+✔  Function active: pd
+❌  Data file could not be located. Expected @ /home/kschoener/.pd-data
+✔  Bootstrap code located in /home/kschoener/.bashrc
+Park Directories is only partially installed.
+Please review the list above and refer to the README for possible solutions.
+
+Cannot continue with update until Parked Directories is properly installed.
+```
+
+If a correct installation is detected, the current installation will be updated.
+```bash
+$ ./install.sh -u
+Updating Park Directories...
+
+Checking for installed components...
+Park Directories seems to be installed properly.
+Continuing with update...
+Update complete.
+```
+
 **Use as Many Options as You'd Like**  
-You can mix and match as many of the options as you'd like.  We can place the bootstrap code in `$HOME/.bashrc`, the executable in `$HOME/savedDirs`, rename the data file _.savedDirs_, and use _sd_ as the function name.
+You can mix and match as many of the options as you'd like, where it makes sense.  We can place the bootstrap code in `$HOME/.bashrc`, the executable in `$HOME/savedDirs`, rename the data file _.savedDirs_, and use _sd_ as the function name.
 ```bash
 ./install.sh -p $HOME/.bash_profile -d $HOME/savedDirs -f .savedDirs --func sd
 ```
+
+`--verify` and `--update` do not support any of the other options.
 
 ## Advanced Uninstall
 I don't know why you'd ever want to uninstall Park Directories, but if you must... ;)  
