@@ -29,24 +29,42 @@ Parked directories are stored in "$pdFile"
 EOF
             ;;
         -a|--add)   # Add a bookmarked directory
-            # Park a directory by name
+            # Park the current directory
             # Command format: pd -a|--add {unique name}
+            # Park a directory by the full path
+            # Command format: pd -a|--add {unique name} {full directory path}
             # Add it to $pdFile
             # Format {unique name} {full directory path}
             
-            # Command requires at least one argument following -a
-            if [[ $# -lt 2 ]]; then
-                echo "ERROR: Name required to park the current directory."
-                return 10
-            fi
-            ref="$2"
-            if [[ $(grep -Pc "^$ref .*$" "$pdFile") -gt 0 ]]; then
-                echo "Name already used"
+            # 1) Option requires a single argument to park the current directory, or
+            # 2) a pair of arguments to park a directory that is not the current directory.
+
+            # Only continue if there is at least one argument after the option identifier
+            if [[ $# -gt 1 ]]; then
+                # The first argument after the option identifier is the ref name
+                ref="$2"
+
+                # If the second argument after the option identifier is not another option
+                # identifier, use it as the full path to the directory to park.
+                # Otherwise, use the current directory.
+                if [[ $# -gt 2 && $3 != -* ]]; then
+                    ADD_TARGET="$3"
+                    shift 3     # Shift out the option and both arguments
+                else
+                    ADD_TARGET="$(pwd)"
+                    shift 2     # Shift out the option and one argument
+                fi
+
+                if [[ $(grep -Pc "^$ref .*$" "$pdFile") -gt 0 ]]; then
+                    echo "Name already used"
+                else
+                    echo "$ref" "$ADD_TARGET" >> "$pdFile"
+                    echo "Added: $ref --> $ADD_TARGET"
+                fi
             else
-                ADD_TARGET=$(pwd)
-                echo "$ref" "$ADD_TARGET" >> "$pdFile"
-                echo "Added: $ref --> $ADD_TARGET"
-                return 0
+                echo "ERROR: The add option takes one argument to park the current directory"
+                echo "       or two arguments to park a directory by its full path."
+                return 10
             fi
             ;;
         -d|--del)   # Delete a bookmarked directory
