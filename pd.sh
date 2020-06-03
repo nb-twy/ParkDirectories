@@ -15,11 +15,12 @@ Park (bookmark) directories so that we can quickly navigate
 to them from anywhere else using a short reference name.
 The references persist across bash sessions.
 
-usage: pd [OPTION] [REF]
+usage: pd [REF] [OPTION {ARG} [OPTION {ARG} ...]]
 
 -h, --help              Display this help message
 -a, --add NAME [PATH]   Given just NAME, park the current directory with reference NAME
                         Given NAME & PATH, park PATH with reference NAME
+                        Reference names may not contain /
 -d, --del NAME          Remove the directory referenced by NAME
 -l, --list              Display the entire list of parked directories
 -c, --clear             Clear the entire list of parked directories
@@ -30,6 +31,16 @@ examples:
     pd -a log /var/log  Park /var/log with ref name log
     pd -d dev           Remove the directory referenced by the name dev from
                         the parked directories list
+    
+    A single invocation can take multiple options, performing multiple operations at once:
+        pd -l -d dev -a dev -d log -a log /var/log -l
+    This command will
+      1) List all parked directories
+      2) Remove the entry referenced by "dev", if one exists
+      3) Park the current directory with the reference name "dev"
+      4) Remove the entry referenced by "log", if one exists
+      5) Park the /var/log directory with the reference name "log"
+      6) List all parked directories
 
 Parked directories are stored in "$pdFile"
 EOF
@@ -75,17 +86,22 @@ shift 1
                 fi
                 ;;
             -d|--del)   # Delete a bookmarked directory
-                ref="$2"
-                # Remove the parked directory by name
-                # Command format: pd -d|--del {unique name}
-                DEL_TARGET=$(grep -P "^$ref .*$" "$pdFile")
-                if [[ "$DEL_TARGET" == $ref* && ${#DEL_TARGET} -gt ${#ref} ]]; then
-                    sed -i "/^$ref .*$/d" "$pdFile"
-                    echo "Removed: ${DEL_TARGET/ / --> }"
+                if [[ $# -gt 1 && $2 != -* ]]; then
+                    ref="$2"
+                    # Remove the parked directory by name
+                    # Command format: pd -d|--del {unique name}
+                    DEL_TARGET=$(grep -P "^$ref .*$" "$pdFile")
+                    if [[ "$DEL_TARGET" == $ref* && ${#DEL_TARGET} -gt ${#ref} ]]; then
+                        sed -i "/^$ref .*$/d" "$pdFile"
+                        echo "Removed: ${DEL_TARGET/ / --> }"
+                    else
+                        echo "$ref -- No parked directory with that name"
+                    fi
+                    shift 2
                 else
-                    echo "No parked directory with that name"
+                    echo "ERROR: The delete option requires one argument."
+                    return 20
                 fi
-                shift 2
                 ;;
             -l|--list)  # List all of the bookmarked directories
                 # List all parked directories
@@ -113,9 +129,9 @@ shift 1
                 if [[ ${#path} -gt 0 ]]; then
                     cd "$path" || return 50
                 else
-                    echo "No parked directory with that name"
+                    echo "$ref -- No parked directory with that name"
                 fi
-                shift 2
+                shift 1
                 ;;
         esac
     done
