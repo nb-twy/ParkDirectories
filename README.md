@@ -11,21 +11,17 @@ You can park any directory by providing the full path to the directory: `pd -a N
 #!/bin/bash
 
 # Release references
-pd -d proj
-pd -d dbg
-pd -d rel
-pd -d log
-pd -d dep
+pd -d proj -d dbg -d rel -d log -d dep
 
 # Add references
+# These could all be executed in the same invocation, but it's easier to read and understand
+# in multiple invocations.
 pd -a proj /home/user/docs/dev/super-awesome-project  # project directory
 pd -a dbg /home/user/docs/dev/super-awesome-project/bin/debug   # debug build directory
 pd -a rel /home/user/docs/dev/super-awesome-project/bin/release   # debug build directory
 pd -a log /home/user/log   # log directory
 pd -a dep /var/www/html/super-awesome-project   # deploy directory
 ```
-> **Coming Soon:** You'll be able to perform multiple actions with a single invocation.
-
 The references persist across instances of the terminal and reboots.
 
 Easily remove a bookmark with `pd -d NAME`.  Show the list of all parked directories with `pd -l`, and when you want to totally clean house, just type `pd -c` and all of the references will be removed.
@@ -63,11 +59,12 @@ Park (bookmark) directories so that we can quickly navigate
 to them from anywhere else using a short reference name.
 The references persist across bash sessions.
 
-usage: pd [OPTION] [REF]
+usage: pd [REF] [OPTION {ARG} [OPTION {ARG} ...]]
 
 -h, --help              Display this help message
 -a, --add NAME [PATH]   Given just NAME, park the current directory with reference NAME
                         Given NAME & PATH, park PATH with reference NAME
+                        Reference names may not contain /
 -d, --del NAME          Remove the directory referenced by NAME
 -l, --list              Display the entire list of parked directories
 -c, --clear             Clear the entire list of parked directories
@@ -79,7 +76,17 @@ examples:
     pd -d dev           Remove the directory referenced by the name dev from
                         the parked directories list
 
-Parked directories are stored in "/home/username/.pd-data"
+    A single invocation can take multiple options, performing multiple operations at once:
+        pd -l -d dev -a dev -d log -a log /var/log -l
+    This command will
+      1) List all parked directories
+      2) Remove the entry referenced by "dev", if one exists
+      3) Park the current directory with the reference name "dev"
+      4) Remove the entry referenced by "log", if one exists
+      5) Park the /var/log directory with the reference name "log"
+      6) List all parked directories
+
+Parked directories are stored in "/home/kschoener/.pd-data"
 ```
 ### Example
 Let's park the root of your dev directory with the name _dev_.  First navigate to this directory.  Then execute
@@ -108,10 +115,12 @@ Let's head back and work on _my_project_ for a while.
 What did we name the bookmark for _my_project_ code?
 ```bash
 $ pd -l
+
   dev /home/jsmith/documents/dev
   proj /home/jsmith/documents/dev/my_project
   log /var/log/my_project
   html /var/www/html/my_project
+
 ```
 Right, _proj_!
 ```bash
@@ -131,14 +140,13 @@ $ pd proj
 ```
 In a couple of weeks, you're done working on this project and don't need the bookmarks anymore.
 ```bash
-$ pd -d proj
+$ pd -d proj -d html -d log -l
 Removed: proj --> /home/jsmith/documents/dev/my_project
-$ pd -d html
 Removed: html --> /var/www/html/my_project
-$ pd -d log
 Removed: log --> /var/log/my_project
-$ pd -l
+
   dev /home/jsmith/documents/dev
+  
 ```
 If you don't need any of the bookmarks anymore, you can clear the entire list quickly.
 ```bash
