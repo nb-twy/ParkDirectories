@@ -13,17 +13,19 @@ The references persist across bash sessions.
 
 usage: pd [OPTION] [REF]
 
--h, --help      Display this help message
--a, --add NAME  Park a directory referenced by NAME
--d, --del NAME  Remove the directory referenced by NAME
--l, --list      Display the entire list of parked directories
--c, --clear     Clear the entire list of parked directories
+-h, --help              Display this help message
+-a, --add NAME [PATH]   Given just NAME, park the current directory with reference NAME
+                        Given NAME & PATH, park PATH with reference NAME
+-d, --del NAME          Remove the directory referenced by NAME
+-l, --list              Display the entire list of parked directories
+-c, --clear             Clear the entire list of parked directories
 
 examples:
-    pd dev      Navigate to directory saved with the ref name dev
-    pd -a dev   Park the current directory with the ref name dev
-    pd -d dev   Remove the directory referenced by the name dev from
-                the parked directories list
+    pd dev              Navigate to directory saved with the ref name dev
+    pd -a dev           Park the current directory with the ref name dev
+    pd -a log /var/log  Park /var/log with ref name log
+    pd -d dev           Remove the directory referenced by the name dev from
+                        the parked directories list
 
 Parked directories are stored in "$pdFile"
 EOF
