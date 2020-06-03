@@ -60,7 +60,12 @@ shift 1
                 # Only continue if there is at least one argument after the option identifier
                 if [[ $# -gt 1 ]]; then
                     # The first argument after the option identifier is the ref name
-                    ref="$2"
+                    if [[ $2 != *"/"* ]]; then
+                        ref="$2"
+                    else
+                        echo "ERROR: Reference name may not contain '/'"
+                        return 11
+                    fi
 
                     # If the second argument after the option identifier is not another option
                     # identifier, use it as the full path to the directory to park.

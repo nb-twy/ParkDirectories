@@ -10,7 +10,7 @@ You can park any directory by providing the full path to the directory: `pd -a N
 ```bash
 #!/bin/bash
 
-# Release references
+# Remove references, if they exist
 pd -d proj -d dbg -d rel -d log -d dep
 
 # Add references
@@ -22,6 +22,10 @@ pd -a rel /home/user/docs/dev/super-awesome-project/bin/release   # debug build 
 pd -a log /home/user/log   # log directory
 pd -a dep /var/www/html/super-awesome-project   # deploy directory
 ```
+> **NOTE** &nbsp;Reference names may not contain a forward slash '/'.
+> ```bash
+> $ pd -a proj/build
+> ERROR: Reference name may not contain '/'
 The references persist across instances of the terminal and reboots.
 
 Easily remove a bookmark with `pd -d NAME`.  Show the list of all parked directories with `pd -l`, and when you want to totally clean house, just type `pd -c` and all of the references will be removed.
@@ -88,7 +92,7 @@ examples:
 
 Parked directories are stored in "/home/kschoener/.pd-data"
 ```
-### Example
+### Example Workflow
 Let's park the root of your dev directory with the name _dev_.  First navigate to this directory.  Then execute
 ```bash
 $ cd /home/user/nix0/mydocs/dev
@@ -146,7 +150,7 @@ Removed: html --> /var/www/html/my_project
 Removed: log --> /var/log/my_project
 
   dev /home/jsmith/documents/dev
-  
+
 ```
 If you don't need any of the bookmarks anymore, you can clear the entire list quickly.
 ```bash
