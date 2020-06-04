@@ -5,7 +5,8 @@ ACTION="INSTALL"
 ORIGINAL_EX="pd.sh"
 EXECUTABLE_SOURCE="pd-source.sh"
 EXECUTABLE_DEST="pd.sh"
-LOGFILE="pd.log"
+LOGFILE="$HOME/.pd.log"
+OLD_LOGFILE="$(pwd)/pd.log"
 BASHRC="$HOME/.bashrc"
 PROFILE="$BASHRC"
 TARGET_DIR="$HOME"
@@ -49,16 +50,22 @@ EOF
 }
 
 function parse_logfile {
-    # Extract all of the data from pd.log
-    # Put it in a global dictionary called INSTALLED_COMPS
-    if [[ -f pd.log ]]; then
-        INSTALLED_COMPS["path_to_log_file"]="$(pwd)/pd.log"
-        while IFS=' ' read -r key value; do
-            INSTALLED_COMPS["$key"]="$value"
-        done < pd.log
+    # >>> Support for old log file location ends Sept. 1, 2020 <<<
+    # Until then, check for old log file and use it if the new log file does not exist.
+    if [[ -f "$LOGFILE" ]]; then
+        local CUR_LOGFILE="$LOGFILE"
+    elif [[ -f "$OLD_LOGFILE" ]]; then
+        local CUR_LOGFILE="$OLD_LOGFILE"
     else
         return 25
     fi
+
+    # Extract all of the data from the installation log file
+    # Put it in a global dictionary called INSTALLED_COMPS
+    INSTALLED_COMPS["path_to_log_file"]="$CUR_LOGFILE"
+    while IFS=' ' read -r key value; do
+        INSTALLED_COMPS["$key"]="$value"
+    done < "$CUR_LOGFILE"
 }
 
 function bootstrap_in_profile {
@@ -165,12 +172,18 @@ function report_installed_comps {
 
     # Installation log file
     if [[ $(( INSTALLED_COMPS_CODE & COMP_LOG_FILE )) -eq $COMP_LOG_FILE ]]; then
-        echo -e "$CHAR_SUCCESS  Installation log file located @ ${INSTALLED_COMPS['path_to_log_file']}"
+        if [[ ${INSTALLED_COMPS['path_to_log_file']} == "$OLD_LOGFILE" ]]; then
+            echo -e "$CHAR_FAIL  Old installation log file is stil in use @ ${INSTALLED_COMPS['path_to_log_file']}"
+            echo -e "    Please run ./instlal.sh -u to use the new log file location."
+        fi
+        if [[ ${INSTALLED_COMPS['path_to_log_file']} == "$LOGFILE" ]]; then
+            echo -e "$CHAR_SUCCESS  Installation log file located @ ${INSTALLED_COMPS['path_to_log_file']}"
+        fi
         if [[ ${#INSTALLED_COMPS[@]} -eq 5 ]]; then
             echo -e "$CHAR_SUCCESS  Installation log file parsed."
         fi
     else
-        echo -e "$CHAR_FAIL  Installation log file missing. Expected location: $(pwd)/$LOGFILE"
+        echo -e "$CHAR_FAIL  Installation log file missing. Expected location: $LOGFILE"
     fi
     
     # Executable
@@ -380,7 +393,7 @@ function is_installed {
 }
 
 function fix_install {
-    echo -e "Searching for installed components and reconstituting pd.log..."
+    echo -e "Searching for installed components and reconstituting installation log file..."
 
     # Look for installed components using command line arguments and default values
     ## 1) Look for the executable
