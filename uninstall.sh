@@ -1,17 +1,23 @@
 #!/bin/bash
 
 UNINSTALL=0
-LOG_FILE="pd.log"
+LOGFILE="$HOME/.pd.log"
+OLD_LOGFILE="$(pwd)/pd.log"
+
+# If the old log file exists and the new on does not, use the old log file.
+if [[ ! -f "$LOGFILE" && -f "$OLD_LOGFILE" ]]; then
+    LOGFILE="$OLD_LOGFILE"
+fi
 
 # Check if log file exists
 # If so, extract configured data.
 # If not, ask if we should attempt to uninstall default configuration.
-if [[ -f "$LOG_FILE" ]]; then
+if [[ -f "$LOGFILE" ]]; then
     # Extract configurations from log file
-    EXEC=$(grep "path_to_executable" "$LOG_FILE" | cut -d' ' -f2)
-    DATA=$(grep "path_to_data_file" "$LOG_FILE" | cut -d' ' -f2)
-    PROFILE=( $(grep "profile" "$LOG_FILE" | cut -d' ' -f2) )
-    FUNC_NAME=$(grep "func_name" "$LOG_FILE" | cut -d' ' -f2)
+    EXEC=$(grep "path_to_executable" "$LOGFILE" | cut -d' ' -f2)
+    DATA=$(grep "path_to_data_file" "$LOGFILE" | cut -d' ' -f2)
+    PROFILE=( $(grep "profile" "$LOGFILE" | cut -d' ' -f2) )
+    FUNC_NAME=$(grep "func_name" "$LOGFILE" | cut -d' ' -f2)
     UNINSTALL=1
 else
     echo -e "\nThe installation log file is missing."
@@ -56,9 +62,9 @@ if [[ $UNINSTALL -eq 1 ]]; then
     done
 
     # Remove log file
-    if [[ -f "$LOG_FILE" ]]; then
-        rm "$LOG_FILE" || exit 32
-        echo "Removed installation log file: $LOG_FILE"
+    if [[ -f "$LOGFILE" ]]; then
+        rm "$LOGFILE" || exit 32
+        echo "Removed installation log file: $LOGFILE"
     fi
 
     # Remove directory if it is empty -- ask first
