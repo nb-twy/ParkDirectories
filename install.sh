@@ -522,13 +522,23 @@ function update {
     if [[ $INSTALLED_COMPS_CODE -eq $INSTALL_VALID ]]; then
         echo -e "Park Directories seems to be installed properly."
         echo -e "Continuing with update..."
-       # Make a copy of the executable to protect the original
+
+        # If old installation log file is still in use, remove it and write a new one in the new location.
+        if [[ ${INSTALLED_COMPS['path_to_log_file']} == "$OLD_LOGFILE" ]]; then
+            mv "$OLD_LOGFILE" "$LOGFILE"
+            echo -e "$CHAR_SUCCESS  Moved installation log file from $OLD_LOGFILE to $LOGFILE"
+        fi
+
+        # Make a copy of the executable to protect the original
         cp "$ORIGINAL_EX" "$EXECUTABLE_SOURCE"
         # Copy the executable to the location of the executable recorded in the installation log file
         cp "$EXECUTABLE_SOURCE" "${INSTALLED_COMPS['path_to_executable']}" || exit 40
+        echo -e "$CHAR_SUCCESS  Executable updated"
+
         ## Clean up
         cleanup
-        echo -e "Update complete.\n"
+        echo -e "Update complete."
+        echo -e "Please run source ${INSTALLED_COMPS['profile']} or restart your terminal to get the latest features.\n"
 
     # If Park Directories is only partially installed, report on the installed components and exit.
     elif [[ $INSTALLED_COMPS_CODE -gt $COMP_NONE && $INSTALLED_COMPS_CODE -lt $INSTALL_VALID ]]; then
