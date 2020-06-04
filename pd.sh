@@ -141,6 +141,10 @@ shift 1
                 echo -e "Park Directories version $PD_VERSION"
                 shift 1
                 ;;
+            -*|--*) # Catch any unknown arguments
+                echo "$1  ERROR: Unknown argument"
+                shift 1
+                ;;
             *)          # Positional argument
                 ref="$1"
                 # Change to the parked directory by name
