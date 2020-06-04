@@ -72,6 +72,7 @@ usage: pd [REF] [OPTION {ARG} [OPTION {ARG} ...]]
 -d, --del NAME          Remove the directory referenced by NAME
 -l, --list              Display the entire list of parked directories
 -c, --clear             Clear the entire list of parked directories
+-v, --version           Display version
 
 examples:
     pd dev              Navigate to directory saved with the ref name dev
@@ -90,7 +91,8 @@ examples:
       5) Park the /var/log directory with the reference name "log"
       6) List all parked directories
 
-Parked directories are stored in "/home/kschoener/.pd-data"
+Parked directories are stored in /home/user/.pd-data
+Park Directories version 1.3.0
 ```
 ### Example Workflow
 Let's park the root of your dev directory with the name _dev_.  First navigate to this directory.  Then execute
