@@ -71,10 +71,10 @@ shift 1
                 # Only continue if there is at least one argument after the option identifier
                 if [[ $# -gt 1 ]]; then
                     # The first argument after the option identifier is the ref name
-                    if [[ $2 != *"/"* ]]; then
+                    if [[ $2 != *"/"* && $2 != -* ]]; then
                         ref="$2"
                     else
-                        echo "ERROR: Reference name may not contain '/'"
+                        echo "ERROR: Reference name may not contain '/' or begin with '-'"
                         return 11
                     fi
 
