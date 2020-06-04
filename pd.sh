@@ -6,6 +6,12 @@ pd() {
     if [[ $# -eq 0 ]]; then
         set -- "-h"
     fi
+    
+    if [[ ! -f "$pdFile" ]]; then
+        touch "$pdFile" || return 60
+        chmod 660 "$pdFile" || return 61
+    fi
+    
     while [[ $# -gt 0 ]]; do
         case $1 in
             -h|--help)  # Show help
@@ -140,10 +146,5 @@ shift 1
                 ;;
         esac
     done
-
-    if [[ ! -f "$pdFile" ]]; then
-        touch "$pdFile" || return 60
-        chmod 660 "$pdFile" || return 61
-    fi
 }
 
