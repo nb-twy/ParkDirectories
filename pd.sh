@@ -1,12 +1,15 @@
 #!/bin/bash
 
+# >>>> GLOBALS <<<<
 pdFile="$HOME/.pd-data"
+PD_VERSION="1.3.0"
+# <<<< END GLOBALS >>>>
 
 pd() {
     if [[ $# -eq 0 ]]; then
         set -- "-h"
     fi
-    
+
     if [[ ! -f "$pdFile" ]]; then
         touch "$pdFile" || return 60
         chmod 660 "$pdFile" || return 61
@@ -30,6 +33,7 @@ usage: pd [REF] [OPTION {ARG} [OPTION {ARG} ...]]
 -d, --del NAME          Remove the directory referenced by NAME
 -l, --list              Display the entire list of parked directories
 -c, --clear             Clear the entire list of parked directories
+-v, --version           Display version
 
 examples:
     pd dev              Navigate to directory saved with the ref name dev
@@ -48,7 +52,8 @@ examples:
       5) Park the /var/log directory with the reference name "log"
       6) List all parked directories
 
-Parked directories are stored in "$pdFile"
+Parked directories are stored in $pdFile
+Park Directories version $PD_VERSION
 EOF
 shift 1
                 ;;
@@ -130,6 +135,10 @@ shift 1
                     echo "Could not remove all parked directories"
                     return 40
                 fi
+                shift 1
+                ;;
+            -v|--version) # Display version
+                echo -e "Park Directories version $PD_VERSION"
                 shift 1
                 ;;
             *)          # Positional argument
