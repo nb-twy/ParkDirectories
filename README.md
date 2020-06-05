@@ -65,14 +65,18 @@ The references persist across bash sessions.
 
 usage: pd [REF] [OPTION {ARG} [OPTION {ARG} ...]]
 
--h, --help              Display this help message
--a, --add NAME [PATH]   Given just NAME, park the current directory with reference NAME
-                        Given NAME & PATH, park PATH with reference NAME
-                        Reference names may not contain /
--d, --del NAME          Remove the directory referenced by NAME
--l, --list              Display the entire list of parked directories
--c, --clear             Clear the entire list of parked directories
--v, --version           Display version
+-h, --help                           Display this help message
+-a, --add NAME [PATH]                Given just NAME, park the current directory with reference NAME
+                                     Given NAME & PATH, park PATH with reference NAME
+                                     Reference names may not start with - or contain /
+-d, --del NAME                       Remove the directory referenced by NAME
+-l, --list                           Display the entire list of parked directories
+-c, --clear                          Clear the entire list of parked directories
+-e, --export FILE_PATH               Export current list of parked directories to FILE_PATH
+-i, --import                         Import park directories entries from FILE_PATH
+    [--append | --quiet] FILE_PATH   Use -i --append FILE_PATH to add entries to the existing list
+                                     Use -i --quiet FILE_PATH to overwrite current entries quietly
+-v, --version                        Display version
 
 examples:
     pd dev              Navigate to directory saved with the ref name dev
@@ -92,7 +96,7 @@ examples:
       6) List all parked directories
 
 Parked directories are stored in /home/user/.pd-data
-Park Directories version 1.3.0
+Park Directories version 1.4.0
 ```
 ### Example Workflow
 Let's park the root of your dev directory with the name _dev_.  First navigate to this directory.  Then execute
@@ -159,6 +163,76 @@ If you don't need any of the bookmarks anymore, you can clear the entire list qu
 $ pd -c
   Removed all parked directories
 ```
+### Export List of Parked Directories
+If you want to backup your list of parked directories or want to automate configuring another system, you can easily export your list of parked directories to a file using the `-e|--export` option.
+```bash
+$ pd -e my-parked-directories.txt
+List of parked directories exported to my-parked-directories.txt
+```
+### Import List of Parked Directories
+If you have exported a list of parked directories, created your own by hand, or received a file from a friend, you can import your list.  You can either overwrite the current list or append the new entries to the current list.
+
+**Append to List**  
+You append to the list by using the `-i --append FILE_PATH` option.  You can append entries and check that they were added all in one go by adding the `-l` option to the end of the command.
+```bash
+$ pd -i --append my-parked.directories.txt -l
+Import complete
+
+
+dev /home/user/docs/dev
+pd /home/user/docs/dev/ParkDirectories
+
+```
+
+**Interactive Overwrite**  
+When you import entries without a second option, the current contents will be overwritten, but you will have the chance to decide what to do first.  You can
+1. backup the current contents
+2. overwrite without a backup
+3. abort the import
+
+```bash
+$ pd -i my-parked-directories.txt
+WARNING: Import will replace the current list of parked directories!
+Please choose from the following options:
+  (b)ackup current list and continue
+  (c)ontinue without backing up
+  (a)bort import
+[b/c/a]: a
+Import aborted!
+```
+```bash
+$ pd -i my-parked-directories.txt
+WARNING: Import will replace the current list of parked directories!
+Please choose from the following options:
+  (b)ackup current list and continue
+  (c)ontinue without backing up
+  (a)bort import
+[b/c/a]: b
+Data file backed up to /home/kschoener/.pd-data-1591339470.bck
+Contents of data file cleared
+Import complete
+
+```
+```bash
+$ pd -i my-parked-directories.txt
+WARNING: Import will replace the current list of parked directories!
+Please choose from the following options:
+  (b)ackup current list and continue
+  (c)ontinue without backing up
+  (a)bort import
+[b/c/a]: c
+Contents of data file cleared
+Import complete
+
+```
+Useful for scripted configurations is the ability to overwrite without any user interaction.
+```bash
+$ pd -i --quiet my-parked-directories.txt
+Contents of data file cleared
+Import complete
+
+```
+
 
 ## Advanced Install
 The install script, _install.sh_, has several options that allow you to customize your installation.  Let's walk through each of these options.
