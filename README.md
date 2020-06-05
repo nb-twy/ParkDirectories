@@ -237,6 +237,45 @@ Import complete
 ## Advanced Install
 The install script, _install.sh_, has several options that allow you to customize your installation.  Let's walk through each of these options.
 
+**Initialize Data File on Install**  
+The data file is empty by default.  You can use an exported list of parked directories to initialize the data file by using the `-i|--import FILE_PATH` option.
+
+Let's say you were working on a project on one VM or container or host and had a set of directories parked that were useful for that project.  Then you need to move to a different system to continue working on your project, and you'd like to bring your parked directories with you.
+
+```bash
+# Export your parked directories list from Host 1
+user@host1 $ pd -l
+
+dev /home/user/docs/dev
+proj /home/user/docs/dev/my-project
+dbg /home/user/docs/dev/my-project/bin/debug/
+rel /home/user/docs/dev/my-project/bin/release
+
+user@host1 $ pd -e my-parked-directories.txt
+List of parked directories exported to my-parked-directories.txt
+
+# Transfer the exported file to Host 2
+user@host2 $ ./install.sh -i my-parked-directories.txt
+Installing Park Directories...
+
+Checking for installed components...
+Initiatlized data file with /home/user2/docs/my-parked-directories.txt
+
+Installation complete!
+Please execute the following command to use Park Directories:
+        source /home/user/.bashrc
+
+user@host2 $ soruce /home/user/.bashrc
+user@host2 $ pd -l
+
+dev /home/user/docs/dev
+proj /home/user/docs/dev/my-project
+dbg /home/user/docs/dev/my-project/bin/debug/
+rel /home/user/docs/dev/my-project/bin/release
+
+user@host2 $
+```
+
 **Bootstrap from a Specific Profile File**  
 The default behavior is to append the bootstrap code in your `$HOME/.bashrc` script.  This code checks that the executable, _pd.sh_, exists and runs it.  If you'd like to have this code appended to another one of the profile scripts, use the `-p, --profile` flag:
 ```bash
