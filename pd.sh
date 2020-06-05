@@ -24,14 +24,18 @@ The references persist across bash sessions.
 
 usage: pd [REF] [OPTION {ARG} [OPTION {ARG} ...]]
 
--h, --help              Display this help message
--a, --add NAME [PATH]   Given just NAME, park the current directory with reference NAME
-                        Given NAME & PATH, park PATH with reference NAME
-                        Reference names may not contain /
--d, --del NAME          Remove the directory referenced by NAME
--l, --list              Display the entire list of parked directories
--c, --clear             Clear the entire list of parked directories
--v, --version           Display version
+-h, --help                           Display this help message
+-a, --add NAME [PATH]                Given just NAME, park the current directory with reference NAME
+                                     Given NAME & PATH, park PATH with reference NAME
+                                     Reference names may not start with - or contain /
+-d, --del NAME                       Remove the directory referenced by NAME
+-l, --list                           Display the entire list of parked directories
+-c, --clear                          Clear the entire list of parked directories
+-e, --export FILE_PATH               Export current list of parked directories to FILE_PATH
+-i, --import                         Import park directories entries from FILE_PATH
+    [--append | --quiet] FILE_PATH   Use -i --append FILE_PATH to add entries to the existing list
+                                     Use -i --quiet FILE_PATH to overwrite current entries quietly
+-v, --version                        Display version
 
 examples:
     pd dev              Navigate to directory saved with the ref name dev
