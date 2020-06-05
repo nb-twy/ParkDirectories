@@ -11,6 +11,7 @@ BASHRC="$HOME/.bashrc"
 PROFILE="$BASHRC"
 TARGET_DIR="$HOME"
 DATA_FILE=".pd-data"
+DATA_FILE_INIT="/dev/null"
 FUNC_NAME="pd"
 
 CH_TARGET_DIR=0
@@ -503,12 +504,16 @@ function install {
         # Write the sourcing code to the specified profile script
         write_bootstrap
 
+        # Initialize data file
+        cp "$DATA_FILE_INIT" "$TARGET_DIR/$DATA_FILE" 
+        echo "Initiatlized data file with $DATA_FILE_INIT"
+
+        # Clean up
+        cleanup
+        
         echo -e "\nInstallation complete!"
         echo "Please execute the following command to use Park Directories:"
         echo -e "\tsource $PROFILE"
-        
-        ## Clean up
-        cleanup
     fi
 }
 
@@ -591,6 +596,15 @@ while (( "$#" )); do
         --func)         # Set the command name
             FUNC_NAME="$2"
             CH_FUNC_NAME=1
+            shift 2
+        ;;
+        -i|--import)    # Initialize data file with contents of specified file
+            if [[ -f "$2" ]]; then
+                DATA_FILE_INIT="$2"
+            else
+                echo -e "ERROR: Data file to import does not exist."
+                exit 13
+            fi
             shift 2
         ;;
         -u|--update)    # Perform an in-place update
