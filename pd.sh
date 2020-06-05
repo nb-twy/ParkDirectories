@@ -150,6 +150,8 @@ shift 1
                         shift 1
                     elif [[ "$2" == "--quiet" ]]; then
                         IMPORT_ACTION=$IMPORT_OVERWRITE_QUIET  # Overwrite without warning
+                        : > "$pdFile" || return 73
+                        echo "Contents of data file cleared"
                         shift 1
                     fi
                 else
