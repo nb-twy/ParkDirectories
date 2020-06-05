@@ -137,6 +137,24 @@ shift 1
                 fi
                 shift 1
                 ;;
+            -e|--export) # Export current list of parked directories to specified file
+                # Treats next argument as a full qualified file path
+                # The directory structure must exist, though the file does not.
+                # Entries are appended to the target file, if it exists.
+                # Command format: pd -e|--export PATH_TO_FILE
+                if [[ $# -gt 1 && $2 != -* ]]; then
+                    if cat "$pdFile" >> "$2"; then
+                        echo "List of parked directories exported to $2"
+                    else
+                        echo "ERROR: Failed to export list of parked directories"
+                        return 60
+                    fi
+                else
+                    echo "ERROR: Export requires a valid path to the target file."
+                    return 61
+                fi
+                shift 2
+                ;;
             -v|--version) # Display version
                 echo -e "Park Directories version $PD_VERSION"
                 shift 1
