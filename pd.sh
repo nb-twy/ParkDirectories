@@ -122,10 +122,15 @@ shift 1
                 fi
                 ;;
             -l|--list)  # List all of the bookmarked directories
-                # List all parked directories
-                echo
-                cat "$pdFile" || return 30
-                echo
+                # If the list is empty, tell the user.
+                if [[ $(wc -l "$pdFile" | cut -d' ' -f1) -eq 0 ]]; then
+                    echo "    No directories have been parked yet"
+                else
+                    # List all parked directories
+                    echo
+                    cat "$pdFile" || return 30
+                    echo
+                fi
                 shift 1
                 ;;
             -c|--clear) # Clear the entire list of bookmarked directories
