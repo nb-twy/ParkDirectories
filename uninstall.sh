@@ -74,7 +74,7 @@ if [[ $UNINSTALL -eq 1 ]]; then
         echo "$DIR, is now empty."
         
         while true; do
-            read -n1 -p "Would you like to delete this directory? (y/n) " DEL_DIR
+            read -n1 -p "Would you like to delete this directory? (y/n)" DEL_DIR
             case $DEL_DIR in
                 y|Y)
                     rmdir "$DIR" || exit 33
