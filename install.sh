@@ -1,18 +1,21 @@
 #!/bin/bash
 
+# Load defaults
+source defaults.sh
+
 # >>>>> GLOBALS <<<<<
 ACTION="INSTALL"
-ORIGINAL_EX="pd.sh"
+ORIGINAL_EX="${DEFAULTS['executable_name']}"
 EXECUTABLE_SOURCE="pd-source.sh"
-EXECUTABLE_DEST="pd.sh"
-LOGFILE="$HOME/.pd.log"
-OLD_LOGFILE="$(pwd)/pd.log"
+EXECUTABLE_DEST="${DEFAULTS['executable_name']}"
+LOGFILE="${DEFAULTS['logfile']}"
+OLD_LOGFILE="${DEFAULTS['old_logfile']}"
 BASHRC="$HOME/.bashrc"
-PROFILE="$BASHRC"
-TARGET_DIR="$HOME"
-DATA_FILE=".pd-data"
-DATA_FILE_INIT="/dev/null"
-FUNC_NAME="pd"
+PROFILE="${DEFAULTS['profile']}"
+TARGET_DIR="${DEFAULTS['target_dir']}"
+DATA_FILE="${DEFAULTS['data_file']}"
+DATA_FILE_INIT="${DEFAULTS['data_file_init']}"
+FUNC_NAME="${DEFAULTS['func_name']}"
 
 CH_TARGET_DIR=0
 CH_DATA_FILE=0
