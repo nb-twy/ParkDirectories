@@ -1,8 +1,17 @@
 #!/bin/bash
 
+## Load defaults
+source "$CWD/defaults.sh"
+
 ## Functions & globals that can be used in install.sh, update.sh, and uninstall.sh
 # <<<< GLOBALS >>>>
-
+EXECUTABLE_SOURCE="${DEFAULTS["executable_source"]}"
+EXECUTABLE_DEST="${DEFAULTS['executable_name']}"
+LOGFILE="${DEFAULTS['logfile']}"
+OLD_LOGFILE="${DEFAULTS['old_logfile']}"
+TARGET_DIR="${DEFAULTS['target_dir']}"
+DATA_FILE="${DEFAULTS['data_file']}"
+FUNC_NAME="${DEFAULTS['func_name']}"
 # >>>> END GLOBALS <<<<
 
 function parse_logfile {
@@ -188,6 +197,7 @@ function is_installed {
             INSTALLED_COMPS["func_name"]="pd"
         fi
 
+        ## TODO: Use data from DEFAULTS dictionary when testing for default configurations
         ## 3) Look fo the data file
         if [[ -f "$TARGET_DIR/$DATA_FILE" ]]; then
             (( INSTALLED_COMPS_CODE += COMP_DATA_FILE ))

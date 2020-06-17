@@ -2,6 +2,7 @@
 
 declare -A DEFAULTS
 DEFAULTS["executable_name"]="pd.sh"
+DEFAULTS["executable_source"]="pd-source.sh"
 DEFAULTS["target_dir"]="$HOME"
 DEFAULTS["logfile"]="$HOME/.pd.log"
 DEFAULTS["old_logfile"]="$(pwd)/pd.log"

@@ -1,21 +1,17 @@
 #!/bin/bash
 
-# Load defaults
-source defaults.sh
+# Get the directory where the executable is being run
+CWD="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+# Load common functions, globals, and defaults
+source "$CWD/common.sh"
 
 # >>>>> GLOBALS <<<<<
 ACTION="INSTALL"
 ORIGINAL_EX="${DEFAULTS['executable_name']}"
-EXECUTABLE_SOURCE="pd-source.sh"
-EXECUTABLE_DEST="${DEFAULTS['executable_name']}"
-LOGFILE="${DEFAULTS['logfile']}"
-OLD_LOGFILE="${DEFAULTS['old_logfile']}"
 BASHRC="$HOME/.bashrc"
 PROFILE="${DEFAULTS['profile']}"
-TARGET_DIR="${DEFAULTS['target_dir']}"
-DATA_FILE="${DEFAULTS['data_file']}"
 DATA_FILE_INIT="${DEFAULTS['data_file_init']}"
-FUNC_NAME="${DEFAULTS['func_name']}"
 
 CH_TARGET_DIR=0
 CH_DATA_FILE=0
@@ -28,9 +24,6 @@ CHAR_SUCCESS="\xE2\x9C\x94"
 CHAR_FAIL="\xE2\x9D\x8C"
 # <<<<< END GLOBALS >>>>>>
 
-# TODO: Determine if loading the functions can happen before declaring the global variables
-# Load common functions
-source common.sh
 
 
 function usage() {
