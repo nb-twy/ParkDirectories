@@ -72,49 +72,6 @@ function ch_func_name {
 }
 
 function is_installed {
-    ### Discussion ###
-    # We want to know if Park Directories is already installed for the following reasons:
-    # 1) We do not want to break an existing installation.
-    # 2) We do not want to overwrite the parked directories list.
-    # 3) We need to know that PD is installed correctly if we want to complete an in-place update.
-    #
-    # Knowing that PD is installed correctly starts with checking that each of the five major components
-    # are present: the installation log file exists, the executable (pd.sh), the function in memory, 
-    # the data file, and the bootstrap code in a profile script.
-    #
-    # A complete verification would involve the following:
-    # 1) Does the installation log file exist?
-    # 2) Can it be parsed successfully?
-    # 3) Does the indicated executable exist?
-    # 4) Does that executable use the data file indicated in the log file?
-    # 5) Does the data file exist?
-    # 6) Does the data file parse successfully (i.e. is it formatted properly)?
-    # 7) Does the indicated executable reference the function name indicated in the log file?
-    # 8) Is that function present in the user's environment?
-    # 9) Does the profile script indicated in the log file include bootstrap code?
-    # 10) Does that bootstrap code reference the executable indicated in the log file?
-    # 11) Does that bootstrap code reference the function indicated in the log file?
-    # Certain aspects of this may be dependent on the version of PD that is installed.
-    # We have to be careful that the new version can uninstall and upgrade an older version.
-    #
-    # We need to segregate verification and reporting.
-    # 1) If we call is_installed when we are trying to install PD for the first time,
-    #    it should report that nothing is installed and that the installation can continue,
-    #    if it reports anything at all.
-    # 2) If we call is_installed when we are trying to install PD and there are already some
-    #    components installed, we want to report which are installed, which are not, and that
-    #    this is an error state that needs to be rectified before a proper installation can
-    #    continue.
-    # 3) If we call is_installed when we are trying to perform an in-place update, we want
-    #    is_installed to tell us that everything is properly installed.  This is a good thing
-    #    and allows the update to continue.  If something is not installed correctly, this is
-    #    an error state that needs to be corrected.
-    #
-    # If is_installed performs the tests and creates the globals INSTALLED_COMPS_CODE and
-    # INSTALLED_COMPS, then we can leave reporting up to the caller and can have 
-    # abstracted functions that can report appropriately.
-    #
-    ### End Discussion ###
     # 1) Check if the installation log file exists
     #    INSTALLED_COMPS_CODE += 1
     #    If it does, 
@@ -128,8 +85,6 @@ function is_installed {
     #       INSTALLED_COMPS_CODE += 16
     # If everything checks out, INSTALLED_COMPS_CODE = 31
 
-    # >>>>  Use global associative array, instead of flag-based code <<<<
-    # This will require Bash > 4
     # INSTALLED_COMPS:
     #   logfile = location
     #   exec = location
@@ -180,31 +135,32 @@ function is_installed {
 
         # Look for installed components using command line arguments and default values
         ## 1) Look for the executable
+        local DEFAULT_EXEC="${DEFAULTS[target_dir]}/${DEFAULTS[executable_name]}"
         if [[ -f "$TARGET_DIR/$EXECUTABLE_DEST" ]]; then
             (( INSTALLED_COMPS_CODE += COMP_EXEC ))
             INSTALLED_COMPS["path_to_executable"]="$TARGET_DIR/$EXECUTABLE_DEST"
-        elif [[ "$TARGET_DIR/$EXECUTABLE_DEST" != "$HOME/pd.sh" && -f "$HOME/pd.sh" ]]; then
+        elif [[ "$TARGET_DIR/$EXECUTABLE_DEST" != "$DEFAULT_EXEC" && -f "$DEFAULT_EXEC" ]]; then
             (( INSTALLED_COMPS_CODE += COMP_EXEC ))
-            INSTALLED_COMPS["path_to_executable"]="$HOME/pd.sh"
+            INSTALLED_COMPS["path_to_executable"]="$DEFAULT_EXEC"
         fi
 
         ## 2) Look for the function in the environment
         if command -v "$FUNC_NAME" > /dev/null; then
             (( INSTALLED_COMPS_CODE += COMP_FUNC ))
             INSTALLED_COMPS["func_name"]="$FUNC_NAME"
-        elif [[ "$FUNC_NAME" != "pd" ]] && command -v "pd" > /dev/null; then
+        elif [[ "$FUNC_NAME" != "${DEFAULTS[func_name]}" ]] && command -v "${DEFAULTS[func_name]}" > /dev/null; then
             (( INSTALLED_COMPS_CODE += COMP_FUNC ))
-            INSTALLED_COMPS["func_name"]="pd"
+            INSTALLED_COMPS["func_name"]="${DEFAULTS[func_name]}"
         fi
 
-        ## TODO: Use data from DEFAULTS dictionary when testing for default configurations
         ## 3) Look fo the data file
+        local DEFAULT_DATA_FILE="${DEFAULTS[target_dir]}/${DEFAULTS[data_file]}"
         if [[ -f "$TARGET_DIR/$DATA_FILE" ]]; then
             (( INSTALLED_COMPS_CODE += COMP_DATA_FILE ))
             INSTALLED_COMPS["path_to_data_file"]="$TARGET_DIR/$DATA_FILE"
-        elif [[ "$TARGET_DIR/$DATA_FILE" != "$HOME/.pd-data" && -f "$HOME/.pd-data" ]]; then
+        elif [[ "$TARGET_DIR/$DATA_FILE" != "$DEFAULT_DATA_FILE" && -f "$DEFAULT_DATA_FILE" ]]; then
             (( INSTALLED_COMPS_CODE += COMP_DATA_FILE ))
-            INSTALLED_COMPS["path_to_data_file"]="$HOME/.pd-data"
+            INSTALLED_COMPS["path_to_data_file"]="$DEFAULT_DATA_FILE"
         fi
 
         ## 4) Look for the profile file with the bootstrap code
