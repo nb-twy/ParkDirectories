@@ -1,8 +1,12 @@
 #!/bin/bash
 
+# Get the directory where the executable is being run
+CWD="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+# Load common functions, globals, and defaults
+source "$CWD/common.sh"
+
 UNINSTALL=0
-LOGFILE="$HOME/.pd.log"
-OLD_LOGFILE="$(pwd)/pd.log"
 
 # If the old log file exists and the new on does not, use the old log file.
 if [[ ! -f "$LOGFILE" && -f "$OLD_LOGFILE" ]]; then
@@ -12,6 +16,7 @@ fi
 # Check if log file exists
 # If so, extract configured data.
 # If not, ask if we should attempt to uninstall default configuration.
+## TODO: Use parse_log_file from common.sh
 if [[ -f "$LOGFILE" ]]; then
     # Extract configurations from log file
     EXEC=$(grep "path_to_executable" "$LOGFILE" | cut -d' ' -f2)
