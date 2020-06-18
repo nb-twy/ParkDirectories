@@ -7,7 +7,8 @@ CWD="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source "$CWD/common.sh"
 
 # >>>>> GLOBALS <<<<<
-
+UPDATE=1    # Indicates that an in-place update will be performed
+FUNC_NAME="${DEFAULTS["func_name"]}"
 # <<<<< END GLOBALS >>>>>>
 
 function usage() {
@@ -79,9 +80,15 @@ while (( "$#" )); do
         -h|--help)      # Display help and exit
             usage && exit 0
         ;;
-        --func)         # Set the command name
+        --func)         # Update & change the command name to FUNC_NAME
             FUNC_NAME="$2"
             CH_FUNC_NAME=1
+            shift 2
+        ;;
+        --func-only)    # Only change the command name to FUNC_NAME
+            FUNC_NAME="$2"
+            CH_FUNC_NAME=1
+            UPDATE=0
             shift 2
         ;;
         -*|--*=)   # unsupported flags
@@ -97,3 +104,4 @@ while (( "$#" )); do
     esac
 done
 
+update
