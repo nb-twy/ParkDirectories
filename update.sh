@@ -58,8 +58,19 @@ function update {
                 echo -e "$CHAR_SUCCESS  Moved installation log file from $OLD_LOGFILE to $LOGFILE"
             fi
 
+            TARGET_DIR=$(dir ${INSTALLED_COMPS['path_to_datafile']})
+            DATA_FILE=$(basename ${INSTALLED_COMPS['path_to_datafile']})
+
             # Make a copy of the executable to protect the original
             cp "$ORIGINAL_EX" "$EXECUTABLE_SOURCE"
+
+            # If the data file is not installed in the default location,
+            # Update the executable to use the custom location
+            if [[ "${INSTALLED_COMPS['path_to_data_file']}" != 
+                "${DEFAULTS['target_dir']}/${DEFAULTS['data_file']}"]]; then
+                ch_datafile_loc
+            fi
+
             # Copy the executable to the location of the executable recorded in the installation log file
             cp "$EXECUTABLE_SOURCE" "${INSTALLED_COMPS['path_to_executable']}" || exit 20
             echo -e "$CHAR_SUCCESS  Executable updated"
