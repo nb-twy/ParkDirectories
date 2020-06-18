@@ -53,13 +53,13 @@ function update {
             echo -e "Continuing with update..."
 
             # If old installation log file is still in use, remove it and write a new one in the new location.
-            if [[ ${INSTALLED_COMPS['path_to_log_file']} == "$OLD_LOGFILE" ]]; then
+            if [[ "${INSTALLED_COMPS['path_to_log_file']}" == "$OLD_LOGFILE" ]]; then
                 mv "$OLD_LOGFILE" "$LOGFILE"
                 echo -e "$CHAR_SUCCESS  Moved installation log file from $OLD_LOGFILE to $LOGFILE"
             fi
 
-            TARGET_DIR=$(dir ${INSTALLED_COMPS['path_to_datafile']})
-            DATA_FILE=$(basename ${INSTALLED_COMPS['path_to_datafile']})
+            TARGET_DIR="$(dirname ${INSTALLED_COMPS['path_to_data_file']})"
+            DATA_FILE="$(basename ${INSTALLED_COMPS['path_to_data_file']})"
 
             # Make a copy of the executable to protect the original
             cp "$ORIGINAL_EX" "$EXECUTABLE_SOURCE"
