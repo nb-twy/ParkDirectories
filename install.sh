@@ -20,7 +20,6 @@ CH_FUNC_NAME=0
 # <<<<< END GLOBALS >>>>>>
 
 
-
 function usage() {
     cat << EOF
 
