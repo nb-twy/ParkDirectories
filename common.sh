@@ -12,6 +12,12 @@ OLD_LOGFILE="${DEFAULTS['old_logfile']}"
 TARGET_DIR="${DEFAULTS['target_dir']}"
 DATA_FILE="${DEFAULTS['data_file']}"
 FUNC_NAME="${DEFAULTS['func_name']}"
+
+declare -A INSTALLED_COMPS
+
+### Characters ### 
+CHAR_SUCCESS="\xE2\x9C\x94"
+CHAR_FAIL="\xE2\x9D\x8C"
 # >>>> END GLOBALS <<<<
 
 function parse_logfile {
@@ -174,3 +180,80 @@ function is_installed {
     fi
 }
 
+function report_installed_comps {
+
+    # Installation log file
+    if [[ $(( INSTALLED_COMPS_CODE & COMP_LOG_FILE )) -eq $COMP_LOG_FILE ]]; then
+        if [[ ${INSTALLED_COMPS['path_to_log_file']} == "$OLD_LOGFILE" ]]; then
+            echo -e "$CHAR_FAIL  Old installation log file is stil in use @ ${INSTALLED_COMPS['path_to_log_file']}"
+            echo -e "    Please run ./update.sh to use the new log file location."
+        fi
+        if [[ ${INSTALLED_COMPS['path_to_log_file']} == "$LOGFILE" ]]; then
+            echo -e "$CHAR_SUCCESS  Installation log file located @ ${INSTALLED_COMPS['path_to_log_file']}"
+        fi
+        if [[ ${#INSTALLED_COMPS[@]} -eq 5 ]]; then
+            echo -e "$CHAR_SUCCESS  Installation log file parsed."
+        fi
+    else
+        echo -e "$CHAR_FAIL  Installation log file missing. Expected location: $LOGFILE"
+    fi
+    
+    # Executable
+    if [[ $(( INSTALLED_COMPS_CODE & COMP_EXEC )) -eq $COMP_EXEC ]]; then
+        echo -e "$CHAR_SUCCESS  Executable @ ${INSTALLED_COMPS['path_to_executable']}"
+    else
+        echo -en "$CHAR_FAIL  Executable could not be located."
+        if [[ ${#INSTALLED_COMPS[@]} -eq 5 ]]; then
+            echo -e " Expected @ ${INSTALLED_COMPS['path_to_executable']}"
+        else
+            echo -e " Default: ${DEFAULTS['target_dir']}/${DEFAULTS['executable_name']}"
+        fi
+    fi
+
+    # Function
+    if [[ $(( INSTALLED_COMPS_CODE & COMP_FUNC )) -eq $COMP_FUNC ]]; then
+        echo -e "$CHAR_SUCCESS  Function active: ${INSTALLED_COMPS['func_name']}"
+    else
+        echo -en "$CHAR_FAIL  Expected function not in user environment."
+        if [[ ${#INSTALLED_COMPS[@]} -eq 5 ]]; then
+            echo -e " Expected function name: ${INSTALLED_COMPS['func_name']}"
+        else
+            echo -e " Default function name: ${DEFAULTS['func_name']}"
+        fi
+    fi
+
+    # Data file
+    if [[ $(( INSTALLED_COMPS_CODE & COMP_DATA_FILE )) -eq $COMP_DATA_FILE ]]; then
+        echo -e "$CHAR_SUCCESS  Data file @ ${INSTALLED_COMPS['path_to_data_file']}"
+    else
+        echo -en "$CHAR_FAIL  Data file could not be located."
+        if [[ ${#INSTALLED_COMPS[@]} -eq 5 ]]; then
+            echo -e " Expected @ ${INSTALLED_COMPS['path_to_data_file']}"
+        else
+            echo -e " Default @ ${DEFAULTS['target_dir']}/${DEFAULTS['data_file']}"
+        fi
+    fi
+
+    # Bootstrap code
+    if [[ $(( INSTALLED_COMPS_CODE & COMP_BOOTSTRAP )) -eq $COMP_BOOTSTRAP ]]; then
+        echo -e "$CHAR_SUCCESS  Bootstrap code located in ${INSTALLED_COMPS['profile']}"
+    else
+        echo -en "$CHAR_FAIL  Could not locate bootstrap code in profile scripts."
+        if [[ ${#INSTALLED_COMPS[@]} -eq 5 ]]; then
+            echo -e " Expected in ${INSTALLED_COMPS['profile']}"
+        else
+            echo -e " Default: ${DEFAULTS['profile']}"
+        fi
+    fi
+
+    # Final assessment
+    if [[ $INSTALLED_COMPS_CODE -eq $INSTALL_VALID ]]; then
+        echo -e "All components are installed as expected.\n"
+    elif [[ $INSTALLED_COMPS_CODE -gt $COMP_NONE && $INSTALLED_COMPS_CODE -lt $INSTALL_VALID ]]; then
+        echo -e "Park Directories is only partially installed."
+        echo -e "Please review the list above and refer to the README for possible solutions.\n"
+    elif [[ $INSTALLED_COMPS_CODE -eq $COMP_NONE ]]; then
+        echo -e "No components of Park Directories could be found."
+        echo -e "It looks like Park Directories is not installed.\n"
+    fi
+}

@@ -17,13 +17,7 @@ CH_TARGET_DIR=0
 CH_DATA_FILE=0
 CH_FUNC_NAME=0
 
-declare -A INSTALLED_COMPS
-
-### Characters ### 
-CHAR_SUCCESS="\xE2\x9C\x94"
-CHAR_FAIL="\xE2\x9D\x8C"
 # <<<<< END GLOBALS >>>>>>
-
 
 
 function usage() {
@@ -31,7 +25,7 @@ function usage() {
 
 >>>> Install Park Directories <<<<
 
-usage: install [OPTIONS]
+usage: install.sh [OPTIONS]
 
 OPTIONS:
 -h, --help              Display this help message and exit
@@ -45,7 +39,6 @@ OPTIONS:
                         parked directory references (default: .pd-data)
 --func FUNC_NAME        Set the command name (default: pd)
 -i, --import FILE       Initialize the list of parked directories with those in FILE
--u, --update            Perform an in-place update
 --verify                Look for the installation components of Park Directories
                         and report on the health of the installation.
 
@@ -108,140 +101,6 @@ function cleanup {
     ## Clean up
     # Remove temporary executable source
     rm "$EXECUTABLE_SOURCE"
-}
-
-function report_installed_comps {
-
-    # Installation log file
-    if [[ $(( INSTALLED_COMPS_CODE & COMP_LOG_FILE )) -eq $COMP_LOG_FILE ]]; then
-        if [[ ${INSTALLED_COMPS['path_to_log_file']} == "$OLD_LOGFILE" ]]; then
-            echo -e "$CHAR_FAIL  Old installation log file is stil in use @ ${INSTALLED_COMPS['path_to_log_file']}"
-            echo -e "    Please run ./instlal.sh -u to use the new log file location."
-        fi
-        if [[ ${INSTALLED_COMPS['path_to_log_file']} == "$LOGFILE" ]]; then
-            echo -e "$CHAR_SUCCESS  Installation log file located @ ${INSTALLED_COMPS['path_to_log_file']}"
-        fi
-        if [[ ${#INSTALLED_COMPS[@]} -eq 5 ]]; then
-            echo -e "$CHAR_SUCCESS  Installation log file parsed."
-        fi
-    else
-        echo -e "$CHAR_FAIL  Installation log file missing. Expected location: $LOGFILE"
-    fi
-    
-    # Executable
-    if [[ $(( INSTALLED_COMPS_CODE & COMP_EXEC )) -eq $COMP_EXEC ]]; then
-        echo -e "$CHAR_SUCCESS  Executable @ ${INSTALLED_COMPS['path_to_executable']}"
-    else
-        echo -en "$CHAR_FAIL  Executable could not be located."
-        if [[ ${#INSTALLED_COMPS[@]} -eq 5 ]]; then
-            echo -e " Expected @ ${INSTALLED_COMPS['path_to_executable']}"
-        else
-            echo -e " Default: $HOME/pd.sh"
-        fi
-    fi
-
-    # Function
-    if [[ $(( INSTALLED_COMPS_CODE & COMP_FUNC )) -eq $COMP_FUNC ]]; then
-        echo -e "$CHAR_SUCCESS  Function active: ${INSTALLED_COMPS['func_name']}"
-    else
-        echo -en "$CHAR_FAIL  Expected function not in user environment."
-        if [[ ${#INSTALLED_COMPS[@]} -eq 5 ]]; then
-            echo -e " Expected function name: ${INSTALLED_COMPS['func_name']}"
-        else
-            echo -e " Default function name: pd"
-        fi
-    fi
-
-    # Data file
-    if [[ $(( INSTALLED_COMPS_CODE & COMP_DATA_FILE )) -eq $COMP_DATA_FILE ]]; then
-        echo -e "$CHAR_SUCCESS  Data file @ ${INSTALLED_COMPS['path_to_data_file']}"
-    else
-        echo -en "$CHAR_FAIL  Data file could not be located."
-        if [[ ${#INSTALLED_COMPS[@]} -eq 5 ]]; then
-            echo -e " Expected @ ${INSTALLED_COMPS['path_to_data_file']}"
-        else
-            echo -e " Default @ $HOME/.pd-data"
-        fi
-    fi
-
-    # Bootstrap code
-    if [[ $(( INSTALLED_COMPS_CODE & COMP_BOOTSTRAP )) -eq $COMP_BOOTSTRAP ]]; then
-        echo -e "$CHAR_SUCCESS  Bootstrap code located in ${INSTALLED_COMPS['profile']}"
-    else
-        echo -en "$CHAR_FAIL  Could not locate bootstrap code in profile scripts."
-        if [[ ${#INSTALLED_COMPS[@]} -eq 5 ]]; then
-            echo -e " Expected in ${INSTALLED_COMPS['profile']}"
-        else
-            echo -e " Default: $HOME/.bashrc"
-        fi
-    fi
-
-    # Final assessment
-    if [[ $INSTALLED_COMPS_CODE -eq $INSTALL_VALID ]]; then
-        echo -e "All components are installed as expected.\n"
-    elif [[ $INSTALLED_COMPS_CODE -gt $COMP_NONE && $INSTALLED_COMPS_CODE -lt $INSTALL_VALID ]]; then
-        echo -e "Park Directories is only partially installed."
-        echo -e "Please review the list above and refer to the README for possible solutions.\n"
-    elif [[ $INSTALLED_COMPS_CODE -eq $COMP_NONE ]]; then
-        echo -e "No components of Park Directories could be found."
-        echo -e "It looks like Park Directories is not installed.\n"
-    fi
-}
-
-function fix_install {
-    echo -e "Searching for installed components and reconstituting installation log file..."
-
-    # Look for installed components using command line arguments and default values
-    ## 1) Look for the executable
-    if [[ -f "$TARGET_DIR/$EXECUTABLE_DEST" ]]; then
-        echo -e "$CHAR_SUCCESS  Executable @ $TARGET_DIR/$EXECUTABLE_DEST"
-        (( INSTALLED_COMPS_CODE += COMP_EXEC ))
-        INSTALLED_COMPS["path_to_executable"]="$TARGET_DIR/$EXECUTABLE_DEST"
-    elif [[ "$TARGET_DIR/$EXECUTABLE_DEST" != "$HOME/pd.sh" && -f "$HOME/pd.sh" ]]; then
-        echo -e "$CHAR_SUCCESS  Executable @ $HOME/pd.sh"
-        (( INSTALLED_COMPS_CODE += COMP_EXEC ))
-        INSTALLED_COMPS["path_to_executable"]="$HOME/pd.sh"
-    else
-        echo -e "$CHAR_FAIL  Could not locate executable"
-    fi
-
-    ## 2) Look for the function in the environment
-    if command -v "$FUNC_NAME" > /dev/null; then
-        echo -e "$CHAR_SUCCESS  Function active: $FUNC_NAME"
-        (( INSTALLED_COMPS_CODE += COMP_FUNC ))
-        INSTALLED_COMPS["func_name"]="$FUNC_NAME"
-    elif [[ "$FUNC_NAME" != "pd" ]] && command -v "pd" > /dev/null; then
-        echo -e "$CHAR_SUCCESS  Function active: pd"
-        (( INSTALLED_COMPS_CODE += COMP_FUNC ))
-        INSTALLED_COMPS["func_name"]="pd"
-    else
-        echo -e "$CHAR_FAIL  Could not locate active function"
-    fi
-
-    ## 3) Look fo the data file
-    if [[ -f "$TARGET_DIR/$DATA_FILE" ]]; then
-        echo -e "$CHAR_SUCCESS  Data file @ $TARGET_DIR/$DATA_FILE"
-        (( INSTALLED_COMPS_CODE += COMP_DATA_FILE ))
-        INSTALLED_COMPS["path_to_data_file"]="$TARGET_DIR/$DATA_FILE"
-    elif [[ "$TARGET_DIR/$DATA_FILE" != "$HOME/.pd-data" && -f "$HOME/.pd-data" ]]; then
-        echo -e "$CHAR_SUCCESS  Data file @ $HOME/.pd-data"
-        (( INSTALLED_COMPS_CODE += COMP_DATA_FILE ))
-        INSTALLED_COMPS["path_to_data_file"]="$HOME/.pd-data"
-    else
-        echo -e "$CHAR_FAIL  Could not locate data file"
-    fi
-
-    ## 4) Look for the profile file with the bootstrap code
-    local VER_PROFILE="NONE"
-    local SEARCH_PROFILES=( "$HOME/.bashrc $HOME/.bash_profile $HOME/profile" )
-    local VER_PROFILE=$(bootstrap_in_profile "${SEARCH_PROFILES[@]}")
-    if [[ "$VER_PROFILE" != "NONE" ]]; then
-        echo -e "$CHAR_SUCCESS  Bootstrap code in $VER_PROFILE"
-        (( INSTALLED_COMPS_CODE += COMP_BOOTSTRAP ))
-        INSTALLED_COMPS["profile"]="$VER_PROFILE"
-    else
-        echo -e "$CHAR_FAIL  Could not locate profile file with bootstrap code"
-    fi
 }
 
 function install {
@@ -316,48 +175,6 @@ function install {
     fi
 }
 
-function update {
-    # Perform an in-place update of Park Directories
-    echo -e "Updating Park Directories...\n"
-    echo -e "Checking for installed components..."
-    is_installed
-
-    # If Park Directories is installed properly, continue with the udpate.
-    if [[ $INSTALLED_COMPS_CODE -eq $INSTALL_VALID ]]; then
-        echo -e "Park Directories seems to be installed properly."
-        echo -e "Continuing with update..."
-
-        # If old installation log file is still in use, remove it and write a new one in the new location.
-        if [[ ${INSTALLED_COMPS['path_to_log_file']} == "$OLD_LOGFILE" ]]; then
-            mv "$OLD_LOGFILE" "$LOGFILE"
-            echo -e "$CHAR_SUCCESS  Moved installation log file from $OLD_LOGFILE to $LOGFILE"
-        fi
-
-        # Make a copy of the executable to protect the original
-        cp "$ORIGINAL_EX" "$EXECUTABLE_SOURCE"
-        # Copy the executable to the location of the executable recorded in the installation log file
-        cp "$EXECUTABLE_SOURCE" "${INSTALLED_COMPS['path_to_executable']}" || exit 40
-        echo -e "$CHAR_SUCCESS  Executable updated"
-
-        ## Clean up
-        cleanup
-        echo -e "Update complete."
-        echo -e "Please run source ${INSTALLED_COMPS['profile']} or restart your terminal to get the latest features.\n"
-
-    # If Park Directories is only partially installed, report on the installed components and exit.
-    elif [[ $INSTALLED_COMPS_CODE -gt $COMP_NONE && $INSTALLED_COMPS_CODE -lt $INSTALL_VALID ]]; then
-        report_installed_comps
-        echo -e "Cannot continue with update until Parked Directories is properly installed.\n"
-        exit 60
-
-    # If Park Directories is not installed, ask the user to install and exit.
-    elif [[ $INSTALLED_COMPS_CODE -eq $COMP_NONE ]]; then
-        echo -e "Park Directories is not yet installed."
-        echo -e "Please run ./install.sh --help to review your installation options.\n"
-        exit 61
-    fi
-}
-
 function verify {
     # Check installation and report findings without attempting any changes
     echo -e "Checking for installed components of Park Directories..."
@@ -409,10 +226,6 @@ while (( "$#" )); do
             fi
             shift 2
         ;;
-        -u|--update)    # Perform an in-place update
-            ACTION="UPDATE"
-            shift 1
-        ;;
         --verify)   # verify installation
             ACTION="VERIFY"
             shift 1
@@ -430,15 +243,11 @@ while (( "$#" )); do
     esac
 done
 
-# Install or Update
+# Install
 if [[ "$ACTION" == "INSTALL" ]]; then
     install
 fi
 
 if [[ "$ACTION" == "VERIFY" ]]; then
     verify
-fi
-
-if [[ "$ACTION" == "UPDATE" ]]; then
-    update
 fi
