@@ -60,7 +60,8 @@ function update {
 
             TARGET_DIR="$(dirname ${INSTALLED_COMPS['path_to_data_file']})"
             DATA_FILE="$(basename ${INSTALLED_COMPS['path_to_data_file']})"
-
+            FUNC_NAME="${INSTALLED_COMPS['func_name']}"
+            
             # Make a copy of the executable to protect the original
             cp "$ORIGINAL_EX" "$EXECUTABLE_SOURCE"
 
@@ -69,6 +70,12 @@ function update {
             if [[ "${INSTALLED_COMPS['path_to_data_file']}" != \
                 "${DEFAULTS['target_dir']}/${DEFAULTS['data_file']}" ]]; then
                 ch_datafile_loc
+            fi
+
+            # If the function name of the active installation is not the default (pd), 
+            # then update the executable to use the custom function name
+            if [[ "${INSTALLED_COMPS['func_name']}" != "${DEFAULTS['func_name']}" ]]; then
+                ch_func_name
             fi
 
             # Copy the executable to the location of the executable recorded in the installation log file
