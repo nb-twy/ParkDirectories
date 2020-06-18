@@ -2,7 +2,7 @@
 
 pd() {
     local pdFile="$HOME/.pd-data"
-    local PD_VERSION="1.8.0"
+    local PD_VERSION="1.9.0"
 
     if [[ $# -eq 0 ]]; then
         set -- "-h"

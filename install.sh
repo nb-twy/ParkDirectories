@@ -201,7 +201,7 @@ while (( "$#" )); do
         ;;
         -d|--dir)       # Set the directory where the data file and executable will be written
             TARGET_DIR="${2%/}"  # Remove a trailing / if present
-            if [[ "$1" != /* ]]; then
+            if [[ "$2" != /* ]]; then
                 TARGET_DIR="$HOME/$TARGET_DIR"
             fi
             CH_TARGET_DIR=1
