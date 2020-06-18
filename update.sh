@@ -66,7 +66,7 @@ function update {
 
             # If the data file is not installed in the default location,
             # Update the executable to use the custom location
-            if [[ "${INSTALLED_COMPS['path_to_data_file']}" != 
+            if [[ "${INSTALLED_COMPS['path_to_data_file']}" != \
                 "${DEFAULTS['target_dir']}/${DEFAULTS['data_file']}"]]; then
                 ch_datafile_loc
             fi
