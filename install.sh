@@ -17,8 +17,6 @@ CH_TARGET_DIR=0
 CH_DATA_FILE=0
 CH_FUNC_NAME=0
 
-declare -A INSTALLED_COMPS
-
 ### Characters ### 
 CHAR_SUCCESS="\xE2\x9C\x94"
 CHAR_FAIL="\xE2\x9D\x8C"
@@ -31,7 +29,7 @@ function usage() {
 
 >>>> Install Park Directories <<<<
 
-usage: install [OPTIONS]
+usage: install.sh [OPTIONS]
 
 OPTIONS:
 -h, --help              Display this help message and exit
@@ -45,7 +43,6 @@ OPTIONS:
                         parked directory references (default: .pd-data)
 --func FUNC_NAME        Set the command name (default: pd)
 -i, --import FILE       Initialize the list of parked directories with those in FILE
--u, --update            Perform an in-place update
 --verify                Look for the installation components of Park Directories
                         and report on the health of the installation.
 
@@ -316,48 +313,6 @@ function install {
     fi
 }
 
-function update {
-    # Perform an in-place update of Park Directories
-    echo -e "Updating Park Directories...\n"
-    echo -e "Checking for installed components..."
-    is_installed
-
-    # If Park Directories is installed properly, continue with the udpate.
-    if [[ $INSTALLED_COMPS_CODE -eq $INSTALL_VALID ]]; then
-        echo -e "Park Directories seems to be installed properly."
-        echo -e "Continuing with update..."
-
-        # If old installation log file is still in use, remove it and write a new one in the new location.
-        if [[ ${INSTALLED_COMPS['path_to_log_file']} == "$OLD_LOGFILE" ]]; then
-            mv "$OLD_LOGFILE" "$LOGFILE"
-            echo -e "$CHAR_SUCCESS  Moved installation log file from $OLD_LOGFILE to $LOGFILE"
-        fi
-
-        # Make a copy of the executable to protect the original
-        cp "$ORIGINAL_EX" "$EXECUTABLE_SOURCE"
-        # Copy the executable to the location of the executable recorded in the installation log file
-        cp "$EXECUTABLE_SOURCE" "${INSTALLED_COMPS['path_to_executable']}" || exit 40
-        echo -e "$CHAR_SUCCESS  Executable updated"
-
-        ## Clean up
-        cleanup
-        echo -e "Update complete."
-        echo -e "Please run source ${INSTALLED_COMPS['profile']} or restart your terminal to get the latest features.\n"
-
-    # If Park Directories is only partially installed, report on the installed components and exit.
-    elif [[ $INSTALLED_COMPS_CODE -gt $COMP_NONE && $INSTALLED_COMPS_CODE -lt $INSTALL_VALID ]]; then
-        report_installed_comps
-        echo -e "Cannot continue with update until Parked Directories is properly installed.\n"
-        exit 60
-
-    # If Park Directories is not installed, ask the user to install and exit.
-    elif [[ $INSTALLED_COMPS_CODE -eq $COMP_NONE ]]; then
-        echo -e "Park Directories is not yet installed."
-        echo -e "Please run ./install.sh --help to review your installation options.\n"
-        exit 61
-    fi
-}
-
 function verify {
     # Check installation and report findings without attempting any changes
     echo -e "Checking for installed components of Park Directories..."
@@ -409,10 +364,6 @@ while (( "$#" )); do
             fi
             shift 2
         ;;
-        -u|--update)    # Perform an in-place update
-            ACTION="UPDATE"
-            shift 1
-        ;;
         --verify)   # verify installation
             ACTION="VERIFY"
             shift 1
@@ -430,15 +381,11 @@ while (( "$#" )); do
     esac
 done
 
-# Install or Update
+# Install
 if [[ "$ACTION" == "INSTALL" ]]; then
     install
 fi
 
 if [[ "$ACTION" == "VERIFY" ]]; then
     verify
-fi
-
-if [[ "$ACTION" == "UPDATE" ]]; then
-    update
 fi

@@ -12,6 +12,8 @@ OLD_LOGFILE="${DEFAULTS['old_logfile']}"
 TARGET_DIR="${DEFAULTS['target_dir']}"
 DATA_FILE="${DEFAULTS['data_file']}"
 FUNC_NAME="${DEFAULTS['func_name']}"
+
+declare -A INSTALLED_COMPS
 # >>>> END GLOBALS <<<<
 
 function parse_logfile {
