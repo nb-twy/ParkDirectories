@@ -2,8 +2,25 @@
 
 pd() {
     local pdFile="$HOME/.pd-data"
-    local PD_VERSION="1.11.0"
+    local PD_VERSION="1.12.0"
 
+    # Resolve the directory from the ref name
+    # Expected input: REF
+    # Sets PARKED_DIR
+    local PARKED_DIR=""
+    resolve_dir() {
+        local REF="${1%%/*}"
+        local RELPATH="${1##$REF}"    # If there is a relative path, it will begin with /
+        PARKED_DIR=$(grep -P "^$REF .*$" "$pdFile" | cut -d' ' -f2)
+        if [[ ${#PARKED_DIR} -gt 0 ]]; then
+            if [[ -n "$RELPATH" ]]; then
+                PARKED_DIR="${PARKED_DIR%/}$RELPATH"
+            fi
+        else
+            echo "$REF -- No parked directory with that name"
+        fi
+    }
+    
     if [[ $# -eq 0 ]]; then
         set -- "-h"
     fi
@@ -248,28 +265,28 @@ shift 1
                 echo -e "Park Directories version $PD_VERSION"
                 shift 1
                 ;;
+            -x|--expand)  # Expand named directory
+                # Command format: pd -x|--expand {unique name}[/{relative path}]
+                resolve_dir "$2"
+                if [[ -n "$PARKED_DIR" ]]; then
+                    echo "$PARKED_DIR"
+                fi
+                shift 2
+                ;;
             -*|--*) # Catch any unknown arguments
                 echo "$1  ERROR: Unknown argument"
                 shift 1
                 ;;
-            *)          # Positional argument
-                # Change to the parked directory by name
-                # Command format: pd {unique name}
-                REF="${1%%/*}"
-                RELPATH="${1##$REF}"    # If there is a relative path, it will begin with /
-                PARKED_DIR=$(grep -P "^$REF .*$" "$pdFile" | cut -d' ' -f2)
-                if [[ ${#PARKED_DIR} -gt 0 ]]; then
-                    if [[ -z "$RELPATH" ]]; then
-                        cd "$PARKED_DIR" || return 50
-                    else
-                        cd "${PARKED_DIR%/}$RELPATH" || return 50
-                    fi
-                else
-                    echo "$REF -- No parked directory with that name"
+            *)  # Navigate to parked directory
+                resolve_dir "$1"
+                if [[ -n "$PARKED_DIR" ]]; then
+                    cd "$PARKED_DIR" || exit 50
                 fi
                 shift 1
                 ;;
         esac
     done
+
+    unset -f resolve_dir
 }
 
