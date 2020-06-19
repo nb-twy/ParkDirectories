@@ -2,7 +2,7 @@
 
 pd() {
     local pdFile="$HOME/.pd-data"
-    local PD_VERSION="1.10.0"
+    local PD_VERSION="1.11.0"
 
     if [[ $# -eq 0 ]]; then
         set -- "-h"
@@ -253,14 +253,19 @@ shift 1
                 shift 1
                 ;;
             *)          # Positional argument
-                ref="$1"
                 # Change to the parked directory by name
                 # Command format: pd {unique name}
-                path=$(grep -P "^$ref .*$" "$pdFile" | cut -d' ' -f2)
-                if [[ ${#path} -gt 0 ]]; then
-                    cd "$path" || return 50
+                REF="${1%%/*}"
+                RELPATH="${1##$REF}"    # If there is a relative path, it will begin with /
+                PARKED_DIR=$(grep -P "^$REF .*$" "$pdFile" | cut -d' ' -f2)
+                if [[ ${#PARKED_DIR} -gt 0 ]]; then
+                    if [[ -z "$RELPATH" ]]; then
+                        cd "$PARKED_DIR" || return 50
+                    else
+                        cd "${PARKED_DIR%/}$RELPATH" || return 50
+                    fi
                 else
-                    echo "$ref -- No parked directory with that name"
+                    echo "$REF -- No parked directory with that name"
                 fi
                 shift 1
                 ;;
