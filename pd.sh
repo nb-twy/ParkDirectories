@@ -2,8 +2,25 @@
 
 pd() {
     local pdFile="$HOME/.pd-data"
-    local PD_VERSION="1.11.0"
+    local PD_VERSION="1.12.0"
 
+    # Resolve the directory from the ref name
+    # Expected input: REF
+    # Sets PARKED_DIR
+    local PARKED_DIR=""
+    resolve_dir() {
+        local REF="${1%%/*}"
+        local RELPATH="${1##$REF}"    # If there is a relative path, it will begin with /
+        PARKED_DIR=$(grep -P "^$REF .*$" "$pdFile" | cut -d' ' -f2)
+        if [[ ${#PARKED_DIR} -gt 0 ]]; then
+            if [[ -n "$RELPATH" ]]; then
+                PARKED_DIR="${PARKED_DIR%/}$RELPATH"
+            fi
+        else
+            echo "$REF -- No parked directory with that name"
+        fi
+    }
+    
     if [[ $# -eq 0 ]]; then
         set -- "-h"
     fi
@@ -22,27 +39,35 @@ Park (bookmark) directories so that we can quickly navigate
 to them from anywhere else using a short reference name.
 The references persist across bash sessions.
 
-usage: pd [REF] [OPTION {ARG} [OPTION {ARG} ...]]
+usage: pd [REF[/RELPATH]] [OPTION {ARG} [OPTION {ARG} ...]]
 
 -h, --help                           Display this help message
--a, --add NAME [PATH]                Given just NAME, park the current directory with reference NAME
+-a, --add NAME[ PATH]                Given just NAME, park the current directory with reference NAME
                                      Given NAME & PATH, park PATH with reference NAME
                                      Reference names may not start with - or contain /
 -d, --del NAME                       Remove the directory referenced by NAME
 -l, --list                           Display the entire list of parked directories
 -c, --clear                          Clear the entire list of parked directories
+-x, --expand NAME[/RELPATH]          Expand the referenced directory and relative path without
+                                     navigating to it
 -e, --export FILE_PATH               Export current list of parked directories to FILE_PATH
 -i, --import                         Import park directories entries from FILE_PATH
     [--append | --quiet] FILE_PATH   Use -i --append FILE_PATH to add entries to the existing list
                                      Use -i --quiet FILE_PATH to overwrite current entries quietly
 -v, --version                        Display version
 
-examples:
+Examples:
     pd dev              Navigate to directory saved with the ref name dev
+    pd dev/proj         Navigate to the proj subdirectory of the directory 
+                        referenced by ref name dev
     pd -a dev           Park the current directory with the ref name dev
     pd -a log /var/log  Park /var/log with ref name log
     pd -d dev           Remove the directory referenced by the name dev from
                         the parked directories list
+    
+    Move the contents of the directory referenced by dev1 to the archive
+    subdirectory of the directory referenced by repos:
+        mv -v $(pd -x dev1) $(pd -x repos/archive/)
     
     A single invocation can take multiple options, performing multiple operations at once:
         pd -l -d dev -a dev -d log -a log /var/log -l
@@ -248,28 +273,28 @@ shift 1
                 echo -e "Park Directories version $PD_VERSION"
                 shift 1
                 ;;
+            -x|--expand)  # Expand named directory
+                # Command format: pd -x|--expand {unique name}[/{relative path}]
+                resolve_dir "$2"
+                if [[ -n "$PARKED_DIR" ]]; then
+                    echo "$PARKED_DIR"
+                fi
+                shift 2
+                ;;
             -*|--*) # Catch any unknown arguments
                 echo "$1  ERROR: Unknown argument"
                 shift 1
                 ;;
-            *)          # Positional argument
-                # Change to the parked directory by name
-                # Command format: pd {unique name}
-                REF="${1%%/*}"
-                RELPATH="${1##$REF}"    # If there is a relative path, it will begin with /
-                PARKED_DIR=$(grep -P "^$REF .*$" "$pdFile" | cut -d' ' -f2)
-                if [[ ${#PARKED_DIR} -gt 0 ]]; then
-                    if [[ -z "$RELPATH" ]]; then
-                        cd "$PARKED_DIR" || return 50
-                    else
-                        cd "${PARKED_DIR%/}$RELPATH" || return 50
-                    fi
-                else
-                    echo "$REF -- No parked directory with that name"
+            *)  # Navigate to parked directory
+                resolve_dir "$1"
+                if [[ -n "$PARKED_DIR" ]]; then
+                    cd "$PARKED_DIR" || exit 50
                 fi
                 shift 1
                 ;;
         esac
     done
+
+    unset -f resolve_dir
 }
 
