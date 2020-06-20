@@ -39,27 +39,35 @@ Park (bookmark) directories so that we can quickly navigate
 to them from anywhere else using a short reference name.
 The references persist across bash sessions.
 
-usage: pd [REF] [OPTION {ARG} [OPTION {ARG} ...]]
+usage: pd [REF[/RELPATH]] [OPTION {ARG} [OPTION {ARG} ...]]
 
 -h, --help                           Display this help message
--a, --add NAME [PATH]                Given just NAME, park the current directory with reference NAME
+-a, --add NAME[ PATH]                Given just NAME, park the current directory with reference NAME
                                      Given NAME & PATH, park PATH with reference NAME
                                      Reference names may not start with - or contain /
 -d, --del NAME                       Remove the directory referenced by NAME
 -l, --list                           Display the entire list of parked directories
 -c, --clear                          Clear the entire list of parked directories
+-x, --expand NAME[/RELPATH]          Expand the referenced directory and relative path without
+                                     navigating to it
 -e, --export FILE_PATH               Export current list of parked directories to FILE_PATH
 -i, --import                         Import park directories entries from FILE_PATH
     [--append | --quiet] FILE_PATH   Use -i --append FILE_PATH to add entries to the existing list
                                      Use -i --quiet FILE_PATH to overwrite current entries quietly
 -v, --version                        Display version
 
-examples:
+Examples:
     pd dev              Navigate to directory saved with the ref name dev
+    pd dev/proj         Navigate to the proj subdirectory of the directory 
+                        referenced by ref name dev
     pd -a dev           Park the current directory with the ref name dev
     pd -a log /var/log  Park /var/log with ref name log
     pd -d dev           Remove the directory referenced by the name dev from
                         the parked directories list
+    
+    Move the contents of the directory referenced by dev1 to the archive
+    subdirectory of the directory referenced by repos:
+        mv -v $(pd -x dev1) $(pd -x repos/archive/)
     
     A single invocation can take multiple options, performing multiple operations at once:
         pd -l -d dev -a dev -d log -a log /var/log -l
