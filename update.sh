@@ -143,7 +143,7 @@ function update {
             exit 22
         fi
     elif [[ $CH_FUNC_NAME -eq 1 ]]; then
-        EXECUTABLE_SOURCE="${INSTALLED_COMPS['path_to_executable'}"
+        EXECUTABLE_SOURCE="${INSTALLED_COMPS['path_to_executable']}"
         ch_func_name
         echo "Function name changed to $FUNC_NAME."
         echo "Please restart your terminal or run the following:"
