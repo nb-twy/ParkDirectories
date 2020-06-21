@@ -114,7 +114,8 @@ function update {
                 fi
                 ch_func_name
                 if [[ $CH_FUNC_NAME -eq 1 ]]; then
-                    echo "Function name changed to $FUNC_NAME."
+                    sed -i "/## Park Directories ##/,/## End Park Directories ##/ s/FUNC_NAME=.*/FUNC_NAME=$FUNC_NAME/" "${INSTALLED_COMPS['profile']}"
+                    echo -e "$CHAR_SUCCESS Function name changed to $FUNC_NAME."
                 fi
             fi
 
@@ -145,7 +146,8 @@ function update {
     elif [[ $CH_FUNC_NAME -eq 1 ]]; then
         EXECUTABLE_SOURCE="${INSTALLED_COMPS['path_to_executable']}"
         ch_func_name
-        echo "Function name changed to $FUNC_NAME."
+        sed -i "/## Park Directories ##/,/## End Park Directories ##/ s/FUNC_NAME=.*/FUNC_NAME=$FUNC_NAME/" "${INSTALLED_COMPS['profile']}"
+        echo "$CHAR_SUCCESS Function name changed to $FUNC_NAME."
         echo "Please restart your terminal or run the following:"
         echo "    unset -f ${INSTALLED_COMPS['func_name']}"
         echo "    source ${INSTALLED_COMPS['profile']}"
