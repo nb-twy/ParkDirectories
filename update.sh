@@ -43,6 +43,7 @@ UPDATE=1    # Indicates that an in-place update will be performed
 FUNC_NAME="${DEFAULTS["func_name"]}"
 ORIGINAL_EX="${DEFAULTS['executable_name']}"
 
+CH_FUNC_NAME=0
 # <<<<< END GLOBALS >>>>>>
 
 function usage() {
@@ -92,7 +93,6 @@ function update {
 
             TARGET_DIR="$(dirname ${INSTALLED_COMPS['path_to_data_file']})"
             DATA_FILE="$(basename ${INSTALLED_COMPS['path_to_data_file']})"
-            FUNC_NAME="${INSTALLED_COMPS['func_name']}"
             
             # Make a copy of the executable to protect the original
             cp "$ORIGINAL_EX" "$EXECUTABLE_SOURCE"
@@ -106,8 +106,16 @@ function update {
 
             # If the function name of the active installation is not the default (pd), 
             # then update the executable to use the custom function name
-            if [[ "${INSTALLED_COMPS['func_name']}" != "${DEFAULTS['func_name']}" ]]; then
+            # Or if the user has chosen to update the name of the function during an in-place update,
+            # use the function name provided by the user.
+            if [[ $CH_FUNC_NAME -eq 1 || "${INSTALLED_COMPS['func_name']}" != "${DEFAULTS['func_name']}" ]]; then
+                if [[ $CH_FUNC_NAME -eq 0 ]]; then
+                    FUNC_NAME="${INSTALLED_COMPS['func_name']}"
+                fi
                 ch_func_name
+                if [[ $CH_FUNC_NAME -eq 1 ]]; then
+                    echo "Function name changed to $FUNC_NAME."
+                fi
             fi
 
             # Copy the executable to the location of the executable recorded in the installation log file
@@ -117,8 +125,11 @@ function update {
             ## Clean up
             cleanup
             echo -e "Update complete."
-            echo -e "Please run source ${INSTALLED_COMPS['profile']} or restart your terminal to get the latest features.\n"
-
+            echo "Please restart your terminal or run the following to get the latest features:"
+            if [[ $CH_FUNC_NAME -eq 1 ]]; then
+                echo "    unset -f ${INSTALLED_COMPS['func_name']}"
+            fi
+            echo "    source ${INSTALLED_COMPS['profile']}"
         # If Park Directories is only partially installed, report on the installed components and exit.
         elif [[ $INSTALLED_COMPS_CODE -gt $COMP_NONE && $INSTALLED_COMPS_CODE -lt $INSTALL_VALID ]]; then
             report_installed_comps
@@ -131,6 +142,13 @@ function update {
             echo -e "Please run ./install.sh --help to review your installation options.\n"
             exit 22
         fi
+    elif [[ $CH_FUNC_NAME -eq 1 ]]; then
+        EXECUTABLE_SOURCE="${INSTALLED_COMPS['path_to_executable'}"
+        ch_func_name
+        echo "Function name changed to $FUNC_NAME."
+        echo "Please restart your terminal or run the following:"
+        echo "    unset -f ${INSTALLED_COMPS['func_name']}"
+        echo "    source ${INSTALLED_COMPS['profile']}"
     fi
 }
 
