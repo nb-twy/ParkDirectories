@@ -174,9 +174,6 @@ function install {
             fi
         fi
             
-        # Create the log file
-        create_logfile
-
         # Change the location where the data file is stored
         # Write the output to a new file so that the original is not altered.
         if [[ $CH_TARGET_DIR -eq 1 || $CH_DATA_FILE -eq 1 ]]; then
@@ -185,6 +182,7 @@ function install {
 
         # Change the name of the function (default: pd), if necessary
         if [[ $CH_FUNC_NAME -eq 1 ]]; then
+            ORIG_FUNC_NAME="${DEFAULTS['func_name']}"
             ch_func_name
         fi
 
@@ -198,6 +196,9 @@ function install {
         cp "$DATA_FILE_INIT" "$TARGET_DIR/$DATA_FILE" 
         echo "Initiatlized data file with $DATA_FILE_INIT"
 
+        # Create the log file
+        create_logfile
+        
         # Clean up
         cleanup
         

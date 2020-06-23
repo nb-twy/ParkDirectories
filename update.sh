@@ -90,6 +90,7 @@ function update {
         TARGET_DIR="$(dirname ${INSTALLED_COMPS['path_to_data_file']})"
         DATA_FILE="$(basename ${INSTALLED_COMPS['path_to_data_file']})"
         
+        
         # If performing a in-place change of the function name, change the references to the func name
         # in the currently installed executable.
         if [[ $UPDATE -eq 0 ]]; then
@@ -103,13 +104,14 @@ function update {
         # function name, the function name needs to be updated before or an update or the function name needs
         # to be updated in-place.
         if [[ $CH_FUNC_NAME -eq 1 || "${INSTALLED_COMPS['func_name']}" != "${DEFAULTS['func_name']}" ]]; then
+            ORIG_FUNC_NAME="${INSTALLED_COMPS['func_name']}"
             if [[ $CH_FUNC_NAME -eq 0 ]]; then
                 FUNC_NAME="${INSTALLED_COMPS['func_name']}"
             fi
             ch_func_name
             if [[ $CH_FUNC_NAME -eq 1 ]]; then
                 # Update bootstrap script in profile
-                sed -i "/## Park Directories ##/,/## End Park Directories ##/ s/FUNC_NAME=.*/FUNC_NAME=$FUNC_NAME/" "${INSTALLED_COMPS['profile']}"
+                sed -i "/## Park Directories ##/,/## End Park Directories ##/ s/FUNC_NAME=.*/FUNC_NAME=\"$FUNC_NAME/\"" "${INSTALLED_COMPS['profile']}"
                 # Update log file data
                 sed -i "s/func_name .*/func_name $FUNC_NAME/" "${INSTALLED_COMPS['path_to_log_file']}"
                 echo -e "$CHAR_SUCCESS Function name changed to $FUNC_NAME."
@@ -137,9 +139,7 @@ function update {
         if [[ $CH_FUNC_NAME -eq 1 ]]; then
             echo "    unset -f ${INSTALLED_COMPS['func_name']}"
         fi
-        if [[ $UPDATE -eq 1 ]]; then
-            echo "    source ${INSTALLED_COMPS['profile']}"
-        fi
+        echo "    source ${INSTALLED_COMPS['profile']}"
     # If Park Directories is only partially installed, report on the installed components and exit.
     elif [[ $INSTALLED_COMPS_CODE -gt $COMP_NONE && $INSTALLED_COMPS_CODE -lt $INSTALL_VALID ]]; then
         report_installed_comps
