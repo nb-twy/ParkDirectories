@@ -72,7 +72,7 @@ function ch_func_name {
     # Make a copy of the executable
     local TMP="tmp-$(date +%s).sh"
     cp "$EXECUTABLE_SOURCE" "$TMP" || exit 31
-    sed -r -e "s|pd\(\) \{|$FUNC_NAME\(\) \{|" -e "s|(usage: )pd|\1$FUNC_NAME|" -e "s|pd |$FUNC_NAME |" "$TMP" > "$EXECUTABLE_SOURCE"
+    sed -r -e "s|$ORIG_FUNC_NAME\(\) \{|$FUNC_NAME\(\) \{|" -e "s|(usage: )$ORIG_FUNC_NAME|\1$FUNC_NAME|" -e "s|$ORIG_FUNC_NAME |$FUNC_NAME |g" "$TMP" > "$EXECUTABLE_SOURCE"
     # Remove the tmp file
     rm "$TMP"
 }

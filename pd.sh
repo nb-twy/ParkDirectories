@@ -32,7 +32,7 @@
 
 pd() {
     local pdFile="$HOME/.pd-data"
-    local PD_VERSION="1.12.1"
+    local PD_VERSION="1.13.0"
 
     # Resolve the directory from the ref name
     # Expected input: REF
@@ -97,7 +97,7 @@ Examples:
     
     Move the contents of the directory referenced by dev1 to the archive
     subdirectory of the directory referenced by repos:
-        mv -v $(pd -x dev1) $(pd -x repos/archive/)
+        mv -v \$(pd -x dev1) \$(pd -x repos/archive/)
     
     A single invocation can take multiple options, performing multiple operations at once:
         pd -l -d dev -a dev -d log -a log /var/log -l
