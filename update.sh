@@ -111,7 +111,7 @@ function update {
             ch_func_name
             if [[ $CH_FUNC_NAME -eq 1 ]]; then
                 # Update bootstrap script in profile
-                sed -i "/## Park Directories ##/,/## End Park Directories ##/ s/FUNC_NAME=.*/FUNC_NAME=\"$FUNC_NAME/\"" "${INSTALLED_COMPS['profile']}"
+                sed -i "/## Park Directories ##/,/## End Park Directories ##/ s/FUNC_NAME=.*/FUNC_NAME=\"$FUNC_NAME\"/ "${INSTALLED_COMPS['profile']}"
                 # Update log file data
                 sed -i "s/func_name .*/func_name $FUNC_NAME/" "${INSTALLED_COMPS['path_to_log_file']}"
                 echo -e "$CHAR_SUCCESS Function name changed to $FUNC_NAME."
