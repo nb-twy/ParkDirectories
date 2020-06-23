@@ -74,52 +74,54 @@ function cleanup {
 }
 
 function update {
-    if [[ UPDATE -eq 1 ]]; then
-        # Perform an in-place update of Park Directories
-        echo -e "Updating Park Directories...\n"
-        echo -e "Checking for installed components..."
-        is_installed
+    echo -e "Verifying current installation..."
+    is_installed
 
-        # If Park Directories is installed properly, continue with the udpate.
-        if [[ $INSTALLED_COMPS_CODE -eq $INSTALL_VALID ]]; then
-            echo -e "Park Directories is installed properly."
-            echo -e "Continuing with update..."
+    # If Park Directories is installed properly, continue with the udpate.
+    if [[ $INSTALLED_COMPS_CODE -eq $INSTALL_VALID ]]; then
+        echo -e "Park Directories is installed properly."
 
-            # If old installation log file is still in use, remove it and write a new one in the new location.
-            if [[ "${INSTALLED_COMPS['path_to_log_file']}" == "$OLD_LOGFILE" ]]; then
-                mv "$OLD_LOGFILE" "$LOGFILE"
-                echo -e "$CHAR_SUCCESS  Moved installation log file from $OLD_LOGFILE to $LOGFILE"
-            fi
+        # If old installation log file is still in use, remove it and write a new one in the new location.
+        if [[ "${INSTALLED_COMPS['path_to_log_file']}" == "$OLD_LOGFILE" ]]; then
+            mv "$OLD_LOGFILE" "$LOGFILE"
+            echo -e "$CHAR_SUCCESS  Moved installation log file from $OLD_LOGFILE to $LOGFILE"
+        fi
 
-            TARGET_DIR="$(dirname ${INSTALLED_COMPS['path_to_data_file']})"
-            DATA_FILE="$(basename ${INSTALLED_COMPS['path_to_data_file']})"
-            
+        TARGET_DIR="$(dirname ${INSTALLED_COMPS['path_to_data_file']})"
+        DATA_FILE="$(basename ${INSTALLED_COMPS['path_to_data_file']})"
+        
+        # If performing a in-place change of the function name, change the references to the func name
+        # in the currently installed executable.
+        if [[ $UPDATE -eq 0 ]]; then
+            EXECUTABLE_SOURCE="${INSTALLED_COMPS['path_to_executable']}"
+        else
             # Make a copy of the executable to protect the original
             cp "$ORIGINAL_EX" "$EXECUTABLE_SOURCE"
+        fi
 
+        # If the user invoked --func or --func-only, or if the user installed Park Directories with a custom
+        # function name, the function name needs to be updated before or an update or the function name needs
+        # to be updated in-place.
+        if [[ $CH_FUNC_NAME -eq 1 || "${INSTALLED_COMPS['func_name']}" != "${DEFAULTS['func_name']}" ]]; then
+            if [[ $CH_FUNC_NAME -eq 0 ]]; then
+                FUNC_NAME="${INSTALLED_COMPS['func_name']}"
+            fi
+            ch_func_name
+            if [[ $CH_FUNC_NAME -eq 1 ]]; then
+                # Update bootstrap script in profile
+                sed -i "/## Park Directories ##/,/## End Park Directories ##/ s/FUNC_NAME=.*/FUNC_NAME=$FUNC_NAME/" "${INSTALLED_COMPS['profile']}"
+                # Update log file data
+                sed -i "s/func_name .*/func_name $FUNC_NAME/" "$INSTALLED_COMPS['path_to_log_file']"
+                echo -e "$CHAR_SUCCESS Function name changed to $FUNC_NAME."
+            fi
+        fi
+
+        if [[ $UPDATE -eq 1 ]]; then 
             # If the data file is not installed in the default location,
             # Update the executable to use the custom location
             if [[ "${INSTALLED_COMPS['path_to_data_file']}" != \
                 "${DEFAULTS['target_dir']}/${DEFAULTS['data_file']}" ]]; then
                 ch_datafile_loc
-            fi
-
-            # If the function name of the active installation is not the default (pd), 
-            # then update the executable to use the custom function name
-            # Or if the user has chosen to update the name of the function during an in-place update,
-            # use the function name provided by the user.
-            if [[ $CH_FUNC_NAME -eq 1 || "${INSTALLED_COMPS['func_name']}" != "${DEFAULTS['func_name']}" ]]; then
-                if [[ $CH_FUNC_NAME -eq 0 ]]; then
-                    FUNC_NAME="${INSTALLED_COMPS['func_name']}"
-                fi
-                ch_func_name
-                if [[ $CH_FUNC_NAME -eq 1 ]]; then
-                    # Update bootstrap script in profile
-                    sed -i "/## Park Directories ##/,/## End Park Directories ##/ s/FUNC_NAME=.*/FUNC_NAME=$FUNC_NAME/" "${INSTALLED_COMPS['profile']}"
-                    # Update log file data
-                    sed -i "s/func_name .*/func_name $FUNC_NAME/" "$INSTALLED_COMPS['path_to_log_file']"
-                    echo -e "$CHAR_SUCCESS Function name changed to $FUNC_NAME."
-                fi
             fi
 
             # Copy the executable to the location of the executable recorded in the installation log file
@@ -129,34 +131,26 @@ function update {
             ## Clean up
             cleanup
             echo -e "Update complete."
-            echo "Please restart your terminal or run the following to get the latest features:"
-            if [[ $CH_FUNC_NAME -eq 1 ]]; then
-                echo "    unset -f ${INSTALLED_COMPS['func_name']}"
-            fi
-            echo "    source ${INSTALLED_COMPS['profile']}"
-        # If Park Directories is only partially installed, report on the installed components and exit.
-        elif [[ $INSTALLED_COMPS_CODE -gt $COMP_NONE && $INSTALLED_COMPS_CODE -lt $INSTALL_VALID ]]; then
-            report_installed_comps
-            echo -e "Cannot continue with update until Parked Directories is properly installed.\n"
-            exit 21
-
-        # If Park Directories is not installed, ask the user to install and exit.
-        elif [[ $INSTALLED_COMPS_CODE -eq $COMP_NONE ]]; then
-            echo -e "Park Directories is not yet installed."
-            echo -e "Please run ./install.sh --help to review your installation options.\n"
-            exit 22
         fi
-    elif [[ $CH_FUNC_NAME -eq 1 ]]; then
-        EXECUTABLE_SOURCE="${INSTALLED_COMPS['path_to_executable']}"
-        ch_func_name
-        # Update bootstrap script in profile
-        sed -i "/## Park Directories ##/,/## End Park Directories ##/ s/FUNC_NAME=.*/FUNC_NAME=$FUNC_NAME/" "${INSTALLED_COMPS['profile']}"
-        # Update log file data
-        sed -i "s/func_name .*/func_name $FUNC_NAME/" "$INSTALLED_COMPS['path_to_log_file']"
-        echo "$CHAR_SUCCESS Function name changed to $FUNC_NAME."
+
         echo "Please restart your terminal or run the following:"
-        echo "    unset -f ${INSTALLED_COMPS['func_name']}"
-        echo "    source ${INSTALLED_COMPS['profile']}"
+        if [[ $CH_FUNC_NAME -eq 1 ]]; then
+            echo "    unset -f ${INSTALLED_COMPS['func_name']}"
+        fi
+        if [[ $UPDATE -eq 1 ]]; then
+            echo "    source ${INSTALLED_COMPS['profile']}"
+        fi
+    # If Park Directories is only partially installed, report on the installed components and exit.
+    elif [[ $INSTALLED_COMPS_CODE -gt $COMP_NONE && $INSTALLED_COMPS_CODE -lt $INSTALL_VALID ]]; then
+        report_installed_comps
+        echo -e "Cannot continue with update until Parked Directories is properly installed.\n"
+        exit 21
+
+    # If Park Directories is not installed, ask the user to install and exit.
+    elif [[ $INSTALLED_COMPS_CODE -eq $COMP_NONE ]]; then
+        echo -e "Park Directories is not yet installed."
+        echo -e "Please run ./install.sh --help to review your installation options.\n"
+        exit 22
     fi
 }
 
