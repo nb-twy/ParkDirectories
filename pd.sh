@@ -32,7 +32,7 @@
 
 pd() {
     local pdFile="$HOME/.pd-data"
-    local PD_VERSION="1.13.0"
+    local PD_VERSION="1.13.1"
 
     # Resolve the directory from the ref name
     # Expected input: REF
@@ -318,7 +318,7 @@ shift 1
             *)  # Navigate to parked directory
                 resolve_dir "$1"
                 if [[ -n "$PARKED_DIR" ]]; then
-                    cd "$PARKED_DIR" || exit 50
+                    cd "$PARKED_DIR" || return 50
                 fi
                 shift 1
                 ;;
