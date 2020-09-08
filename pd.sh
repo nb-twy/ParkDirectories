@@ -32,7 +32,7 @@
 
 pd() {
     local pdFile="$HOME/.pd-data"
-    local PD_VERSION="1.13.1"
+    local PD_VERSION="2.0.0-rc1"
 
     # Resolve the directory from the ref name
     # Expected input: REF
@@ -328,3 +328,37 @@ shift 1
     unset -f resolve_dir
 }
 
+_pd_complete() {
+# Alias the current word on the command line since we're going to be using it a lot
+CWORD="${COMP_WORDS[$COMP_CWORD]}"
+if [[ ${#COMP_WORDS[@]} -gt 1 && \
+    ! -z "$CWORD" && \
+    "$CWORD" != -* && \
+    "$CWORD" == */* ]]; then
+    # Do not add a space after inserting a match
+    compopt -o nospace
+    # Expand the parked name
+    ## Split the argument at the last /
+    ## Use the second token, if there is one, to match any directories
+    local TARGET_REF="${CWORD%/*}"
+    local PREFIX="${CWORD##*/}"
+    #echo -e "\n[.] TARGET_REF: $TARGET_REF -- PREFIX: $PREFIX" 1>&2
+    ## Use PD to expand the first token to the target directory
+    local TARGET_DIR="$(pd -x "$TARGET_REF")"
+    #echo -e "\n[.] TARGET_DIR: $TARGET_DIR" 1>&2
+    # Find directories in TARGET_DIR
+    local DIRS=($(find "$TARGET_DIR" -mindepth 1 -maxdepth 1 -type d -iname "$PREFIX*"))
+    local NUM_DIRS=${#DIRS[@]}
+    # If there is only one match found, construct the suggestion from the original
+    # TARGET_REF followed by the found directory.
+    if [[ $NUM_DIRS -eq 1 ]]; then
+        COMPREPLY=("$TARGET_REF/""${DIRS[0]##*/}/")
+    else
+        for i in $(seq 0 $((NUM_DIRS - 1))); do
+            COMPREPLY+=("${DIRS[$i]##*/}")
+        done
+    fi
+fi
+}
+
+complete -F _pd_complete pd
