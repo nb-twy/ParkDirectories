@@ -56,8 +56,8 @@ pd() {
     fi
 
     if [[ ! -f "$pdFile" ]]; then
-        touch "$pdFile" || return 60
-        chmod 660 "$pdFile" || return 61
+        touch "$pdFile"
+        chmod 660 "$pdFile"
     fi
     
     while [[ $# -gt 0 ]]; do
@@ -131,8 +131,7 @@ shift 1
                     if [[ $2 != *"/"* && "$2" != -* ]]; then
                         ref="$2"
                     else
-                        echo "ERROR: Reference name may not contain '/' or begin with '-'"
-                        return 11
+                        echo "[ERROR] Reference name may not contain '/' or begin with '-'"
                     fi
 
                     # If the second argument after the option identifier is not another option
@@ -153,9 +152,8 @@ shift 1
                         echo "Added: $ref --> $ADD_TARGET"
                     fi
                 else
-                    echo "ERROR: The add option takes one argument to park the current directory"
+                    echo "[ERROR] The add option takes one argument to park the current directory"
                     echo "       or two arguments to park a directory by its full path."
-                    return 10
                 fi
                 ;;
             -d|--del)   # Delete a bookmarked directory
@@ -172,8 +170,7 @@ shift 1
                     fi
                     shift 2
                 else
-                    echo "ERROR: The delete option requires one argument."
-                    return 20
+                    echo "[ERROR] The delete option requires one argument."
                 fi
                 ;;
             -l|--list)  # List all of the bookmarked directories
@@ -183,7 +180,7 @@ shift 1
                 else
                     # List all parked directories
                     echo
-                    cat "$pdFile" || return 30
+                    cat "$pdFile"
                     echo
                 fi
                 shift 1
@@ -195,7 +192,6 @@ shift 1
                     echo "Removed all parked directories"
                 else
                     echo "Could not remove all parked directories"
-                    return 40
                 fi
                 shift 1
                 ;;
@@ -214,13 +210,12 @@ shift 1
                         shift 1
                     elif [[ "$2" == "--quiet" ]]; then
                         IMPORT_ACTION=$IMPORT_OVERWRITE_QUIET  # Overwrite without warning
-                        : > "$pdFile" || return 73
+                        : > "$pdFile"
                         echo "Contents of data file cleared"
                         shift 1
                     fi
                 else
-                    echo "ERROR: Import requires at least one argument"
-                    return 71
+                    echo "[ERROR] Import requires at least one argument"
                 fi
                 if [[ $# -gt 1 && "$2" != -* && -f "$2" ]]; then
                     # If the import is set to overwrite the data file, warn the user
@@ -238,20 +233,19 @@ shift 1
                             case $CHOICE in
                                 b|B)  # Backup data file, clear the contents, and continue
                                     local DATA_BACKUP="$pdFile-$(date +%s).bck"
-                                    cp "$pdFile" "$DATA_BACKUP" || return 72
+                                    cp "$pdFile" "$DATA_BACKUP"
                                     echo "Data file backed up to $DATA_BACKUP"
-                                    : > "$pdFile" || return 73
+                                    : > "$pdFile"
                                     echo "Contents of data file cleared"
                                     break
                                     ;;
                                 c|C)  # Clear the contents of the data file and continue
-                                    : > "$pdFile" || return 73
+                                    : > "$pdFile"
                                     echo "Contents of data file cleared"
                                     break
                                     ;;
-                                a|A)  # Return with exit code 74
+                                a|A)  # Abort import
                                     echo -e "Import aborted!"
-                                    return 74
                                     ;;
                                 *)
                                     echo -e "[!] Please answer [b/c/a]"
@@ -268,15 +262,14 @@ shift 1
                                 # Write the entry to the data file
                                 echo "$ref $path" >> "$pdFile"
                             else
-                                echo "ERROR: Directory must exist   $path"
+                                echo "[ERROR] Directory must exist   $path"
                             fi
                         else
-                            echo "ERROR: Reference name may not start with '-' or include '/'   $ref"
+                            echo "[ERROR] Reference name may not start with '-' or include '/'   $ref"
                         fi
                     done < "$2"
                 else
-                    echo "ERROR: Import requires a properly formatted file path"
-                    return 70
+                    echo "[ERROR] Import requires a properly formatted file path"
                 fi
                 echo -e "Import complete\n"
                 shift 2
@@ -290,12 +283,10 @@ shift 1
                     if cat "$pdFile" >> "$2"; then
                         echo "List of parked directories exported to $2"
                     else
-                        echo "ERROR: Failed to export list of parked directories"
-                        return 60
+                        echo "[ERROR] Failed to export list of parked directories"
                     fi
                 else
-                    echo "ERROR: Export requires a valid path to the target file."
-                    return 61
+                    echo "[ERROR] Export requires a valid path to the target file."
                 fi
                 shift 2
                 ;;
@@ -312,13 +303,13 @@ shift 1
                 shift 2
                 ;;
             -*|--*) # Catch any unknown arguments
-                echo "$1  ERROR: Unknown argument"
+                echo "$1  [ERROR] Unknown argument"
                 shift 1
                 ;;
             *)  # Navigate to parked directory
                 resolve_dir "$1"
                 if [[ -n "$PARKED_DIR" ]]; then
-                    cd "$PARKED_DIR" || return 50
+                    cd "$PARKED_DIR"
                 fi
                 shift 1
                 ;;
@@ -330,35 +321,39 @@ shift 1
 
 _pd_complete() {
 # Alias the current word on the command line since we're going to be using it a lot
-CWORD="${COMP_WORDS[$COMP_CWORD]}"
-if [[ ${#COMP_WORDS[@]} -gt 1 && \
-    ! -z "$CWORD" && \
-    "$CWORD" != -* && \
-    "$CWORD" == */* ]]; then
-    # Do not add a space after inserting a match
-    compopt -o nospace
-    # Expand the parked name
-    ## Split the argument at the last /
-    ## Use the second token, if there is one, to match any directories
-    local TARGET_REF="${CWORD%/*}"
-    local PREFIX="${CWORD##*/}"
-    #echo -e "\n[.] TARGET_REF: $TARGET_REF -- PREFIX: $PREFIX" 1>&2
-    ## Use PD to expand the first token to the target directory
-    local TARGET_DIR="$(pd -x "$TARGET_REF")"
-    #echo -e "\n[.] TARGET_DIR: $TARGET_DIR" 1>&2
-    # Find directories in TARGET_DIR
-    local DIRS=($(find "$TARGET_DIR" -mindepth 1 -maxdepth 1 -type d -iname "$PREFIX*"))
-    local NUM_DIRS=${#DIRS[@]}
-    # If there is only one match found, construct the suggestion from the original
-    # TARGET_REF followed by the found directory.
-    if [[ $NUM_DIRS -eq 1 ]]; then
-        COMPREPLY=("$TARGET_REF/""${DIRS[0]##*/}/")
-    else
-        for i in $(seq 0 $((NUM_DIRS - 1))); do
-            COMPREPLY+=("${DIRS[$i]##*/}")
-        done
+    CWORD="${COMP_WORDS[$COMP_CWORD]}"
+    if [[ ${#COMP_WORDS[@]} -gt 1 && \
+        ! -z "$CWORD" && \
+        "$CWORD" != -* && \
+        "$CWORD" == */* ]]; then
+        # Do not add a space after inserting a match
+        compopt -o nospace -o filenames
+        # Expand the parked name
+        ## Split the argument at the last /
+        ## Use the second token, if there is one, to match any directories
+        local TARGET_REF="${CWORD%/*}"
+        local PREFIX="${CWORD##*/}"
+        ## Use PD to expand the first token to the target directory
+        local TARGET_DIR="$(pd -x "$TARGET_REF")"
+        # If the target directory could not be resolved, print message on a new line
+        if [[ "$TARGET_DIR" == *"No parked directory"* ]]; then
+            echo -e "\n$TARGET_DIR"
+            return
+        fi
+        # Find directories in TARGET_DIR
+        local DIRS=($(find "$TARGET_DIR" -mindepth 1 -maxdepth 1 -type d -iname "$PREFIX*"))
+        local NUM_DIRS=${#DIRS[@]}
+        # If there is only one match found, construct the suggestion from the original
+        # TARGET_REF followed by the found directory.
+        if [[ $NUM_DIRS -eq 1 ]]; then
+            COMPREPLY=("$TARGET_REF/""${DIRS[0]##*/}/")
+        else
+            for i in $(seq 0 $((NUM_DIRS - 1))); do
+                COMPREPLY+=("$TARGET_REF/""${DIRS[$i]##*/}")
+            done
+        fi
     fi
-fi
+
 }
 
 complete -F _pd_complete pd
