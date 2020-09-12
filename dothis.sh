@@ -24,7 +24,7 @@ _dothis_complete2() {
         "$CWORD" != -* && \
         "$CWORD" == */* ]]; then
         # Do not add a space after inserting a match
-        compopt -o nospace
+        compopt -o nospace -o filenames
         # Expand the parked name
         ## Split the argument at the last /
         ## Use the second token, if there is one, to match any directories
@@ -43,11 +43,36 @@ _dothis_complete2() {
             COMPREPLY=("$TARGET_REF/""${DIRS[0]##*/}/")
         else
             for i in $(seq 0 $((NUM_DIRS - 1))); do
-                COMPREPLY+=("${DIRS[$i]##*/}")
+                COMPREPLY+=("$TARGET_REF/""${DIRS[$i]##*/}")
             done
         fi
     fi
 
+}
+
+_dothis_complete3() {
+    SUGS=("hello" "hi" "hill" "hunt" "horn" "cross" "crutch" "crumb" "cliff" "climb" "clip")
+    CW="$(_get_cword)"
+    for i in $(seq 0 $((${#SUGS[@]} - 1))); do
+        if [[ "${SUGS[$i]}" == "$CW"* ]]; then
+            COMPREPLY+=("${SUGS[$i]}")
+        fi
+    done
+}
+
+_dothis_complete4() {
+    SUGS=("hello" "hi" "hill" "hunt" "horn" "cross" "crutch" "crumb" "cliff" "climb" "clip")
+    SUGS_STR="${SUGS[@]}"
+    CW="$(_get_cword)"
+    COMPREPLY=()
+    COMPREPLY+=($(compgen -W "$SUGS_STR" -- "$CW"))
+}
+
+_dothis_complete5() {
+    CW="$(_get_cword)"
+    compopt -o filenames
+    COMPREPLY=()
+    COMPREPLY+=($(compgen -d -- "$(pd -x "$CW")"))
 }
 
 complete -F _dothis_complete2 dothis
