@@ -32,7 +32,7 @@
 
 pd() {
     local pdFile="$HOME/.pd-data"
-    local PD_VERSION="2.0.0-rc1"
+    local PD_VERSION="2.1.0-rc1"
 
     # Resolve the directory from the ref name
     # Expected input: REF
