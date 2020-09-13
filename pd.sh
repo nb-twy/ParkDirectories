@@ -32,7 +32,7 @@
 
 pd() {
     local pdFile="$HOME/.pd-data"
-    local PD_VERSION="2.1.0-rc1"
+    local PD_VERSION="2.2.0-rc1"
 
     # Resolve the directory from the ref name
     # Expected input: REF
@@ -382,7 +382,7 @@ elif [[ "$CWORD" != -* ]]; then
                 fi
             fi
         fi
-    done <<< "$(pd -l)"
+    done < <(pd -l)
     # If there is only one match, add it with a trailing / so that autocomplete
     # can continue for relative paths.
     if [[ ${#REFS[@]} -eq 1 ]]; then
@@ -390,6 +390,17 @@ elif [[ "$CWORD" != -* ]]; then
     else
         COMPREPLY+=("${REFS[@]}")
     fi
+
+# Option Completion
+## Begin with long option completion
+elif [[ "$CWORD" == --* ]]; then
+    local OPTIONS="--add --del --list --clear --expand --export --import --version --help"
+    local IFS=$' \t\n'
+    COMPREPLY+=($(compgen -W "$OPTIONS" -- "$CWORD"))
+elif [[ "$CWORD" == -* ]]; then
+    local OPTIONS="-a -d -l -c -x -e -i -v -h"
+    local IFS=$' \t\n'
+    COMPREPLY=($(compgen -W "$OPTIONS" -- "$CWORD"))
 fi
 
 }
