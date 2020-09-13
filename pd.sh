@@ -302,14 +302,14 @@ shift 1
                 fi
                 shift 2
                 ;;
-            -*|--*) # Catch any unknown arguments
+            --*|-*) # Catch any unknown arguments
                 echo "$1  [ERROR] Unknown argument"
                 shift 1
                 ;;
             *)  # Navigate to parked directory
                 resolve_dir "$1"
                 if [[ -n "$PARKED_DIR" ]]; then
-                    cd "$PARKED_DIR"
+                    cd "$PARKED_DIR" || return
                 fi
                 shift 1
                 ;;
@@ -321,38 +321,76 @@ shift 1
 
 _pd_complete() {
 # Alias the current word on the command line since we're going to be using it a lot
-    CWORD="${COMP_WORDS[$COMP_CWORD]}"
-    if [[ ${#COMP_WORDS[@]} -gt 1 && \
-        ! -z "$CWORD" && \
-        "$CWORD" != -* && \
-        "$CWORD" == */* ]]; then
-        # Do not add a space after inserting a match
-        compopt -o nospace -o filenames
-        # Expand the parked name
-        ## Split the argument at the last /
-        ## Use the second token, if there is one, to match any directories
-        local TARGET_REF="${CWORD%/*}"
-        local PREFIX="${CWORD##*/}"
-        ## Use PD to expand the first token to the target directory
-        local TARGET_DIR="$(pd -x "$TARGET_REF")"
-        # If the target directory could not be resolved, print message on a new line
-        if [[ "$TARGET_DIR" == *"No parked directory"* ]]; then
-            echo -e "\n$TARGET_DIR"
-            return
-        fi
-        # Find directories in TARGET_DIR
-        local DIRS=($(find "$TARGET_DIR" -mindepth 1 -maxdepth 1 -type d -iname "$PREFIX*"))
-        local NUM_DIRS=${#DIRS[@]}
-        # If there is only one match found, construct the suggestion from the original
-        # TARGET_REF followed by the found directory.
-        if [[ $NUM_DIRS -eq 1 ]]; then
-            COMPREPLY=("$TARGET_REF/""${DIRS[0]##*/}/")
-        else
-            for i in $(seq 0 $((NUM_DIRS - 1))); do
-                COMPREPLY+=("$TARGET_REF/""${DIRS[$i]##*/}")
-            done
-        fi
+CWORD="${COMP_WORDS[$COMP_CWORD]}"
+# Autocomplete relative path
+## Need more than one command line argument, it cannot be empty, it cannot begin with
+## a - and must include a /.
+if [[ ${#COMP_WORDS[@]} -gt 1 && \
+    ! -z "$CWORD" && \
+    "$CWORD" != -* && \
+    "$CWORD" == */* ]]; then
+    # Do not add a space after inserting a match
+    compopt -o nospace -o filenames
+    # Expand the parked name
+    ## Split the argument at the last /
+    ## Use the second token, if there is one, to match any directories
+    local TARGET_REF="${CWORD%/*}"
+    #echo -e "\nTARGET_REF: $TARGET_REF"
+    local PREFIX="${CWORD##*/}"
+    #echo -e "\nPREFIX: $PREFIX"
+    ## Use PD to expand the first token to the target directory
+    local STD_IFS=$' \t\n'
+    local IFS=$'\n'
+    local TARGET_DIR="$(pd -x "$TARGET_REF")"
+    #echo -e "\nTARGET_DIR: $TARGET_DIR"
+    # If the target directory could not be resolved, print message on a new line
+    if [[ "$TARGET_DIR" == *"No parked directory"* ]]; then
+        echo -e "\n$TARGET_DIR"
+        return
     fi
+    # Find directories in TARGET_DIR
+    #echo -e "\nTARGET_DIR to search: $TARGET_DIR"
+    local DIRS=($(find "${TARGET_DIR//\\/}" -mindepth 1 -maxdepth 1 -type d -iname "$PREFIX*"))
+    #echo -e "\nDIRS: ${DIRS[@]}"
+    IFS=$STD_IFS
+    local NUM_DIRS=${#DIRS[@]}
+    #echo -e "\nNUM_DIRS: $NUM_DIRS"
+    # If there is only one match found, construct the suggestion from the original
+    # TARGET_REF followed by the found directory.
+    #echo -e "\nTARGET_REF: $TARGET_REF"
+    if [[ $NUM_DIRS -eq 1 ]]; then
+        COMPREPLY=("${TARGET_REF//\\/}/""${DIRS[0]##*/}/")
+    else
+        for i in $(seq 0 $((NUM_DIRS - 1))); do
+            COMPREPLY+=("${TARGET_REF//\\/}/""${DIRS[$i]##*/}")
+        done
+    fi
+elif [[ "$CWORD" != -* ]]; then
+    # Do not add a space after inserting a match
+    compopt -o nospace
+    local REFS
+    while IFS=' ' read -r ref target; do
+        if [[ -n "$ref" ]]; then
+            # If the current word is empty, select all refs.
+            if [[ -z "$CWORD" ]]; then
+                REFS+=("$ref")
+            else
+                # If the current word is not empty, only select refs
+                # that begin with current word.
+                if [[ "$ref" == "$CWORD"* ]]; then
+                    REFS+=("$ref")
+                fi
+            fi
+        fi
+    done <<< "$(pd -l)"
+    # If there is only one match, add it with a trailing / so that autocomplete
+    # can continue for relative paths.
+    if [[ ${#REFS[@]} -eq 1 ]]; then
+        COMPREPLY=("${REFS[0]}/")
+    else
+        COMPREPLY+=("${REFS[@]}")
+    fi
+fi
 
 }
 

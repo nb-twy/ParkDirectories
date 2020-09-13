@@ -7,7 +7,10 @@
 - [ ] Modify install and update to replace instances of the command name
       (i.e. pd) with the custom name
 
-- [ ] Autocomplete aliases
+- [x] Autocomplete aliases
+      * If the current word does not end with a /, search available aliases for possible matches.
+      * If there is a single match, complete it and finish the string with / so that autocomplete
+        can continue to work on the relative path.
 - [ ] Autocomplete options
 
 - [ ] When using pd -a ref /full/path
