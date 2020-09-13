@@ -11,7 +11,14 @@
       * If the current word does not end with a /, search available aliases for possible matches.
       * If there is a single match, complete it and finish the string with / so that autocomplete
         can continue to work on the relative path.
-- [ ] Autocomplete options
+- [x] Autocomplete options
+- [ ] Autocomplete logic should consider arguments
+      * -h|--help, -a|--add, -l|--list, -c|--clear, -e|--export, -v|--version --> do nothing
+      * -d|--del, -x|--expand --> autocomplete ref names
+      * -i|--import --> autocomplete filenames
+        - in current path if none given
+        - in specified path if an absolute or relative path provided
+        - This should be normal filename completion; maybe use the built-in filename completion.
 
 - [ ] When using pd -a ref /full/path
   * Should we check to make sure that the target path exists?
