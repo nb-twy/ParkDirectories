@@ -32,7 +32,7 @@
 
 pd() {
     local pdFile="$HOME/.pd-data"
-    local PD_VERSION="2.2.0-rc1"
+    local PD_VERSION="2.3.0-rc1"
 
     # Resolve the directory from the ref name
     # Expected input: REF
@@ -322,6 +322,12 @@ shift 1
 _pd_complete() {
 # Alias the current word on the command line since we're going to be using it a lot
 CWORD="${COMP_WORDS[$COMP_CWORD]}"
+# Alias the previous word on the command line
+PWORD="${COMP_WORDS[$COMP_CWORD - 1]}"
+
+# If the previous word is an option (begins with a -), then perform autocomplete only
+# for delete, expand, and import.  Otherwise, simply return.
+## Perform ref name completion with delete and expand
 # Autocomplete relative path
 ## Need more than one command line argument, it cannot be empty, it cannot begin with
 ## a - and must include a /.
@@ -365,30 +371,45 @@ if [[ ${#COMP_WORDS[@]} -gt 1 && \
             COMPREPLY+=("${TARGET_REF//\\/}/""${DIRS[$i]##*/}")
         done
     fi
+# Autocomplete ref names
 elif [[ "$CWORD" != -* ]]; then
-    # Do not add a space after inserting a match
-    compopt -o nospace
-    local REFS
-    while IFS=' ' read -r ref target; do
-        if [[ -n "$ref" ]]; then
-            # If the current word is empty, select all refs.
-            if [[ -z "$CWORD" ]]; then
-                REFS+=("$ref")
-            else
-                # If the current word is not empty, only select refs
-                # that begin with current word.
-                if [[ "$ref" == "$CWORD"* ]]; then
+    local REF_NAME_COMPOPTS=("-d" "--del" "-x" "--expand")
+    local REF_NAME_COMPLETE=0
+    if [[ "$PWORD" == "${COMP_WORDS[0]}" ]]; then
+        REF_NAME_COMPLETE=1
+    elif [[ "$PWORD" == -* ]]; then
+        for opt in "${REF_NAME_COMPOPTS[@]}"; do
+            if [[ "$PWORD" == "$opt" ]]; then
+                REF_NAME_COMPLETE=1
+            fi
+        done
+    fi
+
+    if [[ $REF_NAME_COMPLETE -eq 1 ]]; then
+        # Do not add a space after inserting a match
+        compopt -o nospace
+        local REFS=()
+        while IFS=' ' read -r ref target; do
+            if [[ -n "$ref" ]]; then
+                # If the current word is empty, select all refs.
+                if [[ -z "$CWORD" ]]; then
                     REFS+=("$ref")
+                else
+                    # If the current word is not empty, only select refs
+                    # that begin with current word.
+                    if [[ "$ref" == "$CWORD"* ]]; then
+                        REFS+=("$ref")
+                    fi
                 fi
             fi
+        done < <(pd -l)
+        # If there is only one match, add it with a trailing / so that autocomplete
+        # can continue for relative paths.
+        if [[ ${#REFS[@]} -eq 1 ]]; then
+            COMPREPLY=("${REFS[0]}/")
+        else
+            COMPREPLY+=("${REFS[@]}")
         fi
-    done < <(pd -l)
-    # If there is only one match, add it with a trailing / so that autocomplete
-    # can continue for relative paths.
-    if [[ ${#REFS[@]} -eq 1 ]]; then
-        COMPREPLY=("${REFS[0]}/")
-    else
-        COMPREPLY+=("${REFS[@]}")
     fi
 
 # Option Completion

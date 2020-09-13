@@ -13,9 +13,9 @@
         can continue to work on the relative path.
 - [x] Autocomplete options
 - [ ] Autocomplete logic should consider arguments
-      * -h|--help, -a|--add, -l|--list, -c|--clear, -e|--export, -v|--version --> do nothing
-      * -d|--del, -x|--expand --> autocomplete ref names
-      * -i|--import --> autocomplete filenames
+      - [x] -h|--help, -a|--add, -l|--list, -c|--clear, -e|--export, -v|--version --> do nothing
+      - [x] -d|--del, -x|--expand --> autocomplete ref names
+      - [ ] -i|--import --> autocomplete filenames
         - in current path if none given
         - in specified path if an absolute or relative path provided
         - This should be normal filename completion; maybe use the built-in filename completion.
