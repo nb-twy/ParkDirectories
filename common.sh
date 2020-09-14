@@ -72,7 +72,14 @@ function ch_func_name {
     # Make a copy of the executable
     local TMP="tmp-$(date +%s).sh"
     cp "$EXECUTABLE_SOURCE" "$TMP" || exit 31
-    sed -r -e "s|$ORIG_FUNC_NAME\(\) \{|$FUNC_NAME\(\) \{|" -e "s|(usage: )$ORIG_FUNC_NAME|\1$FUNC_NAME|" -e "s|$ORIG_FUNC_NAME |$FUNC_NAME |g" "$TMP" > "$EXECUTABLE_SOURCE"
+    local ORIG_AC_FUNC_NAME="_""$ORIG_FUNC_NAME""_complete"
+    local NEW_AC_FUNC_NAME="_""$FUNC_NAME""_complete"
+    sed -r -e "s|$ORIG_FUNC_NAME\(\) \{|$FUNC_NAME\(\) \{|" \
+        -e "s|(usage:) $ORIG_FUNC_NAME|\1$FUNC_NAME|" \
+        -e "s|$ORIG_FUNC_NAME |$FUNC_NAME |g" \
+        -e "s|$ORIG_AC_FUNC_NAME\(\)|$NEW_AC_FUNC_NAME\(\)|" \
+        -e "s|$ORIG_AC_FUNC_NAME $ORIG_FUNC_NAME|$NEW_AC_FUNC_NAME $FUNC_NAME|" \
+        "$TMP" > "$EXECUTABLE_SOURCE"
     # Remove the tmp file
     rm "$TMP"
 }
