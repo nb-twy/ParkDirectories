@@ -335,7 +335,8 @@ if [[ ${#COMP_WORDS[@]} -gt 1 && \
     ! -z "$CWORD" && \
     "$CWORD" != -* && \
     "$CWORD" == */* && \
-    "$PWORD" != -* ]]; then
+    "$PWORD" != -* && \
+    "${COMP_WORDS[$COMP_CWORD -2]}" != *"-a"* ]]; then
     # Do not add a space after inserting a match
     compopt -o nospace -o filenames
     # Expand the parked name
@@ -374,7 +375,9 @@ if [[ ${#COMP_WORDS[@]} -gt 1 && \
     fi
 
 # Use standard filedir completion from bash_completion script following -i|--import
-elif [[ "$PWORD" == "-i" || "$PWORD" == "--import" ]]; then
+elif [[ "$PWORD" == "-i" || "$PWORD" == "--import" ]] || \
+     [[ $COMP_CWORD -gt 2 && "$CWORD" == "~"* ]] || \
+     [[ $COMP_CWORD -gt 2 && "$CWORD" == *"/"* ]]; then
     compopt -o filenames
     COMPREPLY=($(compgen -f -- "$CWORD"))
 

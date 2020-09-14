@@ -4,7 +4,7 @@
       and instead, just replaced the entire CWORD with the prefix and not
       a resolved directory.
 - [x] If pd -x exits with error, show error on new line
-- [ ] Modify install and update to replace instances of the command name
+- [x] Modify install and update to replace instances of the command name
       (i.e. pd) with the custom name
 
 - [x] Autocomplete aliases
@@ -19,7 +19,8 @@
         - in current path if none given
         - in specified path if an absolute or relative path provided
         - This should be normal filename completion; maybe use the built-in filename completion.
-
+      - [x] When using -a _ref_ _path_, allow the path to autocomplete with standard filename
+            completion.
 - [ ] When using pd -a ref /full/path
   * Should we check to make sure that the target path exists?
   * If we check and the target does not exist, we should prompt the user if they want to add the
