@@ -32,7 +32,7 @@
 
 pd() {
     local pdFile="$HOME/.pd-data"
-    local PD_VERSION="2.3.0-rc1"
+    local PD_VERSION="2.0.0"
 
     # Resolve the directory from the ref name
     # Expected input: REF
@@ -375,12 +375,15 @@ if [[ ${#COMP_WORDS[@]} -gt 1 && \
     fi
 
 # Use standard filedir completion from bash_completion script following -i|--import
-elif [[ "$PWORD" == "-i" || "$PWORD" == "--import" ]] || \
-     [[ $COMP_CWORD -gt 2 && "$CWORD" == "~"* ]] || \
-     [[ $COMP_CWORD -gt 2 && "$CWORD" == *"/"* ]]; then
+elif [[ "$PWORD" == "-i" || "$PWORD" == "--import" ]]; then
     compopt -o filenames
     COMPREPLY=($(compgen -f -- "$CWORD"))
 
+elif [[ $COMP_CWORD -gt 2 && "${COMP_WORDS[$COMP_CWORD -2]}" == *"-a"* && "$CWORD" == "~"* ]] || \
+     [[ $COMP_CWORD -gt 2 && "${COMP_WORDS[$COMP_CWORD -2]}" == *"-a"* && "$CWORD" == *"/"* ]]; then
+    compopt -o filenames
+    COMPREPLY=($(compgen -d -- "$CWORD"))
+ 
 # Autocomplete ref names
 elif [[ "$CWORD" != -* ]]; then
     local REF_NAME_COMPOPTS=("-d" "--del" "-x" "--expand")
