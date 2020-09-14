@@ -8,7 +8,6 @@ source "$CWD/defaults.sh"
 EXECUTABLE_SOURCE="${DEFAULTS["executable_source"]}"
 EXECUTABLE_DEST="${DEFAULTS['executable_name']}"
 LOGFILE="${DEFAULTS['logfile']}"
-OLD_LOGFILE="${DEFAULTS['old_logfile']}"
 TARGET_DIR="${DEFAULTS['target_dir']}"
 DATA_FILE="${DEFAULTS['data_file']}"
 FUNC_NAME="${DEFAULTS['func_name']}"
@@ -25,8 +24,6 @@ function parse_logfile {
     # Until then, check for old log file and use it if the new log file does not exist.
     if [[ -f "$LOGFILE" ]]; then
         local CUR_LOGFILE="$LOGFILE"
-    elif [[ -f "$OLD_LOGFILE" ]]; then
-        local CUR_LOGFILE="$OLD_LOGFILE"
     else
         return 25
     fi
@@ -191,10 +188,6 @@ function report_installed_comps {
 
     # Installation log file
     if [[ $(( INSTALLED_COMPS_CODE & COMP_LOG_FILE )) -eq $COMP_LOG_FILE ]]; then
-        if [[ ${INSTALLED_COMPS['path_to_log_file']} == "$OLD_LOGFILE" ]]; then
-            echo -e "$CHAR_FAIL  Old installation log file is stil in use @ ${INSTALLED_COMPS['path_to_log_file']}"
-            echo -e "    Please run ./update.sh to use the new log file location."
-        fi
         if [[ ${INSTALLED_COMPS['path_to_log_file']} == "$LOGFILE" ]]; then
             echo -e "$CHAR_SUCCESS  Installation log file located @ ${INSTALLED_COMPS['path_to_log_file']}"
         fi

@@ -81,12 +81,6 @@ function update {
     if [[ $INSTALLED_COMPS_CODE -eq $INSTALL_VALID ]]; then
         echo -e "Park Directories is installed properly."
 
-        # If old installation log file is still in use, remove it and write a new one in the new location.
-        if [[ "${INSTALLED_COMPS['path_to_log_file']}" == "$OLD_LOGFILE" ]]; then
-            mv "$OLD_LOGFILE" "$LOGFILE"
-            echo -e "$CHAR_SUCCESS  Moved installation log file from $OLD_LOGFILE to $LOGFILE"
-        fi
-
         TARGET_DIR="$(dirname ${INSTALLED_COMPS['path_to_data_file']})"
         DATA_FILE="$(basename ${INSTALLED_COMPS['path_to_data_file']})"
         
