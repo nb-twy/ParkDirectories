@@ -545,11 +545,41 @@ Park Directories is not a complicated application.  A proper installation consis
 You can try using `uninstall.sh` to clean up.  As described below, it will try to use the installation log file to remove a proper installation.  It will also attempt to remove any of the components it can find through locating defaults and matching signatures.  If the automatic uninstall does not clean things up for a fresh new installation, then follow the instructions to perform a [manual uninstall](#bookmark_to_manual_uninstall).
 
 ### Step-by-Step Investigation
-**Executable**  
+If you don't want to try to uninstall Park Directories and reinstall it to fix a broken installation, you can diagnose the problem and try to fix it manually with the following information.  
+
 **Installation Log File**  
+When Park Directories is installed, the installation details are stored in the installation log file.  By default, this file is located at `$HOME/.pd.log`.  Its contents look like this:
+```bash
+path_to_executable /home/user/pd.sh
+path_to_data_file /home/user/.pd-data
+profile /home/user/.bashrc
+func_name pd
+```
+It tells `install.sh`, `update.sh`, and `uninstall.sh` 
+1. the location of the executable
+1. the location of the data file
+1. which profile script contains the bootstrap code
+1. and the name of the function that is registered in the environment.
+
+These scripts create, modify, and remove the installation log file.  Unless something has gone horribly wrong, this file should not be modified manually.  However, if the application is saying that something is missing, it is because this log file is missing or includes the wrong information.
+
+If the file is missing, but the rest of the application components are present, you can recreate the log file by copying the example file contents shown above and replacing the values to the right of the space with the proper information.
+
+**Executable**  
+By default, the executable is called `pd.sh` and is located in the user's `$HOME` directory.  If you believe that Park Directories is installed but `pd.sh` is not in your home directory or at the location indicated in the installation log file, you can always search for it.
+```bash
+> find ~ -type f -name "pd.sh"
+```
+The installation script allows you to put the executable anywhere you'd like.  If you can't find it, it is probably best to continue to clean up the rest of the application assets and reinstall.  If your data file exists and you want to keep the current list of parked directories, you can rename the file (_e.g. _.pd-data.bck_) and use it with the `-i, --import` option of the `install.sh` script.  You can also just leave it alone and reinstall.
+
 **Data File**  
+If the data file is not located where the installation log file says it should be, the active function will recreate the data file the next time you use it.  If you know that the data file is somewhere else, you can either move it to where the installation log file says it should be or edit the log file with the correct location of the data file.
+
 **Profile Script**  
+The installation log file records which profile script contains the bootstrap code.  If the bootstrap code was moved manually to another profile script, you should update the log file with the correct location of the profile script.  The proper way to change which profile script is used to bootstrap Park Directories is to uninstall it and reinstall it with the `-p, --profile` option.
+
 **Active Function**  
+By default, the active function is called `pd`.  The function name is set in the bootstrap code located in the profile script, default is `$HOME/.bashrc`.  The name of the function in `pd.sh` and the name in the bootstrap code need to match.  If they do not, for some reason, update the information in the bootstrap code to match what is in `pd.sh`.  Normally, uninstalling and reinstalling would fix this problem automatically.
 
 
 ## Uninstalling Park Directories
