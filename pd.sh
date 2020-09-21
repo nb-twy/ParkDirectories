@@ -81,7 +81,7 @@ usage: pd [REF[/RELPATH]] [OPTION {ARG} [OPTION {ARG} ...]]
 -x, --expand NAME[/RELPATH]          Expand the referenced directory and relative path without
                                      navigating to it
 -e, --export FILE_PATH               Export current list of parked directories to FILE_PATH
--i, --import                         Import park directories entries from FILE_PATH
+-i, --import                         Import parked directories entries from FILE_PATH
     [--append | --quiet] FILE_PATH   Use -i --append FILE_PATH to add entries to the existing list
                                      Use -i --quiet FILE_PATH to overwrite current entries quietly
 -v, --version                        Display version

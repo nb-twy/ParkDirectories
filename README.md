@@ -4,17 +4,17 @@
 
 ## Introduction
 Park Directories allows a user to navigate to any directory on their system
-with the simplicity of the semantics of the _cd_ command.  Do you have a a few directories in which you work commonly: the root to your _dev_ directory, _/var/log_, the root directory of your current project?  When you open your terminal, how do you jump to one of these?  Do you have aliases for them?  Do you have to type them out with tab completion a lot?  Does it get tedious?  When you want to jump to another part of your system and stay there for a  while, are you tempted to open a new terminal window or another tab, or another _tmux_ pane so that you can come back to where you are without having to navigate back tediously?
+with the simplicity of the semantics of the _cd_ command.  Do you have a few directories in which you work commonly: the root to your _dev_ directory, _/var/log_, the root directory of your current project?  When you open your terminal, how do you jump to one of these?  Do you have aliases for them?  Do you have to type them out with tab completion a lot?  Does it get tedious?  When you want to jump to another part of your system and stay there for a  while, are you tempted to open a new terminal window or another tab, or another _tmux_ pane so that you can come back to where you are without having to navigate back tediously?
 
 There are a few popular implementations that allow us to go back to the last directory easily using the command `cd -`.  This is really handy, but what happens when you need to navigate around the tree for a bit before going back to where you were?
 
 With Park Directories, this is easy.  Park (_i.e._ bookmark or alias) the current directory by typing `pd -a NAME`.  Go wherever you'd like on your system.  When you're ready to return to where you were, type `pd NAME`, and you're back!
 
-No need to park every frequently used directory.  Park a _home base_ and navigate to directories relative to the target of the reference name: `pd dev/my_project`.
+No need to park every frequently used directory.  Park a _home base_ and navigate to directories relative to the target of the reference name: `pd proj/src`.
 
 You can use Bash's popular autocomplete feature to quickly access your parked directory aliases, directory paths relative to a target directory, short and long options, and more with the press of a `<tab>` or two.
 
-You can park any directory by providing the full path to the directory: `pd -a NAME FULL_PATH`.  This could be useful when you are getting ready to work on a project and want to park your project root, the debug build directory, the release build directory, the log directory, and maybe the deploy directory.  You could use the same generic names to reference all of these and use a script to set up your environment.  Something like the following:
+Park Directories was designed with scriptability in mind.  You can perform multiple actions on the same line, and you can park any directory by providing the full path to the directory: `pd -a NAME FULL_PATH`.  This could be useful when you are getting ready to work on a project and want to park your project root, the debug build directory, the release build directory, the log directory, and maybe the deploy directory.  You could use the same generic names to reference all of these and use a script to set up your environment.  Something like the following:
 ```bash
 #!/bin/bash
 
@@ -34,7 +34,7 @@ pd -a dep /var/www/html/super-awesome-project   # deploy directory
 > ```bash
 > $ pd -a proj/build
 > ERROR: Reference name may not contain '/'
-The references persist across instances of the terminal and reboots.
+The references persist across Bash sessions.
 
 Easily remove a bookmark with `pd -d NAME`.  Show the list of all parked directories with `pd -l`, and when you want to totally clean house, just type `pd -c` and all of the references will be removed.
 
@@ -53,7 +53,7 @@ cd ParkDirectories
 source ~/.bashrc
 ```
 
-Without any switches, _.install.sh_ will add the _pd_ command to the environment, place the Bash executable in your `$HOME` directory, and place the bootstrap code in the _.bashrc_ file.  Installation is fast!  Follow the instructions at the end of installation and run `source ~/.bashrc` or restart your terminal to bootstrap the command.  
+Without any switches, _install.sh_ will add the _pd_ command to the environment, place the Bash executable in your `$HOME` directory, and place the bootstrap code in the _.bashrc_ file.  Installation is fast!  Follow the instructions at the end of the installation and run `source ~/.bashrc` or restart your terminal to bootstrap the command.  
 
 The first time you run _pd_ with any of its options (_e.g._ `pd -h` to see the help information), the data file (_.pd-data_ by default) will be created in the same directory as the executable.  The command is not complicated, so just run `pd -h` to see all of the options in a quick view.
 
@@ -79,7 +79,7 @@ Have fun zooming around your system!
 
 ----
 ## Using Park Directories
-You can read everything you need to know from the command's help.
+Most of what you need to know to be successful with Park Directories is right in the help text.
 ```bash
 $ pd -h
 Park Directories
@@ -99,7 +99,7 @@ usage: pd [REF[/RELPATH]] [OPTION {ARG} [OPTION {ARG} ...]]
 -x, --expand NAME[/RELPATH]          Expand the referenced directory and relative path without
                                      navigating to it
 -e, --export FILE_PATH               Export current list of parked directories to FILE_PATH
--i, --import                         Import park directories entries from FILE_PATH
+-i, --import                         Import list of parked directories from FILE_PATH
     [--append | --quiet] FILE_PATH   Use -i --append FILE_PATH to add entries to the existing list
                                      Use -i --quiet FILE_PATH to overwrite current entries quietly
 -v, --version                        Display version
@@ -216,7 +216,7 @@ Added: app --> /home/user/dev/apps/MyApp
 ```
 
 ### Autocomplete Parked Directory Ref Names
-Use tab completion to quickly find the ref name you're looking for.  This works with navigation (`pd ref`), deletion (`pd -d ref`), and expansion (`pd -x ref`).
+Use tab completion to quickly find the ref name you're looking for.  This works with navigation (`pd REF`), deletion (`pd -d REF`), and expansion (`pd -x REF`).
 ```bash
 > pd d<tab><tab>
 dev dlp docs
@@ -242,7 +242,7 @@ projA   projB   projC   projD
 /home/user/dev/my_ui_project_B
 ```
 ### Autocomplete File and Directory Names
-If you are using the import feature (`pd -i mapping_file`) or parking a directory with the path (`pd -a ref path`), you can use autocomplete to easily find the file or directory.
+If you are using the import feature (`pd -i MAPPING_FILE`) or parking a directory with the path (`pd -a REF PATH`), you can use autocomplete to easily find the file or directory.
 
 ```bash
 # Look for a file to import
@@ -351,8 +351,8 @@ usage: install.sh [OPTIONS]
 OPTIONS:
 -h, --help              Display this help message and exit
 -d, --dir DIR           Set the directory where the data file and executable
-                        will be written. Use a fully-qualified path or /home/kschoener
-                        will be used as the root path. (default: /home/kschoener)
+                        will be written. Use a fully-qualified path or /home/user
+                        will be used as the root path. (default: /home/user)
 -p, --profile PROFILE   Install the bootstrap code in the specified profile file
                         Requires full path (e.g. ~/.bash_profile, ~/.bash_login)
                         (default: ~/.bashrc)
@@ -367,25 +367,29 @@ OPTIONS:
 ### Bootstrap from a Specific Profile File
 The default behavior is to append the bootstrap code in your `$HOME/.bashrc` script.  This code checks that the executable, _pd.sh_, exists and runs it.  If you'd like to have this code appended to another one of the profile scripts, use the `-p, --profile` flag:
 ```bash
-./install.sh -p ~/.bash_profile
+# Put the bootstrap code in .bash_profile
+$ ./install.sh -p ~/.bash_profile
 ```
 
 ### Location of the Executable and Data Files
-_pd.sh_ and _.pd-data_ are placed in your `$HOME` directory, by default.  Some might find it cleaner to place both in a different directory, maybe in `$HOME/pd` or in `$HOME/.local/bin`, perhaps.  Whatever your fancy, use the `-d|--dir` option to choose where you'd like the files placed.  The entire directory tree will be created automatically if it doesn't exist.
+The executable and data file (defaults: _pd.sh_ and _.pd-data_) are placed in your `$HOME` directory, by default.  Some might find it cleaner to place both in a different directory, maybe in `$HOME/pd` or in `$HOME/local/bin`, perhaps.  Whatever your fancy, use the `-d|--dir` option to choose where you'd like the files placed.  The entire directory tree will be created automatically if it doesn't exist.
 ```bash
-./install.sh -d $HOME/scripts/pd
+# Put the executable and data file in $HOME/scripts/pd
+$ ./install.sh -d $HOME/scripts/pd
 ```
 
 ### Name of the Function
 The function name, _pd_ by default, becomes a part of your environment every time your terminal loads.  With a short name like _pd_, it is possible to collide with another piece of software, function, or alias with the name _pd_.  In addition to being the initials of the name of the software (**p**ark **d**irectories), _pd_ was also chosen because the letters are typed from both hands, making it convenient and comfortable to type over and over.  You might like to use _kd_, for example, because it keeps your hands on the home keys.  Or maybe you use a different keyboard layout or speak a different language where a different mnemonic makes sense. For these reasons, among others, you can choose the name of the function by using the `--func` option.  Unlike creating an alias, this sets the name in the script that is registered in the environment.
 ```bash
-./install.sh --func kd
+# Set active function name to kd
+$ ./install.sh --func kd
 ```
 
 ### Name of the Data File
 The default name of the file used to store the nickname and full path pairs is _.pd-data_.  If you'd like to pick a different name for that file, use the `-f|--file` option.  There is rarely a strong need for this, as choosing a custom location solves most concerns, but if, for example, you prefer to call the file _.savedDirs_, you can.  Please note that the option only takes the **name** of the file, NOT a full path.
 ```bash
-./install.sh -f .savedDirs
+# Store the parked directory mappings in a file named .savedDirs
+$ ./install.sh -f .savedDirs
 ```
 
 ### Initialize Data File on Install
@@ -406,6 +410,7 @@ user@host1 $ pd -e my-parked-directories.txt
 List of parked directories exported to my-parked-directories.txt
 
 # Transfer the exported file to Host 2
+# Then install Park Directories and initialize the mappings
 user@host2 $ ./install.sh -i my-parked-directories.txt
 Installing Park Directories...
 
@@ -459,7 +464,7 @@ Please review the list above and refer to the README for possible solutions.
 **Use as Many Options as You'd Like**  
 You can mix and match as many of the options as you'd like, where it makes sense.  We can place the bootstrap code in `$HOME/.bash_profile`, the executable in `$HOME/savedDirs`, rename the data file _.savedDirs_, and use _sd_ as the function name.
 ```bash
-./install.sh -p $HOME/.bash_profile -d $HOME/savedDirs -f .savedDirs --func sd
+$ ./install.sh -p $HOME/.bash_profile -d $HOME/savedDirs -f .savedDirs --func sd
 ```
 
 `--verify` does not support any of the other options.
