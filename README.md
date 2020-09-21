@@ -1,4 +1,4 @@
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/nb-twy/ParkDirectories)
+![GitHub release (latest by date)](https://img.shields.io/badge/Version-2.0.0-success)
 
 # Park Directories
 
