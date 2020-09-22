@@ -590,7 +590,7 @@ Park Directories is not a complicated application.  A proper installation consis
 1. Bootstrap code in a profile script
 1. The active function in the environment
 
-You can try using `uninstall.sh` to clean up.  As described below, it will try to use the installation log file to remove a proper installation.  It will also attempt to remove any of the components it can find through locating defaults and matching signatures.  If the automatic uninstall does not clean things up for a fresh new installation, then follow the instructions to perform a [manual uninstall](#uninstalling-park-directories).
+You can try using `uninstall.sh` to clean up.  As described below, it will try to use the installation log file to remove a proper installation.  It will also attempt to remove any of the components it can find through locating defaults and matching signatures.  If the automatic uninstall does not clean things up for a fresh installation, then follow the instructions to perform a [manual uninstall](#uninstalling-park-directories).
 
 ### Step-by-Step Investigation
 If you don't want to try to uninstall Park Directories and reinstall it to fix a broken installation, you can diagnose the problem and try to fix it manually with the following information.  
@@ -618,7 +618,7 @@ By default, the executable is called `pd.sh` and is located in the user's `$HOME
 ```bash
 > find ~ -type f -name "pd.sh"
 ```
-The installation script allows you to put the executable anywhere you'd like.  If you can't find it, it is probably best to continue to clean up the rest of the application assets and reinstall.  If your data file exists and you want to keep the current list of parked directories, you can rename the file (_e.g. _.pd-data.bck_) and use it with the `-i, --import` option of the `install.sh` script.  You can also just leave it alone and reinstall.
+The installation script allows you to put the executable anywhere you'd like.  If you can't find it, it is probably best to continue to clean up the rest of the application assets and reinstall.  If your data file exists and you want to keep the current list of parked directories, you can rename the file (_e.g. _.pd-data.bck_) and use it with the `-i, --import` option of the `install.sh` script.  You can also just leave it alone and reinstall.  `install.sh` does **not** overwrite the data file.
 
 **Data File**  
 If the data file is not located where the installation log file says it should be, the active function will recreate the data file the next time you use it.  If you know that the data file is somewhere else, you can either move it to where the installation log file says it should be or edit the log file with the correct location of the data file.
