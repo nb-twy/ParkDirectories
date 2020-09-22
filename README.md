@@ -489,12 +489,71 @@ OPTIONS:
                         Does not execute any other update actions.
 ```
 
+### Standard In-place Update
+You can upgrade or downgrade Park Directories to the current version in the branch that you have checked out.  If you'd like to checkout the latest version under development in a feature branch, you can checkout that branch and run `./update.sh`.  If this latest version is not stable enough to leave it installed, you can return to the latest release by checking out the master branch and running `./update.sh` again.  You can determine the current active version of Park Directories by executing `pd --version`.  You can determine the version in the branch you have checkout out by running `./pd.sh --version`.
+```bash
+# Determine the current running version
+$ pd --version
+Park Directories version 1.12.0
+# Pull the latest updates from GitHub
+$ git pull
+<git output...>
+# Checkout a feature branch
+$ git checkout ftr_issue-56
+# What version does this branch intend to release?
+$ ./pd.sh --version
+Park Directories version 2.0.0
+# Upgrade to version 2.0.0
+$ ./update.sh
+Verifying current installation...
+Park Directories is installed properly.
+✔  Executable updated
+Update complete.
+Please restart your terminal or run the following:
+    source /home/user/.bashrc
+# Source .bashrc and check new running version
+$ source ~/.bashrc
+$ pd --version
+Park Directories version 2.0.0
+# Something is not right, and you want to return to the stable version 1.12.0
+# Checkout the master branch
+$ git checkout master
+# Downgrade to latest stable version 1.12.0
+$ ./update.sh
+Verifying current installation...
+Park Directories is installed properly.
+✔  Executable updated
+Update complete.
+Please restart your terminal or run the following:
+    source /home/user/.bashrc
+# Source .bashrc and check new running version
+$ source ~/.bashrc
+$ pd --version
+Park Directories version 1.12.0
+```
+
+### Update Will Abort if Installation Incorrect
+```bash
+$ ./update.sh
+Verifying current installation...
+✔  Installation log file located @ /home/user/.pd.log
+✔  Installation log file parsed.
+❌  Executable could not be located. Expected @ /home/user/pd.sh
+✔  Function active: pd
+❌  Data file could not be located. Expected @ /home/user/.pd-data
+✔  Bootstrap code located in /home/user/.bashrc
+Park Directories is only partially installed.
+Please review the list above and refer to the README for possible solutions.
+
+Cannot continue with update until Parked Directories is properly installed.
+```
+
 ### Update Version & Change the Function Name
 When you're ready to upgrade to a newer version of Park Directories, you might want to change the function name.  Use the `--func FUNC_NAME` option to perform an in-place upgrade **and** change the function name.
 
 ```bash
 ## Upgrade to the latest version and change the function name from pd to kd
-> ./update.sh --func kd
+$ ./update.sh --func kd
 Verifying current installation...
 Park Directories is installed properly.
 ✔ Function name changed to kd.
@@ -511,7 +570,7 @@ You can change the function name without upgrading the application version by us
 
 ```bash
 ## Change the function name back to pd without updating the application version
-> ./update.sh --func-only pd
+$ ./update.sh --func-only pd
 Verifying current installation...
 Park Directories is installed properly.
 ✔ Function name changed to pd.
@@ -520,22 +579,6 @@ Please restart your terminal or run the following:
     source /home/user/.bashrc
 ```
 >Do not forget to follow the instructions after the upgrade to either restart the terminal or to run `unset` and source your profile script.
-
-### Update Will Abort if Installation Incorrect
-```bash
-> ./update.sh
-Verifying current installation...
-✔  Installation log file located @ /home/user/.pd.log
-✔  Installation log file parsed.
-❌  Executable could not be located. Expected @ /home/user/pd.sh
-✔  Function active: pd
-❌  Data file could not be located. Expected @ /home/user/.pd-data
-✔  Bootstrap code located in /home/user/.bashrc
-Park Directories is only partially installed.
-Please review the list above and refer to the README for possible solutions.
-
-Cannot continue with update until Parked Directories is properly installed.
-```
 
 -----
 ## Fixing Partial Installation
