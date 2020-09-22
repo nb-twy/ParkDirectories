@@ -40,11 +40,6 @@ source "$CWD/common.sh"
 
 UNINSTALL=0
 
-# If the old log file exists and the new on does not, use the old log file.
-if [[ ! -f "$LOGFILE" && -f "$OLD_LOGFILE" ]]; then
-    LOGFILE="$OLD_LOGFILE"
-fi
-
 # Check if log file exists
 # If so, extract configured data.
 # If not, ask if we should attempt to uninstall default configuration.

@@ -32,7 +32,7 @@
 
 pd() {
     local pdFile="$HOME/.pd-data"
-    local PD_VERSION="1.13.1"
+    local PD_VERSION="2.0.0"
 
     # Resolve the directory from the ref name
     # Expected input: REF
@@ -56,8 +56,8 @@ pd() {
     fi
 
     if [[ ! -f "$pdFile" ]]; then
-        touch "$pdFile" || return 60
-        chmod 660 "$pdFile" || return 61
+        touch "$pdFile"
+        chmod 660 "$pdFile"
     fi
     
     while [[ $# -gt 0 ]]; do
@@ -81,7 +81,7 @@ usage: pd [REF[/RELPATH]] [OPTION {ARG} [OPTION {ARG} ...]]
 -x, --expand NAME[/RELPATH]          Expand the referenced directory and relative path without
                                      navigating to it
 -e, --export FILE_PATH               Export current list of parked directories to FILE_PATH
--i, --import                         Import park directories entries from FILE_PATH
+-i, --import                         Import parked directories entries from FILE_PATH
     [--append | --quiet] FILE_PATH   Use -i --append FILE_PATH to add entries to the existing list
                                      Use -i --quiet FILE_PATH to overwrite current entries quietly
 -v, --version                        Display version
@@ -131,8 +131,7 @@ shift 1
                     if [[ $2 != *"/"* && "$2" != -* ]]; then
                         ref="$2"
                     else
-                        echo "ERROR: Reference name may not contain '/' or begin with '-'"
-                        return 11
+                        echo "[ERROR] Reference name may not contain '/' or begin with '-'"
                     fi
 
                     # If the second argument after the option identifier is not another option
@@ -153,9 +152,8 @@ shift 1
                         echo "Added: $ref --> $ADD_TARGET"
                     fi
                 else
-                    echo "ERROR: The add option takes one argument to park the current directory"
+                    echo "[ERROR] The add option takes one argument to park the current directory"
                     echo "       or two arguments to park a directory by its full path."
-                    return 10
                 fi
                 ;;
             -d|--del)   # Delete a bookmarked directory
@@ -172,8 +170,7 @@ shift 1
                     fi
                     shift 2
                 else
-                    echo "ERROR: The delete option requires one argument."
-                    return 20
+                    echo "[ERROR] The delete option requires one argument."
                 fi
                 ;;
             -l|--list)  # List all of the bookmarked directories
@@ -183,7 +180,7 @@ shift 1
                 else
                     # List all parked directories
                     echo
-                    cat "$pdFile" || return 30
+                    cat "$pdFile"
                     echo
                 fi
                 shift 1
@@ -195,7 +192,6 @@ shift 1
                     echo "Removed all parked directories"
                 else
                     echo "Could not remove all parked directories"
-                    return 40
                 fi
                 shift 1
                 ;;
@@ -214,13 +210,12 @@ shift 1
                         shift 1
                     elif [[ "$2" == "--quiet" ]]; then
                         IMPORT_ACTION=$IMPORT_OVERWRITE_QUIET  # Overwrite without warning
-                        : > "$pdFile" || return 73
+                        : > "$pdFile"
                         echo "Contents of data file cleared"
                         shift 1
                     fi
                 else
-                    echo "ERROR: Import requires at least one argument"
-                    return 71
+                    echo "[ERROR] Import requires at least one argument"
                 fi
                 if [[ $# -gt 1 && "$2" != -* && -f "$2" ]]; then
                     # If the import is set to overwrite the data file, warn the user
@@ -238,20 +233,19 @@ shift 1
                             case $CHOICE in
                                 b|B)  # Backup data file, clear the contents, and continue
                                     local DATA_BACKUP="$pdFile-$(date +%s).bck"
-                                    cp "$pdFile" "$DATA_BACKUP" || return 72
+                                    cp "$pdFile" "$DATA_BACKUP"
                                     echo "Data file backed up to $DATA_BACKUP"
-                                    : > "$pdFile" || return 73
+                                    : > "$pdFile"
                                     echo "Contents of data file cleared"
                                     break
                                     ;;
                                 c|C)  # Clear the contents of the data file and continue
-                                    : > "$pdFile" || return 73
+                                    : > "$pdFile"
                                     echo "Contents of data file cleared"
                                     break
                                     ;;
-                                a|A)  # Return with exit code 74
+                                a|A)  # Abort import
                                     echo -e "Import aborted!"
-                                    return 74
                                     ;;
                                 *)
                                     echo -e "[!] Please answer [b/c/a]"
@@ -268,15 +262,14 @@ shift 1
                                 # Write the entry to the data file
                                 echo "$ref $path" >> "$pdFile"
                             else
-                                echo "ERROR: Directory must exist   $path"
+                                echo "[ERROR] Directory must exist   $path"
                             fi
                         else
-                            echo "ERROR: Reference name may not start with '-' or include '/'   $ref"
+                            echo "[ERROR] Reference name may not start with '-' or include '/'   $ref"
                         fi
                     done < "$2"
                 else
-                    echo "ERROR: Import requires a properly formatted file path"
-                    return 70
+                    echo "[ERROR] Import requires a properly formatted file path"
                 fi
                 echo -e "Import complete\n"
                 shift 2
@@ -290,12 +283,10 @@ shift 1
                     if cat "$pdFile" >> "$2"; then
                         echo "List of parked directories exported to $2"
                     else
-                        echo "ERROR: Failed to export list of parked directories"
-                        return 60
+                        echo "[ERROR] Failed to export list of parked directories"
                     fi
                 else
-                    echo "ERROR: Export requires a valid path to the target file."
-                    return 61
+                    echo "[ERROR] Export requires a valid path to the target file."
                 fi
                 shift 2
                 ;;
@@ -311,14 +302,14 @@ shift 1
                 fi
                 shift 2
                 ;;
-            -*|--*) # Catch any unknown arguments
-                echo "$1  ERROR: Unknown argument"
+            --*|-*) # Catch any unknown arguments
+                echo "$1  [ERROR] Unknown argument"
                 shift 1
                 ;;
             *)  # Navigate to parked directory
                 resolve_dir "$1"
                 if [[ -n "$PARKED_DIR" ]]; then
-                    cd "$PARKED_DIR" || return 50
+                    cd "$PARKED_DIR" || return
                 fi
                 shift 1
                 ;;
@@ -328,3 +319,124 @@ shift 1
     unset -f resolve_dir
 }
 
+_pd_complete() {
+# Alias the current word on the command line since we're going to be using it a lot
+CWORD="${COMP_WORDS[$COMP_CWORD]}"
+# Alias the previous word on the command line
+PWORD="${COMP_WORDS[$COMP_CWORD - 1]}"
+
+# If the previous word is an option (begins with a -), then perform autocomplete only
+# for delete, expand, and import.  Otherwise, simply return.
+## Perform ref name completion with delete and expand
+# Autocomplete relative path
+## Need more than one command line argument, it cannot be empty, it cannot begin with
+## a - and must include a /.
+if [[ ${#COMP_WORDS[@]} -gt 1 && \
+    ! -z "$CWORD" && \
+    "$CWORD" != -* && \
+    "$CWORD" == */* && \
+    "$PWORD" != -* && \
+    "${COMP_WORDS[$COMP_CWORD -2]}" != *"-a"* ]]; then
+    # Do not add a space after inserting a match
+    compopt -o nospace -o filenames
+    # Expand the parked name
+    ## Split the argument at the last /
+    ## Use the second token, if there is one, to match any directories
+    local TARGET_REF="${CWORD%/*}"
+    #echo -e "\nTARGET_REF: $TARGET_REF"
+    local PREFIX="${CWORD##*/}"
+    #echo -e "\nPREFIX: $PREFIX"
+    ## Use PD to expand the first token to the target directory
+    local STD_IFS=$' \t\n'
+    local IFS=$'\n'
+    local TARGET_DIR="$(pd -x "$TARGET_REF")"
+    #echo -e "\nTARGET_DIR: $TARGET_DIR"
+    # If the target directory could not be resolved, print message on a new line
+    if [[ "$TARGET_DIR" == *"No parked directory"* ]]; then
+        echo -e "\n$TARGET_DIR"
+        return
+    fi
+    # Find directories in TARGET_DIR
+    #echo -e "\nTARGET_DIR to search: $TARGET_DIR"
+    local DIRS=($(find "${TARGET_DIR//\\/}" -mindepth 1 -maxdepth 1 -type d -iname "$PREFIX*"))
+    #echo -e "\nDIRS: ${DIRS[@]}"
+    IFS=$STD_IFS
+    local NUM_DIRS=${#DIRS[@]}
+    #echo -e "\nNUM_DIRS: $NUM_DIRS"
+    # If there is only one match found, construct the suggestion from the original
+    # TARGET_REF followed by the found directory.
+    #echo -e "\nTARGET_REF: $TARGET_REF"
+    if [[ $NUM_DIRS -eq 1 ]]; then
+        COMPREPLY=("${TARGET_REF//\\/}/""${DIRS[0]##*/}/")
+    else
+        for i in $(seq 0 $((NUM_DIRS - 1))); do
+            COMPREPLY+=("${TARGET_REF//\\/}/""${DIRS[$i]##*/}")
+        done
+    fi
+
+# Use standard filedir completion from bash_completion script following -i|--import
+elif [[ "$PWORD" == "-i" || "$PWORD" == "--import" ]]; then
+    compopt -o filenames
+    COMPREPLY=($(compgen -f -- "$CWORD"))
+
+elif [[ $COMP_CWORD -gt 2 && "${COMP_WORDS[$COMP_CWORD -2]}" == *"-a"* && "$CWORD" == "~"* ]] || \
+     [[ $COMP_CWORD -gt 2 && "${COMP_WORDS[$COMP_CWORD -2]}" == *"-a"* && "$CWORD" == *"/"* ]]; then
+    compopt -o filenames
+    COMPREPLY=($(compgen -d -- "$CWORD"))
+ 
+# Autocomplete ref names
+elif [[ "$CWORD" != -* ]]; then
+    local REF_NAME_COMPOPTS=("-d" "--del" "-x" "--expand")
+    local REF_NAME_COMPLETE=0
+    if [[ "$PWORD" == "${COMP_WORDS[0]}" ]]; then
+        REF_NAME_COMPLETE=1
+    elif [[ "$PWORD" == -* ]]; then
+        for opt in "${REF_NAME_COMPOPTS[@]}"; do
+            if [[ "$PWORD" == "$opt" ]]; then
+                REF_NAME_COMPLETE=1
+            fi
+        done
+    fi
+
+    if [[ $REF_NAME_COMPLETE -eq 1 ]]; then
+        # Do not add a space after inserting a match
+        compopt -o nospace
+        local REFS=()
+        while IFS=' ' read -r ref target; do
+            if [[ -n "$ref" ]]; then
+                # If the current word is empty, select all refs.
+                if [[ -z "$CWORD" ]]; then
+                    REFS+=("$ref")
+                else
+                    # If the current word is not empty, only select refs
+                    # that begin with current word.
+                    if [[ "$ref" == "$CWORD"* ]]; then
+                        REFS+=("$ref")
+                    fi
+                fi
+            fi
+        done < <(pd -l)
+        # If there is only one match, add it with a trailing / so that autocomplete
+        # can continue for relative paths.
+        if [[ ${#REFS[@]} -eq 1 ]]; then
+            COMPREPLY=("${REFS[0]}/")
+        else
+            COMPREPLY+=("${REFS[@]}")
+        fi
+    fi
+
+# Option Completion
+## Begin with long option completion
+elif [[ "$CWORD" == --* ]]; then
+    local OPTIONS="--add --del --list --clear --expand --export --import --version --help"
+    local IFS=$' \t\n'
+    COMPREPLY+=($(compgen -W "$OPTIONS" -- "$CWORD"))
+elif [[ "$CWORD" == -* ]]; then
+    local OPTIONS="-a -d -l -c -x -e -i -v -h"
+    local IFS=$' \t\n'
+    COMPREPLY=($(compgen -W "$OPTIONS" -- "$CWORD"))
+fi
+
+}
+
+complete -F _pd_complete pd
