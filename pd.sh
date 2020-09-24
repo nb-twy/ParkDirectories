@@ -32,7 +32,7 @@
 
 pd() {
     local pdFile="$HOME/.pd-data"
-    local PD_VERSION="2.0.0"
+    local PD_VERSION="2.0.1"
 
     # Resolve the directory from the ref name
     # Expected input: REF
@@ -56,8 +56,8 @@ pd() {
     fi
 
     if [[ ! -f "$pdFile" ]]; then
-        touch "$pdFile"
-        chmod 660 "$pdFile"
+        touch "$pdFile" || return 10
+        chmod 660 "$pdFile" || return 11
     fi
     
     while [[ $# -gt 0 ]]; do
@@ -132,6 +132,7 @@ shift 1
                         ref="$2"
                     else
                         echo "[ERROR] Reference name may not contain '/' or begin with '-'"
+                        return 20
                     fi
 
                     # If the second argument after the option identifier is not another option
@@ -148,12 +149,13 @@ shift 1
                     if [[ $(grep -Pc "^$ref .*$" "$pdFile") -gt 0 ]]; then
                         echo "Name already used"
                     else
-                        echo "$ref" "$ADD_TARGET" >> "$pdFile"
+                        echo "$ref" "$ADD_TARGET" >> "$pdFile" || return 21
                         echo "Added: $ref --> $ADD_TARGET"
                     fi
                 else
                     echo "[ERROR] The add option takes one argument to park the current directory"
                     echo "       or two arguments to park a directory by its full path."
+                    return 22
                 fi
                 ;;
             -d|--del)   # Delete a bookmarked directory
@@ -163,7 +165,7 @@ shift 1
                     # Command format: pd -d|--del {unique name}
                     DEL_TARGET=$(grep -P "^$ref .*$" "$pdFile")
                     if [[ "$DEL_TARGET" == $ref* && ${#DEL_TARGET} -gt ${#ref} ]]; then
-                        sed -i "/^$ref .*$/d" "$pdFile"
+                        sed -i "/^$ref .*$/d" "$pdFile" || return 30
                         echo "Removed: ${DEL_TARGET/ / --> }"
                     else
                         echo "$ref -- No parked directory with that name"
@@ -171,6 +173,7 @@ shift 1
                     shift 2
                 else
                     echo "[ERROR] The delete option requires one argument."
+                    return 31
                 fi
                 ;;
             -l|--list)  # List all of the bookmarked directories
@@ -180,7 +183,7 @@ shift 1
                 else
                     # List all parked directories
                     echo
-                    cat "$pdFile"
+                    cat "$pdFile" || return 40
                     echo
                 fi
                 shift 1
@@ -192,6 +195,7 @@ shift 1
                     echo "Removed all parked directories"
                 else
                     echo "Could not remove all parked directories"
+                    return 50
                 fi
                 shift 1
                 ;;
@@ -210,12 +214,13 @@ shift 1
                         shift 1
                     elif [[ "$2" == "--quiet" ]]; then
                         IMPORT_ACTION=$IMPORT_OVERWRITE_QUIET  # Overwrite without warning
-                        : > "$pdFile"
+                        : > "$pdFile" || return 60
                         echo "Contents of data file cleared"
                         shift 1
                     fi
                 else
                     echo "[ERROR] Import requires at least one argument"
+                    return 61
                 fi
                 if [[ $# -gt 1 && "$2" != -* && -f "$2" ]]; then
                     # If the import is set to overwrite the data file, warn the user
@@ -233,14 +238,14 @@ shift 1
                             case $CHOICE in
                                 b|B)  # Backup data file, clear the contents, and continue
                                     local DATA_BACKUP="$pdFile-$(date +%s).bck"
-                                    cp "$pdFile" "$DATA_BACKUP"
+                                    cp "$pdFile" "$DATA_BACKUP" || return 62
                                     echo "Data file backed up to $DATA_BACKUP"
-                                    : > "$pdFile"
+                                    : > "$pdFile" || return 63
                                     echo "Contents of data file cleared"
                                     break
                                     ;;
                                 c|C)  # Clear the contents of the data file and continue
-                                    : > "$pdFile"
+                                    : > "$pdFile" || return 63 
                                     echo "Contents of data file cleared"
                                     break
                                     ;;
@@ -256,11 +261,18 @@ shift 1
                     # Parse the file and check each entry before adding them to the list of parked directories
                     # Ref names cannot contain / or start with -
                     # Directories must exist
+                    # If one of the entries in the import file is incorrectly formatted or if the
+                    # directory does not exist, display an error but do not stop processing the file.
+                    # We would rather gracefully fail on one or more and properly import those that can
+                    # be. 
+                    # TO DO: Check for duplicate entries so that importing cannot create duplicate
+                    # entries.
                     while IFS=' ' read -r ref path; do
                         if [[ "$ref" != -* && "$ref" != *"/"* ]]; then
                             if [[ -d "$path" ]]; then
                                 # Write the entry to the data file
-                                echo "$ref $path" >> "$pdFile"
+                                # Abort if the data file cannot be modified.
+                                echo "$ref $path" >> "$pdFile" || return 64
                             else
                                 echo "[ERROR] Directory must exist   $path"
                             fi
@@ -270,6 +282,7 @@ shift 1
                     done < "$2"
                 else
                     echo "[ERROR] Import requires a properly formatted file path"
+                    return 65
                 fi
                 echo -e "Import complete\n"
                 shift 2
@@ -284,9 +297,11 @@ shift 1
                         echo "List of parked directories exported to $2"
                     else
                         echo "[ERROR] Failed to export list of parked directories"
+                        return 70
                     fi
                 else
                     echo "[ERROR] Export requires a valid path to the target file."
+                    return 71
                 fi
                 shift 2
                 ;;
@@ -309,7 +324,7 @@ shift 1
             *)  # Navigate to parked directory
                 resolve_dir "$1"
                 if [[ -n "$PARKED_DIR" ]]; then
-                    cd "$PARKED_DIR" || return
+                    cd "$PARKED_DIR" || return 80
                 fi
                 shift 1
                 ;;
