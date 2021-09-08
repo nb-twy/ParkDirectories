@@ -32,7 +32,7 @@
 
 pd() {
     local pdFile="$HOME/.pd-data"
-    local PD_VERSION="2.0.1"
+    local PD_VERSION="2.1.0"
 
     # Resolve the directory from the ref name
     # Expected input: REF
@@ -41,7 +41,7 @@ pd() {
     resolve_dir() {
         local REF="${1%%/*}"
         local RELPATH="${1##$REF}"    # If there is a relative path, it will begin with /
-        PARKED_DIR=$(grep -P "^$REF .*$" "$pdFile" | cut -d' ' -f2)
+        PARKED_DIR="$(grep -P "^$REF .*$" "$pdFile" | cut -d' ' -f2-)"
         if [[ ${#PARKED_DIR} -gt 0 ]]; then
             if [[ -n "$RELPATH" ]]; then
                 PARKED_DIR="${PARKED_DIR%/}$RELPATH"
