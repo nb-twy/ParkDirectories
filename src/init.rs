@@ -154,7 +154,7 @@ const NU_INIT: &str = r#"# Park Directories — nushell integration
 
 # def --env: allows this command to modify the caller's environment (including $env.PWD)
 # ^pd: the caret explicitly calls the external binary, bypassing this custom command
-def --env pd [...args: string] {
+def --env --wrapped pd [...args: string] {
     if ($args | is-empty) {
         ^pd list
         return
