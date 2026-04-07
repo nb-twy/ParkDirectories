@@ -170,7 +170,7 @@ def _pd_bookmark_names [] {
 # Custom completer called by nushell on every <Tab> press.
 # Receives the full command-line context string and the cursor offset.
 def _pd_completer [context: string, offset: int] {
-    # Tokenise the context (skip the leading "pd" token itself)
+    # Tokenize the context (skip the leading "pd" token itself)
     let args_tokens = (
         $context
         | split row ' '
@@ -224,7 +224,7 @@ def _pd_completer [context: string, offset: int] {
             | where type == dir
             | get name
             | each { |p|
-                # Normalise OS path separators to '/' for the completion string
+                # Normalize OS path separators to '/' for the completion string
                 let p_norm = ($p | into string | str replace --all '\' '/')
                 let base_norm = ($base | str replace --all '\' '/')
                 let rel = ($p_norm | str replace $"($base_norm)/" "")
@@ -247,7 +247,7 @@ def _pd_completer [context: string, offset: int] {
 # ── pd command ───────────────────────────────────────────────────────────────
 
 # def --env : propagates environment changes (including $env.PWD) to the caller
-# --wrapped : passes unrecognised flags through as string args instead of erroring
+# --wrapped : passes unrecognized flags through as string args instead of erroring
 # ^pd       : the caret calls the external binary, bypassing this custom command
 def --env --wrapped pd [...args: string@_pd_completer] {
     if ($args | is-empty) {
