@@ -190,51 +190,75 @@ def _pd_completer [context: string, offset: int] {
         if $n >= 2 { $args_tokens | get ($n - 2) } else { "" }
     }
 
+    # Flags that expect a bookmark name next
     if ($prev in ["-d" "--del" "-x" "--expand"]) {
-        # These flags expect a bookmark name next
-        _pd_bookmark_names
+        return (_pd_bookmark_names)
+    }
 
-    } else if ($prev in ["-a" "--add" "-e" "--export" "-i" "--import"]) {
-        # These flags expect a file/directory path — return empty so nushell
-        # falls back to its built-in file completer
-        []
+    # Flags that expect a file/dir path next — return empty so nushell
+    # falls back to its built-in file completer
+    if ($prev in ["-a" "--add" "-e" "--export" "-i" "--import"]) {
+        return []
+    }
 
-    } else if (not ($cur | str starts-with '-')) and ($cur | str contains '/') {
-        # Relative-path completion: "bookmarkname/partial/path<TAB>"
-        let ref_name = ($cur | split row '/' | first)
-        let rel_typed = ($cur | str replace $"($ref_name)/" "")
+    # No-argument flags — nothing follows
+    if ($prev in ["-l" "--list" "-c" "--clear" "-v" "--version" "-h" "--help"]) {
+        return []
+    }
 
-        # Resolve the bookmark without printing an error if not found
-        let get_result = (do { ^pd get $ref_name } | complete)
-        if $get_result.exit_code != 0 { return [] }
-        let base = ($get_result.stdout | str trim)
-        if ($base | is-empty) { return [] }
+    # Partial flag being typed — no completion
+    if ($cur | str starts-with '-') {
+        return []
+    }
 
-        # List directories inside the appropriate level of the hierarchy
-        let search_dir = (
-            if ($rel_typed | is-empty) or (not ($rel_typed | str contains '/')) {
+    # Position of the token being typed (0 = first positional after "pd")
+    let cur_pos = if $ends_with_space { $n } else if $n > 0 { $n - 1 } else { 0 }
+    let subcmd = if $n > 0 { $args_tokens.0 } else { "" }
+
+    if $cur_pos == 0 {
+        if ($cur | str contains '/') {
+            # Relative-path completion: "bookmarkname/partial/path<TAB>"
+            let ref_name = ($cur | split row '/' | first)
+            let rel_typed = ($cur | str replace $"($ref_name)/" "")
+
+            # Resolve the bookmark without printing an error if not found
+            let get_result = (do { ^pd get $ref_name } | complete)
+            if $get_result.exit_code != 0 { return [] }
+            let base = ($get_result.stdout | str trim)
+            if ($base | is-empty) { return [] }
+
+            # Determine which directory to list.
+            # Strip the partial name being typed (everything after the last '/')
+            # so "Aletheia42/sub_par" and "Aletheia42/" both search in "$base/Aletheia42".
+            let search_dir = if ($rel_typed | is-empty) or (not ($rel_typed | str contains '/')) {
                 $base
             } else {
-                $"($base)/($rel_typed | path dirname)"
+                let dir_part = ($rel_typed | str replace --regex '[^/]*$' '' | str trim --right --char '/')
+                if ($dir_part | is-empty) { $base } else { $"($base)/($dir_part)" }
             }
-        )
 
-        try {
-            ls $search_dir
-            | where type == dir
-            | get name
-            | each { |p|
-                # Normalize OS path separators to '/' for the completion string
-                let p_norm = ($p | into string | str replace --all '\' '/')
-                let base_norm = ($base | str replace --all '\' '/')
-                let rel = ($p_norm | str replace $"($base_norm)/" "")
-                $"($ref_name)/($rel)"
-            }
-        } catch { [] }
-
-    } else {
-        # Default: complete bookmark names (navigation or first positional)
+            try {
+                ls $search_dir
+                | where type == dir
+                | get name
+                | each { |p|
+                    # Normalize OS path separators to '/' for the completion string
+                    let p_norm = ($p | into string | str replace --all '\' '/')
+                    let base_norm = ($base | str replace --all '\' '/')
+                    let rel = ($p_norm | str replace $"($base_norm)/" "")
+                    $"($ref_name)/($rel)"
+                }
+            } catch { [] }
+        } else {
+            # Complete bookmark names (navigation target or subcommand being typed)
+            _pd_bookmark_names
+        }
+    } else if ($subcmd in ["del" "expand"]) and $cur_pos == 1 {
+        # Subcommand form: complete the bookmark name argument
         _pd_bookmark_names
+    } else {
+        # All other positions (add path arg, extra args, etc.): no useful completion
+        []
     }
 }
 
@@ -301,36 +325,53 @@ def _pd_completer [context: string, offset: int] {
     }
 
     if ($prev in ["-d" "--del" "-x" "--expand"]) {
-        _pd_bookmark_names
-    } else if ($prev in ["-a" "--add" "-e" "--export" "-i" "--import"]) {
-        []
-    } else if (not ($cur | str starts-with '-')) and ($cur | str contains '/') {
-        let ref_name = ($cur | split row '/' | first)
-        let rel_typed = ($cur | str replace $"($ref_name)/" "")
-        let get_result = (do { ^pd get $ref_name } | complete)
-        if $get_result.exit_code != 0 { return [] }
-        let base = ($get_result.stdout | str trim)
-        if ($base | is-empty) { return [] }
-        let search_dir = (
-            if ($rel_typed | is-empty) or (not ($rel_typed | str contains '/')) {
+        return (_pd_bookmark_names)
+    }
+    if ($prev in ["-a" "--add" "-e" "--export" "-i" "--import"]) {
+        return []
+    }
+    if ($prev in ["-l" "--list" "-c" "--clear" "-v" "--version" "-h" "--help"]) {
+        return []
+    }
+    if ($cur | str starts-with '-') {
+        return []
+    }
+
+    let cur_pos = if $ends_with_space { $n } else if $n > 0 { $n - 1 } else { 0 }
+    let subcmd = if $n > 0 { $args_tokens.0 } else { "" }
+
+    if $cur_pos == 0 {
+        if ($cur | str contains '/') {
+            let ref_name = ($cur | split row '/' | first)
+            let rel_typed = ($cur | str replace $"($ref_name)/" "")
+            let get_result = (do { ^pd get $ref_name } | complete)
+            if $get_result.exit_code != 0 { return [] }
+            let base = ($get_result.stdout | str trim)
+            if ($base | is-empty) { return [] }
+            let search_dir = if ($rel_typed | is-empty) or (not ($rel_typed | str contains '/')) {
                 $base
             } else {
-                $"($base)/($rel_typed | path dirname)"
+                let dir_part = ($rel_typed | str replace --regex '[^/]*$' '' | str trim --right --char '/')
+                if ($dir_part | is-empty) { $base } else { $"($base)/($dir_part)" }
             }
-        )
-        try {
-            ls $search_dir
-            | where type == dir
-            | get name
-            | each { |p|
-                let p_norm = ($p | into string | str replace --all '\' '/')
-                let base_norm = ($base | str replace --all '\' '/')
-                let rel = ($p_norm | str replace $"($base_norm)/" "")
-                $"($ref_name)/($rel)"
-            }
-        } catch { [] }
-    } else {
+            try {
+                ls $search_dir
+                | where type == dir
+                | get name
+                | each { |p|
+                    let p_norm = ($p | into string | str replace --all '\' '/')
+                    let base_norm = ($base | str replace --all '\' '/')
+                    let rel = ($p_norm | str replace $"($base_norm)/" "")
+                    $"($ref_name)/($rel)"
+                }
+            } catch { [] }
+        } else {
+            _pd_bookmark_names
+        }
+    } else if ($subcmd in ["del" "expand"]) and $cur_pos == 1 {
         _pd_bookmark_names
+    } else {
+        []
     }
 }
 "#;
