@@ -256,8 +256,18 @@ def _pd_completer [context: string, offset: int] {
     } else if ($subcmd in ["del" "expand"]) and $cur_pos == 1 {
         # Subcommand form: complete the bookmark name argument
         _pd_bookmark_names
+    } else if ($subcmd in ["add" "-a" "--add"]) and $cur_pos >= 2 {
+        # Path argument of add: complete directories.
+        # path dirname of "C:\Us" → "C:\"; of "foo" → "."; of "" → "."
+        let dir = if ($cur | is-empty) { "." } else { $cur | path dirname }
+        try {
+            ls $dir
+            | where type == dir
+            | get name
+            | each { |p| $p | into string }
+        } catch { [] }
     } else {
-        # All other positions (add path arg, extra args, etc.): no useful completion
+        # All other positions: no useful completion
         []
     }
 }
@@ -370,6 +380,14 @@ def _pd_completer [context: string, offset: int] {
         }
     } else if ($subcmd in ["del" "expand"]) and $cur_pos == 1 {
         _pd_bookmark_names
+    } else if ($subcmd in ["add" "-a" "--add"]) and $cur_pos >= 2 {
+        let dir = if ($cur | is-empty) { "." } else { $cur | path dirname }
+        try {
+            ls $dir
+            | where type == dir
+            | get name
+            | each { |p| $p | into string }
+        } catch { [] }
     } else {
         []
     }
