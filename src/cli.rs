@@ -24,11 +24,13 @@ pub enum Commands {
     /// Resolve a bookmark to its path; used by shell integration
     Get {
         /// Bookmark name, optionally with /relative/path suffix
+        #[arg(allow_hyphen_values = true)]
         name: String,
     },
     /// Add a bookmark for a directory
     Add {
         /// Bookmark name
+        #[arg(allow_hyphen_values = true)]
         name: String,
         /// Directory to bookmark (default: current directory)
         path: Option<PathBuf>,
@@ -39,6 +41,7 @@ pub enum Commands {
     /// Delete a bookmark
     Del {
         /// Bookmark name to remove
+        #[arg(allow_hyphen_values = true)]
         name: String,
     },
     /// List all bookmarks
@@ -52,6 +55,7 @@ pub enum Commands {
     /// Print the resolved path of a bookmark without navigating (for scripts)
     Expand {
         /// Bookmark name, optionally with /relative/path suffix
+        #[arg(allow_hyphen_values = true)]
         name: String,
     },
     /// Export bookmarks to a file
