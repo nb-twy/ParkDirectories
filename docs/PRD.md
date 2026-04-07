@@ -37,7 +37,7 @@ The tool is optimized for a user who keeps a working set of maybe a dozen to a f
 
 ### Priority 2 — Secondary
 - **Shell**: Bash
-- **Host**: SSH sessions to Linux servers (Ubuntu/Debian)
+- **Host**: SSH sessions to Linux servers (Fedora/RHEL and Ubuntu/Debian)
 
 ### Priority 3 — Tertiary
 - **Shell**: PowerShell
