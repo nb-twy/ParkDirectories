@@ -108,6 +108,8 @@ pub fn normalize_args(mut args: Vec<OsString>) -> Vec<OsString> {
         "-x" | "--expand" => Some("expand"),
         "-e" | "--export" => Some("export"),
         "-i" | "--import" => Some("import"),
+        // -h/--help are intercepted before clap so we can show user-facing help
+        "-h" | "--help"   => Some("help"),
         // -v is the user-facing version flag; clap's built-in is -V/--version
         "-v"              => Some("--version"),
         _ => None,

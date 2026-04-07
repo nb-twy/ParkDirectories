@@ -183,6 +183,48 @@ fn parse_import_file(src: &Path) -> Result<Vec<(String, PathBuf)>, PdError> {
     Ok(entries)
 }
 
+pub fn cmd_help() {
+    print!(
+        "\
+Park Directories — directory bookmarks for your terminal
+
+NAVIGATION  (requires shell integration via `pd init <shell>`)
+  pd <name>                Change to the bookmarked directory
+  pd <name>/<relpath>      Change to a subdirectory of a bookmark
+
+COMMANDS
+  pd add <name> [<path>]   Bookmark a directory (default: current directory)
+  pd del <name>            Delete a bookmark
+  pd list                  List all bookmarks
+  pd clear                 Delete all bookmarks
+  pd expand <name>         Print the resolved path without navigating
+  pd export <file>         Export bookmarks to a file
+  pd import <file>         Import bookmarks from a file
+
+SHORT FLAGS
+  -a <name> [<path>]       Same as: add
+  -d <name>                Same as: del
+  -l                       Same as: list
+  -c                       Same as: clear
+  -x <name>                Same as: expand
+  -e <file>                Same as: export
+  -i <file>                Same as: import
+  -v                       Same as: --version
+
+SETUP
+  pd init <shell>          Print shell integration script (bash, nu, pwsh)
+  pd completions <shell>   Print tab completion script
+
+OPTIONS
+  --data-file <path>       Override bookmark data file location
+                           (env: PD_DATA_FILE; default: ~/.pd-data)
+
+Run `pd <subcommand> --help` for subcommand details.
+Run `pd init <shell>` to install navigation support in your shell.
+"
+    );
+}
+
 fn is_interactive() -> bool {
     io::stdin().is_terminal()
 }

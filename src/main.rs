@@ -17,6 +17,13 @@ fn main() {
     let raw_args: Vec<OsString> = std::env::args_os().collect();
     let args = cli::normalize_args(raw_args);
 
+    // Intercept "help" before clap so we can show the user-facing help text
+    // that describes the full interface including shell-shim navigation.
+    if args.get(1).and_then(|a| a.to_str()) == Some("help") {
+        commands::cmd_help();
+        return;
+    }
+
     let cli = Cli::parse_from(args);
 
     let data_file = match resolve_data_file(cli.data_file) {
