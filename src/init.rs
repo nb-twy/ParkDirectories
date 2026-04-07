@@ -160,9 +160,9 @@ def _pd_bookmark_names [] {
     try {
         ^pd list
         | lines
-        | filter { |l| not ($l | is-empty) }
+        | where { |l| not ($l | is-empty) }
         | each { |l|
-            $l | str trim | split row ' ' | filter { |t| not ($t | is-empty) } | first
+            $l | str trim | split row ' ' | where { |t| not ($t | is-empty) } | first
         }
     } catch { [] }
 }
@@ -174,7 +174,7 @@ def _pd_completer [context: string, offset: int] {
     let args_tokens = (
         $context
         | split row ' '
-        | filter { |t| not ($t | is-empty) }
+        | where { |t| not ($t | is-empty) }
         | skip 1   # drop "pd"
     )
     let n = ($args_tokens | length)
@@ -202,7 +202,7 @@ def _pd_completer [context: string, offset: int] {
     } else if (not ($cur | str starts-with '-')) and ($cur | str contains '/') {
         # Relative-path completion: "bookmarkname/partial/path<TAB>"
         let ref_name = ($cur | split row '/' | first)
-        let rel_typed = ($cur | str replace --string $"($ref_name)/" "")
+        let rel_typed = ($cur | str replace $"($ref_name)/" "")
 
         # Resolve the bookmark without printing an error if not found
         let get_result = (do { ^pd get $ref_name } | complete)
@@ -225,9 +225,9 @@ def _pd_completer [context: string, offset: int] {
             | get name
             | each { |p|
                 # Normalise OS path separators to '/' for the completion string
-                let p_norm = ($p | into string | str replace --all --string '\' '/')
-                let base_norm = ($base | str replace --all --string '\' '/')
-                let rel = ($p_norm | str replace --string $"($base_norm)/" "")
+                let p_norm = ($p | into string | str replace --all '\' '/')
+                let base_norm = ($base | str replace --all '\' '/')
+                let rel = ($p_norm | str replace $"($base_norm)/" "")
                 $"($ref_name)/($rel)"
             }
         } catch { [] }
@@ -283,9 +283,9 @@ def _pd_bookmark_names [] {
     try {
         ^pd list
         | lines
-        | filter { |l| not ($l | is-empty) }
+        | where { |l| not ($l | is-empty) }
         | each { |l|
-            $l | str trim | split row ' ' | filter { |t| not ($t | is-empty) } | first
+            $l | str trim | split row ' ' | where { |t| not ($t | is-empty) } | first
         }
     } catch { [] }
 }
@@ -294,7 +294,7 @@ def _pd_completer [context: string, offset: int] {
     let args_tokens = (
         $context
         | split row ' '
-        | filter { |t| not ($t | is-empty) }
+        | where { |t| not ($t | is-empty) }
         | skip 1
     )
     let n = ($args_tokens | length)
@@ -312,7 +312,7 @@ def _pd_completer [context: string, offset: int] {
         []
     } else if (not ($cur | str starts-with '-')) and ($cur | str contains '/') {
         let ref_name = ($cur | split row '/' | first)
-        let rel_typed = ($cur | str replace --string $"($ref_name)/" "")
+        let rel_typed = ($cur | str replace $"($ref_name)/" "")
         let get_result = (do { ^pd get $ref_name } | complete)
         if $get_result.exit_code != 0 { return [] }
         let base = ($get_result.stdout | str trim)
@@ -329,9 +329,9 @@ def _pd_completer [context: string, offset: int] {
             | where type == dir
             | get name
             | each { |p|
-                let p_norm = ($p | into string | str replace --all --string '\' '/')
-                let base_norm = ($base | str replace --all --string '\' '/')
-                let rel = ($p_norm | str replace --string $"($base_norm)/" "")
+                let p_norm = ($p | into string | str replace --all '\' '/')
+                let base_norm = ($base | str replace --all '\' '/')
+                let rel = ($p_norm | str replace $"($base_norm)/" "")
                 $"($ref_name)/($rel)"
             }
         } catch { [] }
