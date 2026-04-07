@@ -144,17 +144,112 @@ complete -o nospace -F _pd_completions pd
 
 // ─── Nushell ─────────────────────────────────────────────────────────────────
 
-/// Nushell integration command.
+/// Full nushell integration: navigation command + tab completion.
 /// Generate with: pd init nu | save -f ~/.config/nushell/pd.nu
 /// Source in config.nu with: source ~/.config/nushell/pd.nu
 const NU_INIT: &str = r#"# Park Directories — nushell integration
-# Generate this file with: pd init nu | save -f ~/.config/nushell/pd.nu
+# Generate this file with:
+#   pd init nu | save -f ~/.config/nushell/pd.nu
 # Add to ~/.config/nushell/config.nu:
 #   source ~/.config/nushell/pd.nu
 
-# def --env: allows this command to modify the caller's environment (including $env.PWD)
-# ^pd: the caret explicitly calls the external binary, bypassing this custom command
-def --env --wrapped pd [...args: string] {
+# ── Internal helpers ─────────────────────────────────────────────────────────
+
+# Return all bookmark names as a list of strings.
+def _pd_bookmark_names [] {
+    try {
+        ^pd list
+        | lines
+        | filter { |l| not ($l | is-empty) }
+        | each { |l|
+            $l | str trim | split row ' ' | filter { |t| not ($t | is-empty) } | first
+        }
+    } catch { [] }
+}
+
+# Custom completer called by nushell on every <Tab> press.
+# Receives the full command-line context string and the cursor offset.
+def _pd_completer [context: string, offset: int] {
+    # Tokenise the context (skip the leading "pd" token itself)
+    let args_tokens = (
+        $context
+        | split row ' '
+        | filter { |t| not ($t | is-empty) }
+        | skip 1   # drop "pd"
+    )
+    let n = ($args_tokens | length)
+    let ends_with_space = ($context | str ends-with ' ')
+
+    # The token currently being typed (may be a partial string)
+    let cur = if $ends_with_space { "" } else if $n > 0 { $args_tokens | last } else { "" }
+
+    # The last fully-typed token before cur
+    let prev = if $ends_with_space {
+        if $n >= 1 { $args_tokens | last } else { "" }
+    } else {
+        if $n >= 2 { $args_tokens | get ($n - 2) } else { "" }
+    }
+
+    if ($prev in ["-d" "--del" "-x" "--expand"]) {
+        # These flags expect a bookmark name next
+        _pd_bookmark_names
+
+    } else if ($prev in ["-a" "--add" "-e" "--export" "-i" "--import"]) {
+        # These flags expect a file/directory path — return empty so nushell
+        # falls back to its built-in file completer
+        []
+
+    } else if (not ($cur | str starts-with '-')) and ($cur | str contains '/') {
+        # Relative-path completion: "bookmarkname/partial/path<TAB>"
+        let ref_name = ($cur | split row '/' | first)
+        let rel_typed = ($cur | str replace --string $"($ref_name)/" "")
+
+        # Resolve the bookmark without printing an error if not found
+        let get_result = (do { ^pd get $ref_name } | complete)
+        if $get_result.exit_code != 0 { return [] }
+        let base = ($get_result.stdout | str trim)
+        if ($base | is-empty) { return [] }
+
+        # List directories inside the appropriate level of the hierarchy
+        let search_dir = (
+            if ($rel_typed | is-empty) or (not ($rel_typed | str contains '/')) {
+                $base
+            } else {
+                $"($base)/($rel_typed | path dirname)"
+            }
+        )
+
+        try {
+            ls $search_dir
+            | where type == dir
+            | get name
+            | each { |p|
+                # Normalise OS path separators to '/' for the completion string
+                let p_norm = ($p | into string | str replace --all --string '\' '/')
+                let base_norm = ($base | str replace --all --string '\' '/')
+                let rel = ($p_norm | str replace --string $"($base_norm)/" "")
+                $"($ref_name)/($rel)"
+            }
+        } catch { [] }
+
+    } else if ($cur | str starts-with '-') {
+        # Flag completion
+        ["-a" "--add" "-d" "--del" "-l" "--list" "-c" "--clear"
+         "-x" "--expand" "-e" "--export" "-i" "--import"
+         "-h" "--help" "-v" "--version"]
+
+    } else {
+        # Default: complete bookmark names (navigation or first positional)
+        _pd_bookmark_names
+    }
+}
+
+# ── pd command ───────────────────────────────────────────────────────────────
+
+# def --env : propagates environment changes (including $env.PWD) to the caller
+# --wrapped : passes unrecognised flags through as string args instead of erroring
+# ^pd       : the caret calls the external binary, bypassing this custom command
+def --env --wrapped pd [...args: string@_pd_completer] {
     if ($args | is-empty) {
         ^pd list
         return
@@ -176,9 +271,78 @@ def --env --wrapped pd [...args: string] {
 }
 "#;
 
-/// Nushell completion script (stub — full support in a future release).
+/// Standalone nushell completion script.
+/// The same completion definitions are already included in NU_INIT;
+/// this is provided for users who sourced an older pd.nu and want
+/// only the completion update.
 const NU_COMPLETIONS: &str = r#"# Park Directories — nushell tab completion
-# TODO: full completion support is planned for a future release.
+# This is already included in 'pd init nu'.
+# Source separately only if you need to refresh completions independently.
+
+def _pd_bookmark_names [] {
+    try {
+        ^pd list
+        | lines
+        | filter { |l| not ($l | is-empty) }
+        | each { |l|
+            $l | str trim | split row ' ' | filter { |t| not ($t | is-empty) } | first
+        }
+    } catch { [] }
+}
+
+def _pd_completer [context: string, offset: int] {
+    let args_tokens = (
+        $context
+        | split row ' '
+        | filter { |t| not ($t | is-empty) }
+        | skip 1
+    )
+    let n = ($args_tokens | length)
+    let ends_with_space = ($context | str ends-with ' ')
+    let cur = if $ends_with_space { "" } else if $n > 0 { $args_tokens | last } else { "" }
+    let prev = if $ends_with_space {
+        if $n >= 1 { $args_tokens | last } else { "" }
+    } else {
+        if $n >= 2 { $args_tokens | get ($n - 2) } else { "" }
+    }
+
+    if ($prev in ["-d" "--del" "-x" "--expand"]) {
+        _pd_bookmark_names
+    } else if ($prev in ["-a" "--add" "-e" "--export" "-i" "--import"]) {
+        []
+    } else if (not ($cur | str starts-with '-')) and ($cur | str contains '/') {
+        let ref_name = ($cur | split row '/' | first)
+        let rel_typed = ($cur | str replace --string $"($ref_name)/" "")
+        let get_result = (do { ^pd get $ref_name } | complete)
+        if $get_result.exit_code != 0 { return [] }
+        let base = ($get_result.stdout | str trim)
+        if ($base | is-empty) { return [] }
+        let search_dir = (
+            if ($rel_typed | is-empty) or (not ($rel_typed | str contains '/')) {
+                $base
+            } else {
+                $"($base)/($rel_typed | path dirname)"
+            }
+        )
+        try {
+            ls $search_dir
+            | where type == dir
+            | get name
+            | each { |p|
+                let p_norm = ($p | into string | str replace --all --string '\' '/')
+                let base_norm = ($base | str replace --all --string '\' '/')
+                let rel = ($p_norm | str replace --string $"($base_norm)/" "")
+                $"($ref_name)/($rel)"
+            }
+        } catch { [] }
+    } else if ($cur | str starts-with '-') {
+        ["-a" "--add" "-d" "--del" "-l" "--list" "-c" "--clear"
+         "-x" "--expand" "-e" "--export" "-i" "--import"
+         "-h" "--help" "-v" "--version"]
+    } else {
+        _pd_bookmark_names
+    }
+}
 "#;
 
 // ─── PowerShell ──────────────────────────────────────────────────────────────

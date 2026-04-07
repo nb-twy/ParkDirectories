@@ -71,18 +71,19 @@ The binary generates the shell shim code, making installation self-contained.
 
 ---
 
-## Phase 3: Nushell Integration (Windows — Primary Target)
+## Phase 3: Nushell Integration (Windows — Primary Target) ✓
 
-- [ ] Test `pd init nu` output in a real nushell session
-- [ ] Verify navigation (`pd <name>`) changes directory in the calling shell
-- [ ] Verify relative path navigation (`pd <name>/<relpath>`)
-- [ ] Verify all management commands work through the shim
-- [ ] Implement and test tab completion for nushell
-  - [ ] Complete bookmark names
-  - [ ] Complete relative paths after `<name>/`
-  - [ ] Complete flags
-  - [ ] Complete file paths for `-a`, `-i`, `-e`
-- [ ] Document nushell setup procedure in README
+- [x] Test `pd init nu` output in a real nushell session
+- [x] Verify navigation (`pd <name>`) changes directory in the calling shell
+- [x] Verify all management commands work through the shim (required `--wrapped` fix)
+- [x] Implement tab completion for nushell
+  - [x] Complete bookmark names
+  - [x] Complete relative paths after `<name>/`
+  - [x] Complete flags
+  - [ ] Complete file paths for `-a`, `-i`, `-e` (deferred — nushell falls back to its built-in file completer when the completer returns `[]`, which is acceptable)
+- [ ] Verify relative path navigation (`pd <name>/<relpath>`) — user testing pending
+- [ ] Verify tab completion in a live nushell session — user testing pending
+- [x] Document nushell setup procedure in README
 
 ---
 
