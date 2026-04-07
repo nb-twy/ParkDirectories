@@ -1,86 +1,73 @@
 # Park Directories — Development Backlog
 
-**Last Updated**: 2026-04-06
+**Last Updated**: 2026-04-07
 
 Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ---
 
-## Phase 1: Rust Binary Core
+## Phase 1: Rust Binary Core ✓
 
 All bookmark logic implemented in Rust. No shell integration yet — this phase produces a working binary that can be tested directly from any shell via its subcommand interface.
 
 ### Project Setup
-- [ ] Initialize Cargo project (`cargo new pd --bin`)
-- [ ] Set up workspace structure (`src/`, `tests/`)
-- [ ] Add dependencies: `clap` (CLI), `dirs` (home dir), `thiserror` or `anyhow` (errors)
-- [ ] Configure `Cargo.toml` with metadata (name, version, description, license)
-- [ ] Set up `.gitignore` additions for Rust artifacts (`/target`, `Cargo.lock` policy)
+- [x] Initialize Cargo project (`cargo new pd --bin`)
+- [x] Set up workspace structure (`src/`, `tests/`)
+- [x] Add dependencies: `clap` (CLI), `dirs` (home dir), `thiserror` (errors)
+- [x] Configure `Cargo.toml` with metadata (name, version, description, license)
+- [x] Set up `.gitignore` additions for Rust artifacts (`/target`, `Cargo.lock`)
 
 ### Data Model and File I/O
-- [ ] Define `Bookmark` struct (`name: String`, `path: PathBuf`)
-- [ ] Implement bookmark file parser (handle blank lines, `#` comments, name + path format)
-- [ ] Implement bookmark file writer (atomic write via temp file + rename)
-- [ ] Resolve data file path (default by OS, `PD_DATA_FILE` env var, `--data-file` flag)
-- [ ] Create data file if it does not exist (with correct permissions on Unix)
+- [x] Define `Bookmark` struct (`name: String`, `path: PathBuf`)
+- [x] Implement bookmark file parser (handle blank lines, `#` comments, name + path format)
+- [x] Implement bookmark file writer (atomic write via temp file + rename)
+- [x] Resolve data file path (default by OS, `PD_DATA_FILE` env var, `--data-file` flag)
+- [x] Create data file if it does not exist (with correct permissions on Unix)
 
 ### Subcommands
-- [ ] `pd get <name>[/<relpath>]` — resolve bookmark, print path to stdout
-  - [ ] Split input on first `/` to extract name and relative path
-  - [ ] Look up name in bookmark file
-  - [ ] Join stored path with relative path suffix
-  - [ ] Normalize the result (resolve `.` and `..`)
-  - [ ] Print to stdout on success; error to stderr + non-zero exit on failure
-- [ ] `pd add <name> [path]` — add or update bookmark
-  - [ ] Default path = current working directory
-  - [ ] Expand `~`; resolve relative to absolute path
-  - [ ] Validate bookmark name (no `/`, no leading `-`)
-  - [ ] Check if path exists; warn + prompt if not (respect `--force`)
-  - [ ] Check for existing bookmark with same name; prompt before overwriting (respect `--force`)
-  - [ ] Write updated bookmark file atomically
-- [ ] `pd del <name>` — delete bookmark
-  - [ ] Error if name not found
-  - [ ] Write updated file
-- [ ] `pd list` — list all bookmarks
-  - [ ] Print in `name  path` format, aligned for readability
-  - [ ] Print message if no bookmarks exist
-- [ ] `pd clear` — delete all bookmarks
-  - [ ] Prompt for confirmation unless `--force`
-  - [ ] Truncate data file (preserve comments if any)
-- [ ] `pd expand <name>[/<relpath>]` — same as `get`, for explicit scripting use
-- [ ] `pd export <file>` — copy bookmark file to `<file>`
-  - [ ] Error if destination is not writable
-- [ ] `pd import [--append] [--quiet] <file>` — import from file
-  - [ ] Default (no flags): prompt before replacing; backup existing file
-  - [ ] `--append`: merge imported bookmarks, skip duplicate names
-  - [ ] `--quiet`: non-interactive; replace without prompting
-  - [ ] Validate import file format before writing
+- [x] `pd get <name>[/<relpath>]` — resolve bookmark, print path to stdout
+- [x] `pd add <name> [path]` — add or update bookmark
+  - [x] Default path = current working directory
+  - [x] Expand `~`; resolve relative to absolute path
+  - [x] Validate bookmark name (no `/`, no leading `-`)
+  - [x] Check if path exists; warn + prompt if not (respect `--force`)
+  - [x] Check for existing bookmark with same name; prompt before overwriting (respect `--force`)
+  - [x] Write updated bookmark file atomically
+- [x] `pd del <name>` — delete bookmark
+- [x] `pd list` — list all bookmarks (column-aligned output)
+- [x] `pd clear` — delete all bookmarks (prompt for confirmation; respect `--force`)
+- [x] `pd expand <name>[/<relpath>]` — same as `get`, for explicit scripting use
+- [x] `pd export <file>` — write bookmark file to `<file>`
+- [x] `pd import [--append] [--quiet] [--force] <file>` — import from file
 
 ### Error Handling
-- [ ] Define exit codes (0 success, 1 usage, 2 not found, 3 path missing, 4 I/O error, 5 invalid name)
-- [ ] All errors to stderr; data to stdout
-- [ ] Consistent error message style
+- [x] Define exit codes (0 success, 1 usage, 2 not found, 3 path missing, 4 I/O error, 5 invalid name)
+- [x] All errors to stderr; data to stdout
+- [x] Consistent error message style
+
+### Short-Flag Normalization (ADR-004)
+- [x] `normalize_args` maps `-a/--add`, `-d/--del`, `-l/--list`, `-c/--clear`, `-x/--expand`, `-e/--export`, `-i/--import`, `-v` to their subcommand equivalents before clap parsing
 
 ### Tests
-- [ ] Unit tests for bookmark file parser (blank lines, comments, spaces in paths)
-- [ ] Unit tests for name/path validation
-- [ ] Unit tests for path resolution with relative suffixes
+- [x] Unit tests for bookmark file parser (blank lines, comments, spaces in paths, tab separator)
+- [x] Unit tests for name validation
+- [x] Unit tests for path resolution with relative suffixes and `..` normalization
+- [x] Unit tests for `BookmarkStore` CRUD operations
 - [ ] Integration tests using a temporary data file for each subcommand
-- [ ] Test atomic write behavior (temp file + rename)
 
 ---
 
-## Phase 2: Shell Init Script Generation
+## Phase 2: Shell Init Script Generation ✓
 
-The binary gains the ability to generate the shell shim code, making installation self-contained.
+The binary generates the shell shim code, making installation self-contained.
 
-- [ ] `pd init bash` — print bash integration function + completion registration
-- [ ] `pd init nu` — print nushell `def --env pd` command + completion definition
-- [ ] `pd init pwsh` — print PowerShell function
-- [ ] Embed init script templates in the binary (use `include_str!` macros)
-- [ ] `pd completions bash` — print bash completion script
-- [ ] `pd completions nu` — print nushell completion definitions
-- [ ] `pd completions pwsh` — print PowerShell tab completion registration
+- [x] `pd init bash` — bash integration function + tab completion registration
+- [x] `pd init nu` — nushell `def --env pd` command
+- [x] `pd init pwsh` — PowerShell function with binary path resolution
+- [x] Init script templates embedded in the binary as string constants
+- [x] `pd completions bash` — bash completion script (full implementation)
+- [x] `pd completions nu` — nushell completion script (stub; full support in Phase 3)
+- [x] `pd completions pwsh` — PowerShell completion script (stub; full support in Phase 5)
 
 ---
 
@@ -105,13 +92,20 @@ The binary gains the ability to generate the shell shim code, making installatio
 - [ ] Verify navigation changes directory correctly
 - [ ] Verify relative path navigation
 - [ ] Verify all management commands
-- [ ] Implement and test bash tab completion
+- [ ] Test and refine bash tab completion (written in Phase 2; needs real-world validation)
   - [ ] Complete bookmark names
   - [ ] Complete relative paths after `<name>/`
   - [ ] Complete flags
   - [ ] Complete file paths for `-a`, `-i`, `-e`
-- [ ] Test on a Linux server (Ubuntu/Debian)
+- [ ] Test on a Linux server (Fedora/RHEL and Ubuntu/Debian)
 - [ ] Document bash setup procedure in README
+- [ ] Archive the original bash implementation (see note below)
+
+> **Archive note**: Once Phase 4 is complete and validated on Linux, the original bash
+> implementation (`pd.sh`, `install.sh`, `update.sh`, `uninstall.sh`, `common.sh`,
+> `defaults.sh`, `dothis.sh`) will be moved to an `archive/` directory and the README
+> updated to reflect the new installation process. The archived scripts will be preserved
+> for historical reference but no longer maintained.
 
 ---
 
@@ -128,7 +122,7 @@ The binary gains the ability to generate the shell shim code, making installatio
 
 - [ ] Set up GitHub Actions CI
   - [ ] Build and test on Windows (x64)
-  - [ ] Build and test on Linux (x64, musl)
+  - [ ] Build and test on Linux x64 (musl for fully static binary)
   - [ ] Build on Linux ARM64
 - [ ] Automate GitHub Release creation on version tag push
   - [ ] Attach pre-built binaries for each target
@@ -140,11 +134,9 @@ The binary gains the ability to generate the shell shim code, making installatio
 
 ## Phase 7: Refinements and Carry-over Items
 
-Items from the original bash `todo.md` that are still relevant, plus new ideas:
-
-- [ ] When adding a bookmark, check if target path exists; prompt if not (captured in Phase 1 but listed here for visibility)
-- [ ] `--force` flag to suppress all interactive prompts
-- [ ] Improve `pd list` output formatting (align columns, handle long names/paths)
+- [ ] Integration tests using a temporary data file for each subcommand (moved from Phase 1)
+- [ ] `--force` flag behavior audit across all commands
+- [ ] Improve `pd list` output formatting for very long names or paths (truncation/wrapping)
 - [ ] `pd rename <old> <new>` — rename a bookmark without changing its path
 - [ ] `pd edit` — open the bookmark file in `$EDITOR`
 
