@@ -258,10 +258,18 @@ def _pd_completer [context: string, offset: int] {
         _pd_bookmark_names
     } else if ($subcmd in ["add" "-a" "--add"]) and $cur_pos >= 2 {
         # Path argument of add: complete directories.
-        # path dirname of "C:\Us" → "C:\"; of "foo" → "."; of "" → "."
-        let dir = if ($cur | is-empty) { "." } else { $cur | path dirname }
+        # When cur ends with a separator the user wants to list inside that
+        # directory, not its parent. Use --all so hidden directories such as
+        # AppData appear as completions.
+        let dir = if ($cur | is-empty) {
+            "."
+        } else if ($cur | str ends-with '\') or ($cur | str ends-with '/') {
+            $cur
+        } else {
+            $cur | path dirname
+        }
         try {
-            ls $dir
+            ls --all $dir
             | where type == dir
             | get name
             | each { |p| $p | into string }
@@ -381,9 +389,15 @@ def _pd_completer [context: string, offset: int] {
     } else if ($subcmd in ["del" "expand"]) and $cur_pos == 1 {
         _pd_bookmark_names
     } else if ($subcmd in ["add" "-a" "--add"]) and $cur_pos >= 2 {
-        let dir = if ($cur | is-empty) { "." } else { $cur | path dirname }
+        let dir = if ($cur | is-empty) {
+            "."
+        } else if ($cur | str ends-with '\') or ($cur | str ends-with '/') {
+            $cur
+        } else {
+            $cur | path dirname
+        }
         try {
-            ls $dir
+            ls --all $dir
             | where type == dir
             | get name
             | each { |p| $p | into string }
