@@ -232,12 +232,6 @@ def _pd_completer [context: string, offset: int] {
             }
         } catch { [] }
 
-    } else if ($cur | str starts-with '-') {
-        # Flag completion
-        ["-a" "--add" "-d" "--del" "-l" "--list" "-c" "--clear"
-         "-x" "--expand" "-e" "--export" "-i" "--import"
-         "-h" "--help" "-v" "--version"]
-
     } else {
         # Default: complete bookmark names (navigation or first positional)
         _pd_bookmark_names
@@ -335,10 +329,6 @@ def _pd_completer [context: string, offset: int] {
                 $"($ref_name)/($rel)"
             }
         } catch { [] }
-    } else if ($cur | str starts-with '-') {
-        ["-a" "--add" "-d" "--del" "-l" "--list" "-c" "--clear"
-         "-x" "--expand" "-e" "--export" "-i" "--import"
-         "-h" "--help" "-v" "--version"]
     } else {
         _pd_bookmark_names
     }
