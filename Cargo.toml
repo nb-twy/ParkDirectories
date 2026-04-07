@@ -1,0 +1,15 @@
+[package]
+name = "pd"
+version = "0.1.0"
+edition = "2021"
+description = "Park Directories — directory bookmarks for your terminal"
+license = "BSD-3-Clause"
+
+[[bin]]
+name = "pd"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive", "env"] }
+dirs = "5"
+thiserror = "1"
