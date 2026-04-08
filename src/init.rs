@@ -410,7 +410,7 @@ def _pd_completer [context: string, offset: int] {
 
 // ─── PowerShell ──────────────────────────────────────────────────────────────
 
-/// PowerShell integration function.
+/// PowerShell integration: navigation function + tab completion.
 /// Add to $PROFILE:  Invoke-Expression (& pd init pwsh)
 const PWSH_INIT: &str = r#"# Park Directories — PowerShell integration
 # Add to $PROFILE:
@@ -421,6 +421,11 @@ $script:_pdBin = (Get-Command -Name 'pd' -CommandType Application -ErrorAction S
     Select-Object -First 1 -ExpandProperty Source)
 
 function pd {
+    # No arguments: list all bookmarks
+    if ($args.Count -eq 0) {
+        & $script:_pdBin list
+        return
+    }
     # Navigation: single bare argument with no leading dash
     if ($args.Count -eq 1 -and -not $args[0].ToString().StartsWith('-')) {
         $target = & $script:_pdBin get $args[0]
@@ -432,9 +437,222 @@ function pd {
     # All other operations: pass through to the binary
     & $script:_pdBin @args
 }
+
+# ── Tab completion ────────────────────────────────────────────────────────────
+# Capture the binary path for use inside the completer closure.
+$_pdBinPath = $script:_pdBin
+
+Register-ArgumentCompleter -CommandName pd -ScriptBlock ({
+    param($wordToComplete, $commandAst, $cursorPosition)
+
+    # All tokens after 'pd', as plain strings
+    $tokens = @($commandAst.CommandElements | Select-Object -Skip 1 |
+                ForEach-Object { $_.ToString() })
+    $n     = $tokens.Count
+    $cur   = $wordToComplete
+    $atNew = ($cur -eq '')
+
+    # Last fully-typed token (before the current partial word)
+    $prev = if ($atNew) {
+                if ($n -ge 1) { $tokens[-1] } else { '' }
+            } else {
+                if ($n -ge 2) { $tokens[-2] } else { '' }
+            }
+
+    # Positional slot being completed (0 = first arg after 'pd')
+    $curPos = if ($atNew) { $n } else { $n - 1 }
+    $subcmd = if ($n -gt 0) { $tokens[0] } else { '' }
+
+    # Shorthand: wrap a string as a CompletionResult
+    $mkResult = [scriptblock] {
+        param($t)
+        [System.Management.Automation.CompletionResult]::new($t, $t, 'ParameterValue', $t)
+    }
+
+    # Fetch bookmark names from the binary
+    $names = & $_pdBinPath list 2>$null |
+             ForEach-Object { ($_ -split '\s+', 2)[0] } |
+             Where-Object   { $_ -ne '' }
+
+    # ── Prev-based dispatch ──────────────────────────────────────────────────
+
+    # Flags that expect a bookmark name next
+    if ($prev -in '-d', '--del', '-x', '--expand') {
+        $names | Where-Object { $_ -like "$cur*" } |
+                 ForEach-Object { & $mkResult $_ }
+        return
+    }
+
+    # Flags that expect a file path — no custom completion offered
+    if ($prev -in '-e', '--export', '-i', '--import') { return }
+
+    # No-argument flags — nothing useful follows
+    if ($prev -in '-l', '--list', '-c', '--clear', '-v', '--version', '-h', '--help') { return }
+
+    # ── Flag completion ──────────────────────────────────────────────────────
+
+    if ($cur -like '-*') {
+        '-a', '--add', '-d', '--del', '-l', '--list', '-c', '--clear',
+        '-x', '--expand', '-e', '--export', '-i', '--import',
+        '-h', '--help', '-v', '--version' |
+            Where-Object { $_ -like "$cur*" } |
+            ForEach-Object { & $mkResult $_ }
+        return
+    }
+
+    # ── Position-aware dispatch ──────────────────────────────────────────────
+
+    if ($curPos -eq 0) {
+        if ($cur -like '*/*') {
+            # Relative-path completion: "bookmarkname/partial/path"
+            $refName  = ($cur -split '/', 2)[0]
+            $relTyped = ($cur -split '/', 2)[1]
+
+            $rawBase  = & $_pdBinPath get $refName 2>$null
+            $baseExit = $LASTEXITCODE
+            $base     = if ($rawBase) { "$rawBase".Trim() } else { '' }
+            if ($baseExit -ne 0 -or -not $base) { return }
+
+            # Strip the partial filename component to find the directory to list
+            $searchDir = if ($relTyped -match '[/\\]') {
+                $lastSep = [Math]::Max($relTyped.LastIndexOf('/'), $relTyped.LastIndexOf('\'))
+                $dirPart = $relTyped.Substring(0, $lastSep)
+                Join-Path $base $dirPart
+            } else {
+                $base
+            }
+
+            $baseTrimmed = $base.TrimEnd('\', '/')
+            Get-ChildItem -LiteralPath $searchDir -Directory -ErrorAction SilentlyContinue |
+                ForEach-Object {
+                    $rel = $_.FullName.Substring($baseTrimmed.Length).TrimStart('\', '/')
+                    "$refName/$($rel -replace '\\', '/')"
+                } |
+                Where-Object { $_ -like "$cur*" } |
+                ForEach-Object { & $mkResult $_ }
+
+        } else {
+            # Complete bookmark names (navigation target)
+            $names | Where-Object { $_ -like "$cur*" } | ForEach-Object { & $mkResult $_ }
+        }
+
+    } elseif ($subcmd -in 'del', 'expand' -and $curPos -eq 1) {
+        $names | Where-Object { $_ -like "$cur*" } | ForEach-Object { & $mkResult $_ }
+
+    } elseif ($subcmd -in 'add', '-a', '--add' -and $curPos -ge 2) {
+        # Directory completion for the path argument of 'add'
+        $dirBase = if ($cur -eq '') {
+                       '.'
+                   } elseif ($cur -like '*\' -or $cur -like '*/') {
+                       $cur
+                   } else {
+                       $p = Split-Path -Parent $cur
+                       if ($p) { $p } else { '.' }
+                   }
+
+        Get-ChildItem -LiteralPath $dirBase -Directory -Force -ErrorAction SilentlyContinue |
+            ForEach-Object { $_.FullName } |
+            Where-Object   { $_ -like "$cur*" } |
+            ForEach-Object { & $mkResult $_ }
+    }
+}.GetNewClosure())
 "#;
 
-/// PowerShell completion script (stub — full support in a future release).
+/// Standalone PowerShell completion script.
+/// The same completion definitions are already included in PWSH_INIT;
+/// this is provided for users who sourced an older pd.ps1 and want
+/// only the completion update.
 const PWSH_COMPLETIONS: &str = r#"# Park Directories — PowerShell tab completion
-# TODO: full completion support is planned for a future release.
+# This is already included in 'pd init pwsh'.
+# Source separately only if you need to refresh completions independently.
+
+$_pdBinPath = (Get-Command -Name 'pd' -CommandType Application -ErrorAction SilentlyContinue |
+    Select-Object -First 1 -ExpandProperty Source)
+
+Register-ArgumentCompleter -CommandName pd -ScriptBlock ({
+    param($wordToComplete, $commandAst, $cursorPosition)
+
+    $tokens = @($commandAst.CommandElements | Select-Object -Skip 1 |
+                ForEach-Object { $_.ToString() })
+    $n     = $tokens.Count
+    $cur   = $wordToComplete
+    $atNew = ($cur -eq '')
+
+    $prev = if ($atNew) {
+                if ($n -ge 1) { $tokens[-1] } else { '' }
+            } else {
+                if ($n -ge 2) { $tokens[-2] } else { '' }
+            }
+
+    $curPos = if ($atNew) { $n } else { $n - 1 }
+    $subcmd = if ($n -gt 0) { $tokens[0] } else { '' }
+
+    $mkResult = [scriptblock] {
+        param($t)
+        [System.Management.Automation.CompletionResult]::new($t, $t, 'ParameterValue', $t)
+    }
+
+    $names = & $_pdBinPath list 2>$null |
+             ForEach-Object { ($_ -split '\s+', 2)[0] } |
+             Where-Object   { $_ -ne '' }
+
+    if ($prev -in '-d', '--del', '-x', '--expand') {
+        $names | Where-Object { $_ -like "$cur*" } |
+                 ForEach-Object { & $mkResult $_ }
+        return
+    }
+    if ($prev -in '-e', '--export', '-i', '--import') { return }
+    if ($prev -in '-l', '--list', '-c', '--clear', '-v', '--version', '-h', '--help') { return }
+
+    if ($cur -like '-*') {
+        '-a', '--add', '-d', '--del', '-l', '--list', '-c', '--clear',
+        '-x', '--expand', '-e', '--export', '-i', '--import',
+        '-h', '--help', '-v', '--version' |
+            Where-Object { $_ -like "$cur*" } |
+            ForEach-Object { & $mkResult $_ }
+        return
+    }
+
+    if ($curPos -eq 0) {
+        if ($cur -like '*/*') {
+            $refName  = ($cur -split '/', 2)[0]
+            $relTyped = ($cur -split '/', 2)[1]
+            $rawBase  = & $_pdBinPath get $refName 2>$null
+            $baseExit = $LASTEXITCODE
+            $base     = if ($rawBase) { "$rawBase".Trim() } else { '' }
+            if ($baseExit -ne 0 -or -not $base) { return }
+            $searchDir = if ($relTyped -match '[/\\]') {
+                $lastSep = [Math]::Max($relTyped.LastIndexOf('/'), $relTyped.LastIndexOf('\'))
+                Join-Path $base $relTyped.Substring(0, $lastSep)
+            } else {
+                $base
+            }
+            $baseTrimmed = $base.TrimEnd('\', '/')
+            Get-ChildItem -LiteralPath $searchDir -Directory -ErrorAction SilentlyContinue |
+                ForEach-Object {
+                    $rel = $_.FullName.Substring($baseTrimmed.Length).TrimStart('\', '/')
+                    "$refName/$($rel -replace '\\', '/')"
+                } |
+                Where-Object { $_ -like "$cur*" } |
+                ForEach-Object { & $mkResult $_ }
+        } else {
+            $names | Where-Object { $_ -like "$cur*" } | ForEach-Object { & $mkResult $_ }
+        }
+    } elseif ($subcmd -in 'del', 'expand' -and $curPos -eq 1) {
+        $names | Where-Object { $_ -like "$cur*" } | ForEach-Object { & $mkResult $_ }
+    } elseif ($subcmd -in 'add', '-a', '--add' -and $curPos -ge 2) {
+        $dirBase = if ($cur -eq '') {
+                       '.'
+                   } elseif ($cur -like '*\' -or $cur -like '*/') {
+                       $cur
+                   } else {
+                       $p = Split-Path -Parent $cur
+                       if ($p) { $p } else { '.' }
+                   }
+        Get-ChildItem -LiteralPath $dirBase -Directory -Force -ErrorAction SilentlyContinue |
+            ForEach-Object { $_.FullName } |
+            Where-Object   { $_ -like "$cur*" } |
+            ForEach-Object { & $mkResult $_ }
+    }
+}.GetNewClosure())
 "#;

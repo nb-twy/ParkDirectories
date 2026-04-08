@@ -114,6 +114,125 @@ pd init nu | save -f ~/.config/nushell/pd.nu
 
 ---
 
+### Installation: Bash on Linux (secondary)
+
+**Step 1 — Get the binary**
+
+Download the pre-built Linux binary from the [GitHub Releases](https://github.com/nb-twy/ParkDirectories/releases)
+page, or build from source (requires [Rust](https://rustup.rs)):
+
+```bash
+git clone https://github.com/nb-twy/ParkDirectories.git
+cd ParkDirectories
+cargo build --release
+```
+
+Copy `target/release/pd` to a directory in your `$PATH`, for example
+`~/bin/` or `/usr/local/bin/`.
+
+**Step 2 — Add the bash integration to your shell**
+
+Add the following line to your `~/.bashrc`:
+
+```bash
+eval "$(pd init bash)"
+```
+
+**Step 3 — Restart your terminal** (or run `source ~/.bashrc`)
+
+That's it. The `pd` command is now available with tab completion.
+
+---
+
+### Bash usage
+
+| Command | What it does |
+|---|---|
+| `pd -a name` | Bookmark the current directory as `name` |
+| `pd -a name /some/path` | Bookmark a specific path |
+| `pd name` | Navigate to the bookmarked directory |
+| `pd name/relative/path` | Navigate to a subdirectory of the bookmark |
+| `pd -l` | List all bookmarks |
+| `pd -d name` | Delete a bookmark |
+| `pd -c` | Clear all bookmarks (prompts for confirmation) |
+| `pd -x name` | Print the resolved path without navigating (for scripts) |
+| `pd -e file` | Export bookmarks to a file |
+| `pd -i file` | Import bookmarks from a file |
+| `pd -i --append file` | Merge imported bookmarks with existing ones |
+
+**Tab completion** works for bookmark names, relative paths (`pd name/<Tab>`),
+flags (`pd -<Tab>`), and directory paths when adding a bookmark (`pd -a name <Tab>`).
+
+---
+
+### Updating bash integration
+
+When you update the `pd` binary, the integration is re-evaluated automatically
+on the next shell startup (since `eval "$(pd init bash)"` runs at login). No
+manual step is needed.
+
+---
+
+### Installation: PowerShell on Windows (tertiary)
+
+**Step 1 — Get the binary**
+
+Build from source (requires [Rust](https://rustup.rs)):
+
+```powershell
+git clone https://github.com/nb-twy/ParkDirectories.git
+cd ParkDirectories
+cargo build --release
+```
+
+Copy `target\release\pd.exe` to a directory in your `$env:PATH`, for example
+`C:\Users\you\bin\`.
+
+**Step 2 — Add the PowerShell integration to your profile**
+
+Add the following line to your PowerShell profile (`$PROFILE`):
+
+```powershell
+Invoke-Expression (& pd init pwsh)
+```
+
+To find your profile path: `echo $PROFILE`. Create the file if it does not exist.
+
+**Step 3 — Restart your terminal** (or run `. $PROFILE`)
+
+That's it. The `pd` command is now available with tab completion.
+
+---
+
+### PowerShell usage
+
+| Command | What it does |
+|---|---|
+| `pd -a name` | Bookmark the current directory as `name` |
+| `pd -a name C:\some\path` | Bookmark a specific path |
+| `pd name` | Navigate to the bookmarked directory |
+| `pd name/relative/path` | Navigate to a subdirectory of the bookmark |
+| `pd -l` | List all bookmarks |
+| `pd -d name` | Delete a bookmark |
+| `pd -c` | Clear all bookmarks (prompts for confirmation) |
+| `pd -x name` | Print the resolved path without navigating (for scripts) |
+| `pd -e file` | Export bookmarks to a file |
+| `pd -i file` | Import bookmarks from a file |
+| `pd -i --append file` | Merge imported bookmarks with existing ones |
+
+**Tab completion** works for bookmark names, relative paths (`pd name/<Tab>`),
+flags (`pd -<Tab>`), and directory paths when adding a bookmark (`pd -a name <Tab>`).
+
+---
+
+### Updating PowerShell integration
+
+When you update the `pd` binary, the integration is re-evaluated automatically
+on the next shell startup (since `Invoke-Expression (& pd init pwsh)` runs at
+profile load). No manual step is needed.
+
+---
+
 ## Introduction
 Park Directories allows a user to navigate to any directory on their system
 with the simplicity of the semantics of the _cd_ command.  Do you have a few directories in which you work commonly: the root to your _dev_ directory, _/var/log_, the root directory of your current project?  When you open your terminal, how do you jump to one of these?  Do you have aliases for them?  Do you have to type them out with tab completion a lot?  Does it get tedious?  When you want to jump to another part of your system and stay there for a  while, are you tempted to open a new terminal window or another tab, or another _tmux_ pane so that you can come back to where you are without having to navigate back tediously?

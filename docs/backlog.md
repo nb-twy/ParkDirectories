@@ -114,8 +114,8 @@ The binary generates the shell shim code, making installation self-contained.
 
 - [ ] Test `pd init pwsh` output in a real PowerShell session
 - [ ] Verify navigation and all management commands
-- [ ] Implement and test PowerShell tab completion (using `Register-ArgumentCompleter`)
-- [ ] Document PowerShell setup procedure in README
+- [x] Implement PowerShell tab completion (using `Register-ArgumentCompleter`)
+- [x] Document PowerShell setup procedure in README
 
 ---
 
