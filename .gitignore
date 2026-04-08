@@ -671,3 +671,7 @@ MigrationBackup/
 
 # End of https://www.gitignore.io/api/lua,vim,node,python,angular,dotnetcore,visualstudio,visualstudiocode
 
+### Rust ###
+/target/
+Cargo.lock
+
