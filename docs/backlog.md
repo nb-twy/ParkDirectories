@@ -1,6 +1,6 @@
 # Park Directories — Development Backlog
 
-**Last Updated**: 2026-04-07
+**Last Updated**: 2026-04-08
 
 Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
 
@@ -79,10 +79,10 @@ The binary generates the shell shim code, making installation self-contained.
 - [x] Implement tab completion for nushell
   - [x] Complete bookmark names
   - [x] Complete relative paths after `<name>/`
-  - [x] Complete flags
-  - [x] Complete file paths for `-a`
-- [x] Verify relative path navigation (`pd <name>/<relpath>`) — user testing pending
-- [x] Verify tab completion in a live nushell session — user testing pending
+  - [x] Complete flags (intentionally not implemented: `--wrapped` intercepts `-` input before `@_pd_completer` is called; `pd --help` covers flag discovery)
+  - [x] Complete file paths for `-a` (directory completion implemented; hidden dirs included via `ls --all`)
+- [x] Verify relative path navigation (`pd <name>/<relpath>`)
+- [x] Verify tab completion in a live nushell session
 - [x] Document nushell setup procedure in README
 
 ---

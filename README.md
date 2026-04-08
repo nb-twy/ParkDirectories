@@ -1,15 +1,15 @@
-![GitHub release (latest by date)](https://img.shields.io/badge/Version-3.0.0--beta-blue)
+![GitHub release (latest by date)](https://img.shields.io/badge/Version-3.0.0-blue)
 
 # Park Directories
 
-> **v3.0.0-beta** — Park Directories has been rewritten in Rust. The new binary
+> **v3.0.0** — Park Directories has been rewritten in Rust. The new binary
 > supports nushell, PowerShell, and bash from a single cross-platform executable.
-> See [v3.0.0-beta Setup](#v300-beta-setup) below for installation instructions.
+> See [v3.0.0 Setup](#v300-setup) below for installation instructions.
 > The original bash implementation documentation follows for reference.
 
 ---
 
-## v3.0.0-beta Setup
+## v3.0.0 Setup
 
 ### How it works
 
@@ -82,7 +82,7 @@ All commands also accept long-form flags: `--add`, `--del`, `--list`, `--clear`,
 `--expand`, `--export`, `--import`.
 
 **Tab completion** works for bookmark names, relative paths (`pd name/<Tab>`),
-and flags (`pd -<Tab>`).
+and directory paths when adding a bookmark (`pd -a name <Tab>`).
 
 ---
 
