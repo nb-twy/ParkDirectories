@@ -1,6 +1,6 @@
 # Park Directories — Development Backlog
 
-**Last Updated**: 2026-04-08
+**Last Updated**: 2026-04-08  
 
 Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
 
@@ -121,15 +121,34 @@ The binary generates the shell shim code, making installation self-contained.
 
 ## Phase 6: Build and Distribution
 
+### CI and GitHub Releases
 - [ ] Set up GitHub Actions CI
   - [ ] Build and test on Windows (x64)
   - [ ] Build and test on Linux x64 (musl for fully static binary)
-  - [ ] Build on Linux ARM64
+  - [ ] Build on Linux ARM64 (musl)
 - [ ] Automate GitHub Release creation on version tag push
   - [ ] Attach pre-built binaries for each target
   - [ ] Include SHA256 checksums
 - [ ] Write installation guide in README (download binary, add to PATH, run `pd init`)
 - [ ] Version the shell init scripts alongside the binary
+
+### cargo install (crates.io)
+- [ ] Verify crate name `pd` is available on crates.io; if not, use `park-directories` with `[[bin]] name = "pd"`
+- [ ] Complete `Cargo.toml` metadata: `repository`, `keywords`, `categories`, `readme`
+- [ ] `cargo publish` after Phase 6 CI is in place and confirms clean cross-platform builds
+
+### Winget (Windows)
+- [ ] Create winget package manifest YAML (requires a published GitHub Release with SHA256)
+- [ ] Decide on publisher/package ID (e.g., `NbTwy.ParkDirectories`)
+- [ ] Submit manifest PR to [winget-pkgs](https://github.com/microsoft/winget-pkgs)
+- [ ] Automate future manifest updates with `wingetcreate` on each release
+
+### dnf / apt (Linux)
+- [ ] Write RPM spec file for Fedora/RHEL packaging
+- [ ] Publish to a COPR repository for Fedora/RHEL (`dnf copr enable …`)
+- [ ] Write Debian control files for Ubuntu/Debian packaging
+- [ ] Publish to a Launchpad PPA for Ubuntu/Debian (`add-apt-repository ppa:…`)
+- [ ] Add post-install note in both packages directing users to run `pd init bash`
 
 ---
 

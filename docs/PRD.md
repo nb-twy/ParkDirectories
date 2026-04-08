@@ -1,8 +1,8 @@
 # Park Directories — Project Requirements Document
 
-**Version**: 1.0  
+**Version**: 1.1  
 **Status**: Draft  
-**Last Updated**: 2026-04-06
+**Last Updated**: 2026-04-08
 
 ---
 
@@ -158,3 +158,75 @@ Per-shell isolated bookmark stores are a planned future feature (see backlog), n
 - Bookmark file writes must be atomic to prevent data corruption
 - All error messages go to stderr; data output (paths, listings, init scripts) goes to stdout
 - The tool must work on Linux servers without requiring elevated privileges or package installation beyond placing the binary in `$PATH`
+
+---
+
+## 8. Distribution
+
+The goal is to make `pd` installable through the native package managers of each target platform, reducing friction for users who prefer not to build from source or manage binaries manually.
+
+### 8.1 Cargo Install (crates.io)
+
+**Target audience**: Users already in the Rust ecosystem who have `cargo` available.
+
+**Mechanism**: `cargo install pd` (subject to crate name availability; see note below).
+
+**Requirements**:
+- Publish the crate to [crates.io](https://crates.io)
+- `Cargo.toml` must include all required metadata: `repository`, `keywords`, `categories`, `readme`
+- Builds cleanly on all target platforms from source (validated by Phase 6 CI)
+
+**Considerations**:
+- The crate name `pd` may already be claimed on crates.io. If so, an alternative such as `park-directories` can be used as the crate name while keeping `pd` as the installed binary name via `[[bin]] name = "pd"`
+- `cargo install` compiles from source, so users need the Rust toolchain; this is not a barrier for the intended audience of this channel
+- Easiest distribution channel to set up: a single `cargo publish` after CI is in place
+
+**Prerequisite**: Phase 6 CI must confirm clean builds on all targets before publishing.
+
+---
+
+### 8.2 Winget (Windows)
+
+**Target audience**: Windows users on the primary (nushell) and tertiary (PowerShell) target platforms who prefer a standard Windows installation experience.
+
+**Mechanism**: `winget install pd` (exact package ID TBD at submission time).
+
+**Requirements**:
+- A published GitHub Release with an attached, pre-built Windows x64 binary (prerequisite: Phase 6 CI and release automation)
+- A stable, versioned download URL — GitHub Releases provides this automatically
+- SHA256 checksum of the binary, included in the package manifest
+- A winget package manifest (YAML) submitted to the [winget-pkgs](https://github.com/microsoft/winget-pkgs) community repository
+- Microsoft's automated review and validation pipeline must pass before the package is publicly available
+
+**Considerations**:
+- The manifest submission is a pull request to a public GitHub repository; turnaround is typically a few days
+- The package ID follows the pattern `Publisher.ApplicationName` (e.g., `NbTwy.ParkDirectories`); the publisher name must be consistent across all future submissions
+- Winget requires the download to be a proper installer or a `.zip`/standalone binary; a standalone `.exe` is acceptable
+- Each new release requires an updated manifest PR — this can be automated with tools like `wingetcreate`
+
+**Prerequisite**: Phase 6 GitHub Releases automation with an attached Windows x64 binary and SHA256 checksums.
+
+---
+
+### 8.3 dnf and apt (Linux)
+
+**Target audience**: Linux server users on Fedora/RHEL (dnf) and Ubuntu/Debian (apt) who want to install and upgrade `pd` through their distribution's standard package management tooling.
+
+**Mechanism**:
+- Fedora/RHEL: `dnf copr enable <repo>/pd && dnf install pd` via a COPR repository, or a direct `.rpm` for manual install
+- Ubuntu/Debian: `add-apt-repository ppa:<owner>/pd && apt install pd` via a Launchpad PPA, or a direct `.deb` for manual install
+
+**Requirements**:
+- Pre-built Linux binaries, statically linked via musl for maximum portability across distributions and kernel versions (prerequisite: Phase 6 CI building `x86_64-unknown-linux-musl` and `aarch64-unknown-linux-musl`)
+- **Fedora/RHEL**: An RPM spec file defining package metadata, file placement, and the `%post` install note directing users to run `pd init bash`
+- **Ubuntu/Debian**: Debian packaging control files (`control`, `rules`, `changelog`, etc.) with equivalent post-install guidance
+- A COPR project (Fedora) or Launchpad PPA (Ubuntu) to host the packages and serve repository metadata
+
+**Considerations**:
+- Native package management is the most complex distribution channel: each distro family has its own packaging conventions, and maintaining packages for both RPM and DEB formats is ongoing work
+- COPR (Fedora) and Launchpad PPA (Ubuntu) are community-hosted repositories — they lower the bar compared to official inclusion in Fedora or Debian/Ubuntu, which requires satisfying each distribution's full packaging policy
+- Official distribution inclusion (Fedora package review, Debian mentors process) is a longer-term goal if community interest warrants it
+- For technically capable users, a static musl binary placed in `$PATH` is always a fully supported alternative that bypasses native packaging entirely; the package manager route primarily benefits discoverability and automated upgrades
+- ARM64 binaries are required for the growing number of ARM-based Linux servers (Ampere, Graviton, etc.)
+
+**Prerequisite**: Phase 6 GitHub Releases automation with Linux x64 and ARM64 musl binaries and SHA256 checksums.
