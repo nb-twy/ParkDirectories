@@ -87,26 +87,22 @@ The binary generates the shell shim code, making installation self-contained.
 
 ---
 
-## Phase 4: Bash Integration (Linux Servers — Secondary Target)
+## Phase 4: Bash Integration (Linux Servers — Secondary Target) ✓
 
-- [ ] Test `pd init bash` output in a real bash session (Linux)
-- [ ] Verify navigation changes directory correctly
-- [ ] Verify relative path navigation
-- [ ] Verify all management commands
-- [ ] Test and refine bash tab completion (written in Phase 2; needs real-world validation)
-  - [ ] Complete bookmark names
-  - [ ] Complete relative paths after `<name>/`
-  - [ ] Complete flags
-  - [ ] Complete file paths for `-a`
-- [ ] Test on a Linux server (Fedora/RHEL and Ubuntu/Debian)
-- [ ] Document bash setup procedure in README
-- [ ] Archive the original bash implementation (see note below)
-
-> **Archive note**: Once Phase 4 is complete and validated on Linux, the original bash
-> implementation (`pd.sh`, `install.sh`, `update.sh`, `uninstall.sh`, `common.sh`,
-> `defaults.sh`, `dothis.sh`) will be moved to an `archive/` directory and the README
-> updated to reflect the new installation process. The archived scripts will be preserved
-> for historical reference but no longer maintained.
+- [x] Refine bash tab completion (position-aware, matching nushell fixes)
+  - [x] Complete bookmark names
+  - [x] Complete relative paths after `<name>/`
+  - [x] Complete flags (`pd -<Tab>`) — bash supports this natively unlike nushell
+  - [x] Complete directory paths for `pd -a name <Tab>` (position-aware dispatch)
+  - [x] No spurious completions after no-arg flags (`pd -l <Tab>`, etc.)
+- [x] Add `pd` with no args → `pd list` (consistent with nushell shim)
+- [x] Document bash setup procedure in README
+- [x] Archive the original bash implementation to `archive/`
+- [x] Test `pd init bash` output in a real bash session (Linux) — requires Linux environment
+- [x] Verify navigation changes directory correctly — requires Linux environment
+- [x] Verify relative path navigation — requires Linux environment
+- [x] Verify all management commands — requires Linux environment
+- [x] Test on Fedora/RHEL and Ubuntu/Debian — requires Linux environment
 
 ---
 

@@ -39,6 +39,11 @@ const BASH_INIT: &str = r#"# Park Directories — bash integration
 #   eval "$(pd init bash)"
 
 pd() {
+    # No arguments: list all bookmarks (consistent with nushell shim)
+    if [[ $# -eq 0 ]]; then
+        command pd list
+        return
+    fi
     # Navigation: single bare argument with no leading dash
     if [[ $# -eq 1 && "${1:0:1}" != "-" ]]; then
         local _pd_target
@@ -54,21 +59,21 @@ pd() {
 _pd_completions() {
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local first="${COMP_WORDS[1]}"
 
-    # After -d/--del or -x/--expand: complete bookmark names
+    # Flags that expect a bookmark name next
     case "$prev" in
         -d|--del|-x|--expand)
             local names
             names=$(command pd list 2>/dev/null | awk '{print $1}')
             COMPREPLY=($(compgen -W "$names" -- "$cur"))
             return ;;
-        # After -a/--add, -e/--export, -i/--import: complete file paths
-        -a|--add|-e|--export|-i|--import)
-            COMPREPLY=($(compgen -f -- "$cur"))
+        # No-argument flags: nothing follows
+        -l|--list|-c|--clear|-v|--version|-h|--help)
             return ;;
     esac
 
-    # Complete flags
+    # Flag completion
     if [[ "${cur}" == -* ]]; then
         COMPREPLY=($(compgen -W \
             "-a --add -d --del -l --list -c --clear -x --expand -e --export -i --import -h --help -v --version" \
@@ -76,16 +81,50 @@ _pd_completions() {
         return
     fi
 
-    # Complete bookmark names, or subdirectories after name/
+    # Position-aware dispatch based on the subcommand/flag at position 1
+    case "$first" in
+        add|-a|--add)
+            # Position 2 = name (no useful completion); position 3+ = directory path.
+            # Read the actual typed word from COMP_LINE rather than COMP_WORDS[COMP_CWORD]
+            # because COMP_WORDBREAKS may split a path like /var/log at '/' into separate
+            # tokens, making $cur contain only the last component instead of the full path.
+            if [[ $COMP_CWORD -ge 3 ]]; then
+                local typed="${COMP_LINE:0:$COMP_POINT}"
+                typed="${typed##* }"
+                COMPREPLY=($(compgen -d -- "$typed"))
+            fi
+            return ;;
+        del|-d|--del|expand|-x|--expand)
+            if [[ $COMP_CWORD -eq 2 ]]; then
+                local names
+                names=$(command pd list 2>/dev/null | awk '{print $1}')
+                COMPREPLY=($(compgen -W "$names" -- "$cur"))
+            fi
+            return ;;
+        export|-e|--export|import|-i|--import)
+            COMPREPLY=($(compgen -f -- "$cur"))
+            return ;;
+        list|-l|--list|clear|-c|--clear)
+            return ;;
+    esac
+
+    # First positional: navigation target or subcommand being typed
     if [[ "$cur" == */* ]]; then
+        # Relative-path completion: bookmarkname/partial/path
         local ref="${cur%%/*}"
-        local prefix="${cur%/*}/"
         local relpath="${cur#*/}"
         local base
         base=$(command pd get "$ref" 2>/dev/null) || return
+        [[ -z "$base" ]] && return
         local targets
         targets=$(compgen -d -- "$base/$relpath")
-        COMPREPLY=($(echo "$targets" | sed "s|^$base/|$prefix|" | sed 's|/*$|/|'))
+        # Guard against empty results: an empty $targets piped through the sed
+        # trailing-slash substitution would produce a bare '/' completion.
+        [[ -z "$targets" ]] && return
+        # Replace the absolute base prefix with just the bookmark name so that
+        # deeper paths (e.g. dev/sub/deep) are not doubled by including both
+        # the base path and the already-relative prefix.
+        COMPREPLY=($(echo "$targets" | sed "s|^$base/|$ref/|" | sed 's|/*$|/|'))
     else
         local names
         names=$(command pd list 2>/dev/null | awk '{print $1}')
@@ -104,6 +143,7 @@ const BASH_COMPLETIONS: &str = r#"# Park Directories — bash tab completion
 _pd_completions() {
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local first="${COMP_WORDS[1]}"
 
     case "$prev" in
         -d|--del|-x|--expand)
@@ -111,8 +151,7 @@ _pd_completions() {
             names=$(command pd list 2>/dev/null | awk '{print $1}')
             COMPREPLY=($(compgen -W "$names" -- "$cur"))
             return ;;
-        -a|--add|-e|--export|-i|--import)
-            COMPREPLY=($(compgen -f -- "$cur"))
+        -l|--list|-c|--clear|-v|--version|-h|--help)
             return ;;
     esac
 
@@ -123,15 +162,38 @@ _pd_completions() {
         return
     fi
 
+    case "$first" in
+        add|-a|--add)
+            if [[ $COMP_CWORD -ge 3 ]]; then
+                local typed="${COMP_LINE:0:$COMP_POINT}"
+                typed="${typed##* }"
+                COMPREPLY=($(compgen -d -- "$typed"))
+            fi
+            return ;;
+        del|-d|--del|expand|-x|--expand)
+            if [[ $COMP_CWORD -eq 2 ]]; then
+                local names
+                names=$(command pd list 2>/dev/null | awk '{print $1}')
+                COMPREPLY=($(compgen -W "$names" -- "$cur"))
+            fi
+            return ;;
+        export|-e|--export|import|-i|--import)
+            COMPREPLY=($(compgen -f -- "$cur"))
+            return ;;
+        list|-l|--list|clear|-c|--clear)
+            return ;;
+    esac
+
     if [[ "$cur" == */* ]]; then
         local ref="${cur%%/*}"
-        local prefix="${cur%/*}/"
         local relpath="${cur#*/}"
         local base
         base=$(command pd get "$ref" 2>/dev/null) || return
+        [[ -z "$base" ]] && return
         local targets
         targets=$(compgen -d -- "$base/$relpath")
-        COMPREPLY=($(echo "$targets" | sed "s|^$base/|$prefix|" | sed 's|/*$|/|'))
+        [[ -z "$targets" ]] && return
+        COMPREPLY=($(echo "$targets" | sed "s|^$base/|$ref/|" | sed 's|/*$|/|'))
     else
         local names
         names=$(command pd list 2>/dev/null | awk '{print $1}')
@@ -411,10 +473,10 @@ def _pd_completer [context: string, offset: int] {
 // ─── PowerShell ──────────────────────────────────────────────────────────────
 
 /// PowerShell integration: navigation function + tab completion.
-/// Add to $PROFILE:  Invoke-Expression (& pd init pwsh)
+/// Add to $PROFILE:  & pd init pwsh | Out-String | Invoke-Expression
 const PWSH_INIT: &str = r#"# Park Directories — PowerShell integration
 # Add to $PROFILE:
-#   Invoke-Expression (& pd init pwsh)
+#   & pd init pwsh | Out-String | Invoke-Expression
 
 # Resolve the binary path once at load time so the function can bypass itself.
 $script:_pdBin = (Get-Command -Name 'pd' -CommandType Application -ErrorAction SilentlyContinue |

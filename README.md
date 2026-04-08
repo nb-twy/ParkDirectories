@@ -30,7 +30,7 @@ external process can change your shell's working directory directly.
 
 ---
 
-### Installation: Nushell on Windows (primary)
+### Installation: Nushell on Windows
 
 **Step 1 — Get the binary**
 
@@ -114,12 +114,11 @@ pd init nu | save -f ~/.config/nushell/pd.nu
 
 ---
 
-### Installation: Bash on Linux (secondary)
+### Installation: Bash on Linux
 
 **Step 1 — Get the binary**
 
-Download the pre-built Linux binary from the [GitHub Releases](https://github.com/nb-twy/ParkDirectories/releases)
-page, or build from source (requires [Rust](https://rustup.rs)):
+Build from source (requires [Rust](https://rustup.rs)):
 
 ```bash
 git clone https://github.com/nb-twy/ParkDirectories.git
@@ -127,18 +126,14 @@ cd ParkDirectories
 cargo build --release
 ```
 
-Copy `target/release/pd` to a directory in your `$PATH`, for example
-`~/bin/` or `/usr/local/bin/`.
+Copy `target/release/pd` to a directory in your `$PATH`, for example `~/.local/bin/`.
 
-**Step 2 — Add the bash integration to your shell**
-
-Add the following line to your `~/.bashrc`:
+**Step 2 — Add shell integration to your bashrc**
 
 ```bash
-eval "$(pd init bash)"
+echo 'eval "$(pd init bash)"' >> ~/.bashrc
+source ~/.bashrc
 ```
-
-**Step 3 — Restart your terminal** (or run `source ~/.bashrc`)
 
 That's it. The `pd` command is now available with tab completion.
 
@@ -160,20 +155,25 @@ That's it. The `pd` command is now available with tab completion.
 | `pd -i file` | Import bookmarks from a file |
 | `pd -i --append file` | Merge imported bookmarks with existing ones |
 
+All commands also accept long-form flags: `--add`, `--del`, `--list`, `--clear`,
+`--expand`, `--export`, `--import`.
+
 **Tab completion** works for bookmark names, relative paths (`pd name/<Tab>`),
-flags (`pd -<Tab>`), and directory paths when adding a bookmark (`pd -a name <Tab>`).
+directory paths when adding a bookmark (`pd -a name <Tab>`), and flags (`pd -<Tab>`).
 
 ---
 
 ### Updating bash integration
 
-When you update the `pd` binary, the integration is re-evaluated automatically
-on the next shell startup (since `eval "$(pd init bash)"` runs at login). No
-manual step is needed.
+When you update the `pd` binary, restart your terminal or run:
+
+```bash
+eval "$(pd init bash)"
+```
 
 ---
 
-### Installation: PowerShell on Windows (tertiary)
+### Installation: PowerShell on Windows
 
 **Step 1 — Get the binary**
 
@@ -193,7 +193,7 @@ Copy `target\release\pd.exe` to a directory in your `$env:PATH`, for example
 Add the following line to your PowerShell profile (`$PROFILE`):
 
 ```powershell
-Invoke-Expression (& pd init pwsh)
+& pd init pwsh | Out-String | Invoke-Expression
 ```
 
 To find your profile path: `echo $PROFILE`. Create the file if it does not exist.
@@ -220,6 +220,9 @@ That's it. The `pd` command is now available with tab completion.
 | `pd -i file` | Import bookmarks from a file |
 | `pd -i --append file` | Merge imported bookmarks with existing ones |
 
+All commands also accept long-form flags: `--add`, `--del`, `--list`, `--clear`,
+`--expand`, `--export`, `--import`.
+
 **Tab completion** works for bookmark names, relative paths (`pd name/<Tab>`),
 flags (`pd -<Tab>`), and directory paths when adding a bookmark (`pd -a name <Tab>`).
 
@@ -227,9 +230,8 @@ flags (`pd -<Tab>`), and directory paths when adding a bookmark (`pd -a name <Ta
 
 ### Updating PowerShell integration
 
-When you update the `pd` binary, the integration is re-evaluated automatically
-on the next shell startup (since `Invoke-Expression (& pd init pwsh)` runs at
-profile load). No manual step is needed.
+When you update the `pd` binary, restart your terminal or run `. $PROFILE` to
+re-evaluate the integration.
 
 ---
 
