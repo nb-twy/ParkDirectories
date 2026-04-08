@@ -1,6 +1,6 @@
 # Park Directories — Development Backlog
 
-**Last Updated**: 2026-04-08  
+**Last Updated**: 2026-04-08
 
 Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
 
@@ -119,7 +119,7 @@ The binary generates the shell shim code, making installation self-contained.
 
 ---
 
-## Phase 6: Build and Distribution
+## Phase 6: CI, GitHub Releases, and cargo install
 
 ### CI and GitHub Releases
 - [ ] Set up GitHub Actions CI
@@ -135,7 +135,35 @@ The binary generates the shell shim code, making installation self-contained.
 ### cargo install (crates.io)
 - [ ] Verify crate name `pd` is available on crates.io; if not, use `park-directories` with `[[bin]] name = "pd"`
 - [ ] Complete `Cargo.toml` metadata: `repository`, `keywords`, `categories`, `readme`
-- [ ] `cargo publish` after Phase 6 CI is in place and confirms clean cross-platform builds
+- [ ] `cargo publish` after CI is in place and confirms clean cross-platform builds
+
+---
+
+## Phase 7: Additional Shell Support
+
+Target the two mainstream shells not yet covered. Both require only a new
+`pd init <shell>` output string in `src/init.rs` — no binary logic changes.
+
+### zsh
+- [ ] Implement `pd init zsh` — navigation function (≈ bash shim, adapted for zsh)
+- [ ] Implement `pd completions zsh` — bookmark name and relative path completion (`compdef`)
+- [ ] Test in a real zsh session (macOS or Linux)
+- [ ] Document zsh setup procedure in README
+
+### fish
+- [ ] Implement `pd init fish` — navigation function in fish syntax (`function pd … end`)
+- [ ] Implement `pd completions fish` — bookmark name and relative path completion
+- [ ] Test in a real fish session
+- [ ] Document fish setup procedure in README
+
+> **Scope note**: CMD is intentionally excluded. The `.exe`/`.cmd` PATH precedence
+> conflict makes a reliable wrapper impractical, and CMD offers no tab completion.
+> Elvish, xonsh, tcsh, and other niche shells are deferred unless there is
+> demonstrated community interest.
+
+---
+
+## Phase 8: Package Manager Distribution
 
 ### Winget (Windows)
 - [ ] Create winget package manifest YAML (requires a published GitHub Release with SHA256)
@@ -152,7 +180,7 @@ The binary generates the shell shim code, making installation self-contained.
 
 ---
 
-## Phase 7: Refinements and Carry-over Items
+## Phase 9: Refinements and Carry-over Items
 
 - [ ] Integration tests using a temporary data file for each subcommand (moved from Phase 1)
 - [ ] `--force` flag behavior audit across all commands
@@ -166,6 +194,5 @@ The binary generates the shell shim code, making installation self-contained.
 
 - [ ] Per-shell bookmark stores as a first-class configuration option (beyond `PD_DATA_FILE` workaround)
 - [ ] macOS support (requires testing; architecture already supports it)
-- [ ] Shell init for fish shell
 - [ ] `pd check` — verify all bookmarks point to existing directories; report broken ones
 - [ ] `pd update <name>` — update a bookmark's path to the current directory

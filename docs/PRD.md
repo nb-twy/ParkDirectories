@@ -1,6 +1,6 @@
 # Park Directories — Project Requirements Document
 
-**Version**: 1.1  
+**Version**: 1.2  
 **Status**: Draft  
 **Last Updated**: 2026-04-08
 
@@ -43,8 +43,23 @@ The tool is optimized for a user who keeps a working set of maybe a dozen to a f
 - **Shell**: PowerShell
 - **Host**: Windows Terminal on Windows 11 (occasional use)
 
+### Priority 4 — Community
+These shells are not used by the primary developer but represent large user
+populations. The shim for each is ~15 lines and requires no binary changes,
+making support low-cost relative to the breadth of users it reaches.
+
+- **Shell**: zsh — default on macOS since 2019; large developer user base
+- **Shell**: fish — growing adoption; strong interactive UX community
+
 ### Deferred
 - macOS (any shell): the architecture must not preclude future support, but no active development effort
+- elvish, xonsh, tcsh, ion, and other niche shells: deferred until there is demonstrated community interest
+
+### Excluded
+- **CMD**: A batch file wrapper can technically change directory in the calling
+  session, but CMD's PATHEXT ordering (`.exe` before `.cmd`) makes the navigation
+  wrapper impractical to set up reliably. CMD also offers no tab completion.
+  Windows users are better served by PowerShell or nushell.
 
 ---
 
