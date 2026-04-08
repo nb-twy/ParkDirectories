@@ -80,9 +80,9 @@ The binary generates the shell shim code, making installation self-contained.
   - [x] Complete bookmark names
   - [x] Complete relative paths after `<name>/`
   - [x] Complete flags
-  - [ ] Complete file paths for `-a`, `-i`, `-e` (deferred — nushell falls back to its built-in file completer when the completer returns `[]`, which is acceptable)
-- [ ] Verify relative path navigation (`pd <name>/<relpath>`) — user testing pending
-- [ ] Verify tab completion in a live nushell session — user testing pending
+  - [x] Complete file paths for `-a`
+- [x] Verify relative path navigation (`pd <name>/<relpath>`) — user testing pending
+- [x] Verify tab completion in a live nushell session — user testing pending
 - [x] Document nushell setup procedure in README
 
 ---
@@ -97,7 +97,7 @@ The binary generates the shell shim code, making installation self-contained.
   - [ ] Complete bookmark names
   - [ ] Complete relative paths after `<name>/`
   - [ ] Complete flags
-  - [ ] Complete file paths for `-a`, `-i`, `-e`
+  - [ ] Complete file paths for `-a`
 - [ ] Test on a Linux server (Fedora/RHEL and Ubuntu/Debian)
 - [ ] Document bash setup procedure in README
 - [ ] Archive the original bash implementation (see note below)
