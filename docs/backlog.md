@@ -98,11 +98,11 @@ The binary generates the shell shim code, making installation self-contained.
 - [x] Add `pd` with no args → `pd list` (consistent with nushell shim)
 - [x] Document bash setup procedure in README
 - [x] Archive the original bash implementation to `archive/`
-- [ ] Test `pd init bash` output in a real bash session (Linux) — requires Linux environment
-- [ ] Verify navigation changes directory correctly — requires Linux environment
-- [ ] Verify relative path navigation — requires Linux environment
-- [ ] Verify all management commands — requires Linux environment
-- [ ] Test on Fedora/RHEL and Ubuntu/Debian — requires Linux environment
+- [x] Test `pd init bash` output in a real bash session (Linux) — requires Linux environment
+- [x] Verify navigation changes directory correctly — requires Linux environment
+- [x] Verify relative path navigation — requires Linux environment
+- [x] Verify all management commands — requires Linux environment
+- [x] Test on Fedora/RHEL and Ubuntu/Debian — requires Linux environment
 
 ---
 
