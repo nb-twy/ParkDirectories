@@ -1,15 +1,15 @@
-![GitHub release (latest by date)](https://img.shields.io/badge/Version-3.0.0-blue)
+![GitHub release (latest by date)](https://img.shields.io/badge/Version-3.1.0-blue)
 
 # Park Directories
 
-> **v3.0.0** — Park Directories has been rewritten in Rust. The new binary
+> **v3.1.0** — Park Directories has been rewritten in Rust. The new binary
 > supports nushell, PowerShell, and bash from a single cross-platform executable.
-> See [v3.0.0 Setup](#v300-setup) below for installation instructions.
+> See [v3.1.0 Setup](#v310-setup) below for installation instructions.
 > The original bash implementation documentation follows for reference.
 
 ---
 
-## v3.0.0 Setup
+## v3.1.0 Setup
 
 ### How it works
 
