@@ -108,8 +108,8 @@ The binary generates the shell shim code, making installation self-contained.
 
 ## Phase 5: PowerShell Integration (Windows — Tertiary Target)
 
-- [ ] Test `pd init pwsh` output in a real PowerShell session
-- [ ] Verify navigation and all management commands
+- [x] Test `pd init pwsh` output in a real PowerShell session
+- [x] Verify navigation and all management commands
 - [x] Implement PowerShell tab completion (using `Register-ArgumentCompleter`)
 - [x] Document PowerShell setup procedure in README
 
