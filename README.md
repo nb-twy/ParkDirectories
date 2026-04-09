@@ -1,15 +1,15 @@
-![GitHub release (latest by date)](https://img.shields.io/badge/Version-3.0.0-blue)
+![GitHub release (latest by date)](https://img.shields.io/badge/Version-3.1.0-blue)
 
 # Park Directories
 
-> **v3.0.0** — Park Directories has been rewritten in Rust. The new binary
+> **v3.1.0** — Park Directories has been rewritten in Rust. The new binary
 > supports nushell, PowerShell, and bash from a single cross-platform executable.
-> See [v3.0.0 Setup](#v300-setup) below for installation instructions.
+> See [v3.1.0 Setup](#v310-setup) below for installation instructions.
 > The original bash implementation documentation follows for reference.
 
 ---
 
-## v3.0.0 Setup
+## v3.1.0 Setup
 
 ### How it works
 
@@ -30,7 +30,7 @@ external process can change your shell's working directory directly.
 
 ---
 
-### Installation: Nushell on Windows (primary)
+### Installation: Nushell on Windows
 
 **Step 1 — Get the binary**
 
@@ -111,6 +111,127 @@ the shell integration:
 ```nushell
 pd init nu | save -f ~/.config/nushell/pd.nu
 ```
+
+---
+
+### Installation: Bash on Linux
+
+**Step 1 — Get the binary**
+
+Build from source (requires [Rust](https://rustup.rs)):
+
+```bash
+git clone https://github.com/nb-twy/ParkDirectories.git
+cd ParkDirectories
+cargo build --release
+```
+
+Copy `target/release/pd` to a directory in your `$PATH`, for example `~/.local/bin/`.
+
+**Step 2 — Add shell integration to your bashrc**
+
+```bash
+echo 'eval "$(pd init bash)"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+That's it. The `pd` command is now available with tab completion.
+
+---
+
+### Bash usage
+
+| Command | What it does |
+|---|---|
+| `pd -a name` | Bookmark the current directory as `name` |
+| `pd -a name /some/path` | Bookmark a specific path |
+| `pd name` | Navigate to the bookmarked directory |
+| `pd name/relative/path` | Navigate to a subdirectory of the bookmark |
+| `pd -l` | List all bookmarks |
+| `pd -d name` | Delete a bookmark |
+| `pd -c` | Clear all bookmarks (prompts for confirmation) |
+| `pd -x name` | Print the resolved path without navigating (for scripts) |
+| `pd -e file` | Export bookmarks to a file |
+| `pd -i file` | Import bookmarks from a file |
+| `pd -i --append file` | Merge imported bookmarks with existing ones |
+
+All commands also accept long-form flags: `--add`, `--del`, `--list`, `--clear`,
+`--expand`, `--export`, `--import`.
+
+**Tab completion** works for bookmark names, relative paths (`pd name/<Tab>`),
+directory paths when adding a bookmark (`pd -a name <Tab>`), and flags (`pd -<Tab>`).
+
+---
+
+### Updating bash integration
+
+When you update the `pd` binary, restart your terminal or run:
+
+```bash
+eval "$(pd init bash)"
+```
+
+---
+
+### Installation: PowerShell on Windows
+
+**Step 1 — Get the binary**
+
+Build from source (requires [Rust](https://rustup.rs)):
+
+```powershell
+git clone https://github.com/nb-twy/ParkDirectories.git
+cd ParkDirectories
+cargo build --release
+```
+
+Copy `target\release\pd.exe` to a directory in your `$env:PATH`, for example
+`C:\Users\you\bin\`.
+
+**Step 2 — Add the PowerShell integration to your profile**
+
+Add the following line to your PowerShell profile (`$PROFILE`):
+
+```powershell
+& pd init pwsh | Out-String | Invoke-Expression
+```
+
+To find your profile path: `echo $PROFILE`. Create the file if it does not exist.
+
+**Step 3 — Restart your terminal** (or run `. $PROFILE`)
+
+That's it. The `pd` command is now available with tab completion.
+
+---
+
+### PowerShell usage
+
+| Command | What it does |
+|---|---|
+| `pd -a name` | Bookmark the current directory as `name` |
+| `pd -a name C:\some\path` | Bookmark a specific path |
+| `pd name` | Navigate to the bookmarked directory |
+| `pd name/relative/path` | Navigate to a subdirectory of the bookmark |
+| `pd -l` | List all bookmarks |
+| `pd -d name` | Delete a bookmark |
+| `pd -c` | Clear all bookmarks (prompts for confirmation) |
+| `pd -x name` | Print the resolved path without navigating (for scripts) |
+| `pd -e file` | Export bookmarks to a file |
+| `pd -i file` | Import bookmarks from a file |
+| `pd -i --append file` | Merge imported bookmarks with existing ones |
+
+All commands also accept long-form flags: `--add`, `--del`, `--list`, `--clear`,
+`--expand`, `--export`, `--import`.
+
+**Tab completion** works for bookmark names, relative paths (`pd name/<Tab>`),
+flags (`pd -<Tab>`), and directory paths when adding a bookmark (`pd -a name <Tab>`).
+
+---
+
+### Updating PowerShell integration
+
+When you update the `pd` binary, restart your terminal or run `. $PROFILE` to
+re-evaluate the integration.
 
 ---
 

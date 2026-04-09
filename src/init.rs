@@ -39,6 +39,11 @@ const BASH_INIT: &str = r#"# Park Directories — bash integration
 #   eval "$(pd init bash)"
 
 pd() {
+    # No arguments: list all bookmarks (consistent with nushell shim)
+    if [[ $# -eq 0 ]]; then
+        command pd list
+        return
+    fi
     # Navigation: single bare argument with no leading dash
     if [[ $# -eq 1 && "${1:0:1}" != "-" ]]; then
         local _pd_target
@@ -54,21 +59,21 @@ pd() {
 _pd_completions() {
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local first="${COMP_WORDS[1]}"
 
-    # After -d/--del or -x/--expand: complete bookmark names
+    # Flags that expect a bookmark name next
     case "$prev" in
         -d|--del|-x|--expand)
             local names
             names=$(command pd list 2>/dev/null | awk '{print $1}')
             COMPREPLY=($(compgen -W "$names" -- "$cur"))
             return ;;
-        # After -a/--add, -e/--export, -i/--import: complete file paths
-        -a|--add|-e|--export|-i|--import)
-            COMPREPLY=($(compgen -f -- "$cur"))
+        # No-argument flags: nothing follows
+        -l|--list|-c|--clear|-v|--version|-h|--help)
             return ;;
     esac
 
-    # Complete flags
+    # Flag completion
     if [[ "${cur}" == -* ]]; then
         COMPREPLY=($(compgen -W \
             "-a --add -d --del -l --list -c --clear -x --expand -e --export -i --import -h --help -v --version" \
@@ -76,16 +81,50 @@ _pd_completions() {
         return
     fi
 
-    # Complete bookmark names, or subdirectories after name/
+    # Position-aware dispatch based on the subcommand/flag at position 1
+    case "$first" in
+        add|-a|--add)
+            # Position 2 = name (no useful completion); position 3+ = directory path.
+            # Read the actual typed word from COMP_LINE rather than COMP_WORDS[COMP_CWORD]
+            # because COMP_WORDBREAKS may split a path like /var/log at '/' into separate
+            # tokens, making $cur contain only the last component instead of the full path.
+            if [[ $COMP_CWORD -ge 3 ]]; then
+                local typed="${COMP_LINE:0:$COMP_POINT}"
+                typed="${typed##* }"
+                COMPREPLY=($(compgen -d -- "$typed"))
+            fi
+            return ;;
+        del|-d|--del|expand|-x|--expand)
+            if [[ $COMP_CWORD -eq 2 ]]; then
+                local names
+                names=$(command pd list 2>/dev/null | awk '{print $1}')
+                COMPREPLY=($(compgen -W "$names" -- "$cur"))
+            fi
+            return ;;
+        export|-e|--export|import|-i|--import)
+            COMPREPLY=($(compgen -f -- "$cur"))
+            return ;;
+        list|-l|--list|clear|-c|--clear)
+            return ;;
+    esac
+
+    # First positional: navigation target or subcommand being typed
     if [[ "$cur" == */* ]]; then
+        # Relative-path completion: bookmarkname/partial/path
         local ref="${cur%%/*}"
-        local prefix="${cur%/*}/"
         local relpath="${cur#*/}"
         local base
         base=$(command pd get "$ref" 2>/dev/null) || return
+        [[ -z "$base" ]] && return
         local targets
         targets=$(compgen -d -- "$base/$relpath")
-        COMPREPLY=($(echo "$targets" | sed "s|^$base/|$prefix|" | sed 's|/*$|/|'))
+        # Guard against empty results: an empty $targets piped through the sed
+        # trailing-slash substitution would produce a bare '/' completion.
+        [[ -z "$targets" ]] && return
+        # Replace the absolute base prefix with just the bookmark name so that
+        # deeper paths (e.g. dev/sub/deep) are not doubled by including both
+        # the base path and the already-relative prefix.
+        COMPREPLY=($(echo "$targets" | sed "s|^$base/|$ref/|" | sed 's|/*$|/|'))
     else
         local names
         names=$(command pd list 2>/dev/null | awk '{print $1}')
@@ -104,6 +143,7 @@ const BASH_COMPLETIONS: &str = r#"# Park Directories — bash tab completion
 _pd_completions() {
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local first="${COMP_WORDS[1]}"
 
     case "$prev" in
         -d|--del|-x|--expand)
@@ -111,8 +151,7 @@ _pd_completions() {
             names=$(command pd list 2>/dev/null | awk '{print $1}')
             COMPREPLY=($(compgen -W "$names" -- "$cur"))
             return ;;
-        -a|--add|-e|--export|-i|--import)
-            COMPREPLY=($(compgen -f -- "$cur"))
+        -l|--list|-c|--clear|-v|--version|-h|--help)
             return ;;
     esac
 
@@ -123,15 +162,38 @@ _pd_completions() {
         return
     fi
 
+    case "$first" in
+        add|-a|--add)
+            if [[ $COMP_CWORD -ge 3 ]]; then
+                local typed="${COMP_LINE:0:$COMP_POINT}"
+                typed="${typed##* }"
+                COMPREPLY=($(compgen -d -- "$typed"))
+            fi
+            return ;;
+        del|-d|--del|expand|-x|--expand)
+            if [[ $COMP_CWORD -eq 2 ]]; then
+                local names
+                names=$(command pd list 2>/dev/null | awk '{print $1}')
+                COMPREPLY=($(compgen -W "$names" -- "$cur"))
+            fi
+            return ;;
+        export|-e|--export|import|-i|--import)
+            COMPREPLY=($(compgen -f -- "$cur"))
+            return ;;
+        list|-l|--list|clear|-c|--clear)
+            return ;;
+    esac
+
     if [[ "$cur" == */* ]]; then
         local ref="${cur%%/*}"
-        local prefix="${cur%/*}/"
         local relpath="${cur#*/}"
         local base
         base=$(command pd get "$ref" 2>/dev/null) || return
+        [[ -z "$base" ]] && return
         local targets
         targets=$(compgen -d -- "$base/$relpath")
-        COMPREPLY=($(echo "$targets" | sed "s|^$base/|$prefix|" | sed 's|/*$|/|'))
+        [[ -z "$targets" ]] && return
+        COMPREPLY=($(echo "$targets" | sed "s|^$base/|$ref/|" | sed 's|/*$|/|'))
     else
         local names
         names=$(command pd list 2>/dev/null | awk '{print $1}')
@@ -410,17 +472,22 @@ def _pd_completer [context: string, offset: int] {
 
 // ─── PowerShell ──────────────────────────────────────────────────────────────
 
-/// PowerShell integration function.
-/// Add to $PROFILE:  Invoke-Expression (& pd init pwsh)
+/// PowerShell integration: navigation function + tab completion.
+/// Add to $PROFILE:  & pd init pwsh | Out-String | Invoke-Expression
 const PWSH_INIT: &str = r#"# Park Directories — PowerShell integration
 # Add to $PROFILE:
-#   Invoke-Expression (& pd init pwsh)
+#   & pd init pwsh | Out-String | Invoke-Expression
 
 # Resolve the binary path once at load time so the function can bypass itself.
 $script:_pdBin = (Get-Command -Name 'pd' -CommandType Application -ErrorAction SilentlyContinue |
     Select-Object -First 1 -ExpandProperty Source)
 
 function pd {
+    # No arguments: list all bookmarks
+    if ($args.Count -eq 0) {
+        & $script:_pdBin list
+        return
+    }
     # Navigation: single bare argument with no leading dash
     if ($args.Count -eq 1 -and -not $args[0].ToString().StartsWith('-')) {
         $target = & $script:_pdBin get $args[0]
@@ -432,9 +499,222 @@ function pd {
     # All other operations: pass through to the binary
     & $script:_pdBin @args
 }
+
+# ── Tab completion ────────────────────────────────────────────────────────────
+# Capture the binary path for use inside the completer closure.
+$_pdBinPath = $script:_pdBin
+
+Register-ArgumentCompleter -CommandName pd -ScriptBlock ({
+    param($wordToComplete, $commandAst, $cursorPosition)
+
+    # All tokens after 'pd', as plain strings
+    $tokens = @($commandAst.CommandElements | Select-Object -Skip 1 |
+                ForEach-Object { $_.ToString() })
+    $n     = $tokens.Count
+    $cur   = $wordToComplete
+    $atNew = ($cur -eq '')
+
+    # Last fully-typed token (before the current partial word)
+    $prev = if ($atNew) {
+                if ($n -ge 1) { $tokens[-1] } else { '' }
+            } else {
+                if ($n -ge 2) { $tokens[-2] } else { '' }
+            }
+
+    # Positional slot being completed (0 = first arg after 'pd')
+    $curPos = if ($atNew) { $n } else { $n - 1 }
+    $subcmd = if ($n -gt 0) { $tokens[0] } else { '' }
+
+    # Shorthand: wrap a string as a CompletionResult
+    $mkResult = [scriptblock] {
+        param($t)
+        [System.Management.Automation.CompletionResult]::new($t, $t, 'ParameterValue', $t)
+    }
+
+    # Fetch bookmark names from the binary
+    $names = & $_pdBinPath list 2>$null |
+             ForEach-Object { ($_ -split '\s+', 2)[0] } |
+             Where-Object   { $_ -ne '' }
+
+    # ── Prev-based dispatch ──────────────────────────────────────────────────
+
+    # Flags that expect a bookmark name next
+    if ($prev -in '-d', '--del', '-x', '--expand') {
+        $names | Where-Object { $_ -like "$cur*" } |
+                 ForEach-Object { & $mkResult $_ }
+        return
+    }
+
+    # Flags that expect a file path — no custom completion offered
+    if ($prev -in '-e', '--export', '-i', '--import') { return }
+
+    # No-argument flags — nothing useful follows
+    if ($prev -in '-l', '--list', '-c', '--clear', '-v', '--version', '-h', '--help') { return }
+
+    # ── Flag completion ──────────────────────────────────────────────────────
+
+    if ($cur -like '-*') {
+        '-a', '--add', '-d', '--del', '-l', '--list', '-c', '--clear',
+        '-x', '--expand', '-e', '--export', '-i', '--import',
+        '-h', '--help', '-v', '--version' |
+            Where-Object { $_ -like "$cur*" } |
+            ForEach-Object { & $mkResult $_ }
+        return
+    }
+
+    # ── Position-aware dispatch ──────────────────────────────────────────────
+
+    if ($curPos -eq 0) {
+        if ($cur -like '*/*') {
+            # Relative-path completion: "bookmarkname/partial/path"
+            $refName  = ($cur -split '/', 2)[0]
+            $relTyped = ($cur -split '/', 2)[1]
+
+            $rawBase  = & $_pdBinPath get $refName 2>$null
+            $baseExit = $LASTEXITCODE
+            $base     = if ($rawBase) { "$rawBase".Trim() } else { '' }
+            if ($baseExit -ne 0 -or -not $base) { return }
+
+            # Strip the partial filename component to find the directory to list
+            $searchDir = if ($relTyped -match '[/\\]') {
+                $lastSep = [Math]::Max($relTyped.LastIndexOf('/'), $relTyped.LastIndexOf('\'))
+                $dirPart = $relTyped.Substring(0, $lastSep)
+                Join-Path $base $dirPart
+            } else {
+                $base
+            }
+
+            $baseTrimmed = $base.TrimEnd('\', '/')
+            Get-ChildItem -LiteralPath $searchDir -Directory -ErrorAction SilentlyContinue |
+                ForEach-Object {
+                    $rel = $_.FullName.Substring($baseTrimmed.Length).TrimStart('\', '/')
+                    "$refName/$($rel -replace '\\', '/')"
+                } |
+                Where-Object { $_ -like "$cur*" } |
+                ForEach-Object { & $mkResult $_ }
+
+        } else {
+            # Complete bookmark names (navigation target)
+            $names | Where-Object { $_ -like "$cur*" } | ForEach-Object { & $mkResult $_ }
+        }
+
+    } elseif ($subcmd -in 'del', 'expand' -and $curPos -eq 1) {
+        $names | Where-Object { $_ -like "$cur*" } | ForEach-Object { & $mkResult $_ }
+
+    } elseif ($subcmd -in 'add', '-a', '--add' -and $curPos -ge 2) {
+        # Directory completion for the path argument of 'add'
+        $dirBase = if ($cur -eq '') {
+                       '.'
+                   } elseif ($cur -like '*\' -or $cur -like '*/') {
+                       $cur
+                   } else {
+                       $p = Split-Path -Parent $cur
+                       if ($p) { $p } else { '.' }
+                   }
+
+        Get-ChildItem -LiteralPath $dirBase -Directory -Force -ErrorAction SilentlyContinue |
+            ForEach-Object { $_.FullName } |
+            Where-Object   { $_ -like "$cur*" } |
+            ForEach-Object { & $mkResult $_ }
+    }
+}.GetNewClosure())
 "#;
 
-/// PowerShell completion script (stub — full support in a future release).
+/// Standalone PowerShell completion script.
+/// The same completion definitions are already included in PWSH_INIT;
+/// this is provided for users who sourced an older pd.ps1 and want
+/// only the completion update.
 const PWSH_COMPLETIONS: &str = r#"# Park Directories — PowerShell tab completion
-# TODO: full completion support is planned for a future release.
+# This is already included in 'pd init pwsh'.
+# Source separately only if you need to refresh completions independently.
+
+$_pdBinPath = (Get-Command -Name 'pd' -CommandType Application -ErrorAction SilentlyContinue |
+    Select-Object -First 1 -ExpandProperty Source)
+
+Register-ArgumentCompleter -CommandName pd -ScriptBlock ({
+    param($wordToComplete, $commandAst, $cursorPosition)
+
+    $tokens = @($commandAst.CommandElements | Select-Object -Skip 1 |
+                ForEach-Object { $_.ToString() })
+    $n     = $tokens.Count
+    $cur   = $wordToComplete
+    $atNew = ($cur -eq '')
+
+    $prev = if ($atNew) {
+                if ($n -ge 1) { $tokens[-1] } else { '' }
+            } else {
+                if ($n -ge 2) { $tokens[-2] } else { '' }
+            }
+
+    $curPos = if ($atNew) { $n } else { $n - 1 }
+    $subcmd = if ($n -gt 0) { $tokens[0] } else { '' }
+
+    $mkResult = [scriptblock] {
+        param($t)
+        [System.Management.Automation.CompletionResult]::new($t, $t, 'ParameterValue', $t)
+    }
+
+    $names = & $_pdBinPath list 2>$null |
+             ForEach-Object { ($_ -split '\s+', 2)[0] } |
+             Where-Object   { $_ -ne '' }
+
+    if ($prev -in '-d', '--del', '-x', '--expand') {
+        $names | Where-Object { $_ -like "$cur*" } |
+                 ForEach-Object { & $mkResult $_ }
+        return
+    }
+    if ($prev -in '-e', '--export', '-i', '--import') { return }
+    if ($prev -in '-l', '--list', '-c', '--clear', '-v', '--version', '-h', '--help') { return }
+
+    if ($cur -like '-*') {
+        '-a', '--add', '-d', '--del', '-l', '--list', '-c', '--clear',
+        '-x', '--expand', '-e', '--export', '-i', '--import',
+        '-h', '--help', '-v', '--version' |
+            Where-Object { $_ -like "$cur*" } |
+            ForEach-Object { & $mkResult $_ }
+        return
+    }
+
+    if ($curPos -eq 0) {
+        if ($cur -like '*/*') {
+            $refName  = ($cur -split '/', 2)[0]
+            $relTyped = ($cur -split '/', 2)[1]
+            $rawBase  = & $_pdBinPath get $refName 2>$null
+            $baseExit = $LASTEXITCODE
+            $base     = if ($rawBase) { "$rawBase".Trim() } else { '' }
+            if ($baseExit -ne 0 -or -not $base) { return }
+            $searchDir = if ($relTyped -match '[/\\]') {
+                $lastSep = [Math]::Max($relTyped.LastIndexOf('/'), $relTyped.LastIndexOf('\'))
+                Join-Path $base $relTyped.Substring(0, $lastSep)
+            } else {
+                $base
+            }
+            $baseTrimmed = $base.TrimEnd('\', '/')
+            Get-ChildItem -LiteralPath $searchDir -Directory -ErrorAction SilentlyContinue |
+                ForEach-Object {
+                    $rel = $_.FullName.Substring($baseTrimmed.Length).TrimStart('\', '/')
+                    "$refName/$($rel -replace '\\', '/')"
+                } |
+                Where-Object { $_ -like "$cur*" } |
+                ForEach-Object { & $mkResult $_ }
+        } else {
+            $names | Where-Object { $_ -like "$cur*" } | ForEach-Object { & $mkResult $_ }
+        }
+    } elseif ($subcmd -in 'del', 'expand' -and $curPos -eq 1) {
+        $names | Where-Object { $_ -like "$cur*" } | ForEach-Object { & $mkResult $_ }
+    } elseif ($subcmd -in 'add', '-a', '--add' -and $curPos -ge 2) {
+        $dirBase = if ($cur -eq '') {
+                       '.'
+                   } elseif ($cur -like '*\' -or $cur -like '*/') {
+                       $cur
+                   } else {
+                       $p = Split-Path -Parent $cur
+                       if ($p) { $p } else { '.' }
+                   }
+        Get-ChildItem -LiteralPath $dirBase -Directory -Force -ErrorAction SilentlyContinue |
+            ForEach-Object { $_.FullName } |
+            Where-Object   { $_ -like "$cur*" } |
+            ForEach-Object { & $mkResult $_ }
+    }
+}.GetNewClosure())
 "#;
