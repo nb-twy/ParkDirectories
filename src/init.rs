@@ -56,17 +56,44 @@ pd() {
 }
 
 # Tab completion
+
+# Helper: complete a navigation/expand argument — bookmark names OR relative paths.
+_pd_nav_complete() {
+    local cur="$1"
+    if [[ "$cur" == */* ]]; then
+        # Relative-path completion: bookmarkname/partial/path
+        local ref="${cur%%/*}"
+        local relpath="${cur#*/}"
+        local base
+        base=$(command pd get "$ref" 2>/dev/null) || return
+        [[ -z "$base" ]] && return
+        local targets
+        targets=$(compgen -d -- "$base/$relpath")
+        # Guard against empty results to avoid a bare '/' completion.
+        [[ -z "$targets" ]] && return
+        # Replace the absolute base prefix with just the bookmark name.
+        COMPREPLY=($(echo "$targets" | sed "s|^$base/|$ref/|" | sed 's|/*$|/|'))
+    else
+        local names
+        names=$(command pd list 2>/dev/null | awk '{print $1}')
+        COMPREPLY=($(compgen -W "$names" -- "$cur"))
+    fi
+}
+
 _pd_completions() {
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local first="${COMP_WORDS[1]}"
 
-    # Flags that expect a bookmark name next
+    # Flags that expect a specific argument next
     case "$prev" in
-        -d|--del|-x|--expand)
+        -d|--del)
             local names
             names=$(command pd list 2>/dev/null | awk '{print $1}')
             COMPREPLY=($(compgen -W "$names" -- "$cur"))
+            return ;;
+        -x|--expand)
+            _pd_nav_complete "$cur"
             return ;;
         # No-argument flags: nothing follows
         -l|--list|-c|--clear|-v|--version|-h|--help)
@@ -94,11 +121,16 @@ _pd_completions() {
                 COMPREPLY=($(compgen -d -- "$typed"))
             fi
             return ;;
-        del|-d|--del|expand|-x|--expand)
+        del|-d|--del)
             if [[ $COMP_CWORD -eq 2 ]]; then
                 local names
                 names=$(command pd list 2>/dev/null | awk '{print $1}')
                 COMPREPLY=($(compgen -W "$names" -- "$cur"))
+            fi
+            return ;;
+        expand|-x|--expand)
+            if [[ $COMP_CWORD -eq 2 ]]; then
+                _pd_nav_complete "$cur"
             fi
             return ;;
         export|-e|--export|import|-i|--import)
@@ -109,27 +141,7 @@ _pd_completions() {
     esac
 
     # First positional: navigation target or subcommand being typed
-    if [[ "$cur" == */* ]]; then
-        # Relative-path completion: bookmarkname/partial/path
-        local ref="${cur%%/*}"
-        local relpath="${cur#*/}"
-        local base
-        base=$(command pd get "$ref" 2>/dev/null) || return
-        [[ -z "$base" ]] && return
-        local targets
-        targets=$(compgen -d -- "$base/$relpath")
-        # Guard against empty results: an empty $targets piped through the sed
-        # trailing-slash substitution would produce a bare '/' completion.
-        [[ -z "$targets" ]] && return
-        # Replace the absolute base prefix with just the bookmark name so that
-        # deeper paths (e.g. dev/sub/deep) are not doubled by including both
-        # the base path and the already-relative prefix.
-        COMPREPLY=($(echo "$targets" | sed "s|^$base/|$ref/|" | sed 's|/*$|/|'))
-    else
-        local names
-        names=$(command pd list 2>/dev/null | awk '{print $1}')
-        COMPREPLY=($(compgen -W "$names" -- "$cur"))
-    fi
+    _pd_nav_complete "$cur"
 }
 
 complete -o nospace -F _pd_completions pd
@@ -140,16 +152,38 @@ const BASH_COMPLETIONS: &str = r#"# Park Directories — bash tab completion
 # Included automatically in 'pd init bash'.
 # Source separately only if you defined the pd function another way.
 
+_pd_nav_complete() {
+    local cur="$1"
+    if [[ "$cur" == */* ]]; then
+        local ref="${cur%%/*}"
+        local relpath="${cur#*/}"
+        local base
+        base=$(command pd get "$ref" 2>/dev/null) || return
+        [[ -z "$base" ]] && return
+        local targets
+        targets=$(compgen -d -- "$base/$relpath")
+        [[ -z "$targets" ]] && return
+        COMPREPLY=($(echo "$targets" | sed "s|^$base/|$ref/|" | sed 's|/*$|/|'))
+    else
+        local names
+        names=$(command pd list 2>/dev/null | awk '{print $1}')
+        COMPREPLY=($(compgen -W "$names" -- "$cur"))
+    fi
+}
+
 _pd_completions() {
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local first="${COMP_WORDS[1]}"
 
     case "$prev" in
-        -d|--del|-x|--expand)
+        -d|--del)
             local names
             names=$(command pd list 2>/dev/null | awk '{print $1}')
             COMPREPLY=($(compgen -W "$names" -- "$cur"))
+            return ;;
+        -x|--expand)
+            _pd_nav_complete "$cur"
             return ;;
         -l|--list|-c|--clear|-v|--version|-h|--help)
             return ;;
@@ -170,11 +204,16 @@ _pd_completions() {
                 COMPREPLY=($(compgen -d -- "$typed"))
             fi
             return ;;
-        del|-d|--del|expand|-x|--expand)
+        del|-d|--del)
             if [[ $COMP_CWORD -eq 2 ]]; then
                 local names
                 names=$(command pd list 2>/dev/null | awk '{print $1}')
                 COMPREPLY=($(compgen -W "$names" -- "$cur"))
+            fi
+            return ;;
+        expand|-x|--expand)
+            if [[ $COMP_CWORD -eq 2 ]]; then
+                _pd_nav_complete "$cur"
             fi
             return ;;
         export|-e|--export|import|-i|--import)
@@ -184,21 +223,7 @@ _pd_completions() {
             return ;;
     esac
 
-    if [[ "$cur" == */* ]]; then
-        local ref="${cur%%/*}"
-        local relpath="${cur#*/}"
-        local base
-        base=$(command pd get "$ref" 2>/dev/null) || return
-        [[ -z "$base" ]] && return
-        local targets
-        targets=$(compgen -d -- "$base/$relpath")
-        [[ -z "$targets" ]] && return
-        COMPREPLY=($(echo "$targets" | sed "s|^$base/|$ref/|" | sed 's|/*$|/|'))
-    else
-        local names
-        names=$(command pd list 2>/dev/null | awk '{print $1}')
-        COMPREPLY=($(compgen -W "$names" -- "$cur"))
-    fi
+    _pd_nav_complete "$cur"
 }
 
 complete -o nospace -F _pd_completions pd
@@ -229,6 +254,37 @@ def _pd_bookmark_names [] {
     } catch { [] }
 }
 
+# Helper: complete a navigation/expand argument — bookmark names OR relative paths.
+def _pd_nav_complete [cur: string] {
+    if ($cur | str contains '/') {
+        let ref_name = ($cur | split row '/' | first)
+        let rel_typed = ($cur | str replace $"($ref_name)/" "")
+        let get_result = (do { ^pd get $ref_name } | complete)
+        if $get_result.exit_code != 0 { return [] }
+        let base = ($get_result.stdout | str trim)
+        if ($base | is-empty) { return [] }
+        let search_dir = if ($rel_typed | is-empty) or (not ($rel_typed | str contains '/')) {
+            $base
+        } else {
+            let dir_part = ($rel_typed | str replace --regex '[^/]*$' '' | str trim --right --char '/')
+            if ($dir_part | is-empty) { $base } else { $"($base)/($dir_part)" }
+        }
+        try {
+            ls --all $search_dir
+            | where type == dir
+            | get name
+            | each { |p|
+                let p_norm = ($p | into string | str replace --all '\' '/')
+                let base_norm = ($base | str replace --all '\' '/')
+                let rel = ($p_norm | str replace $"($base_norm)/" "")
+                $"($ref_name)/($rel)"
+            }
+        } catch { [] }
+    } else {
+        _pd_bookmark_names
+    }
+}
+
 # Custom completer called by nushell on every <Tab> press.
 # Receives the full command-line context string and the cursor offset.
 def _pd_completer [context: string, offset: int] {
@@ -252,9 +308,12 @@ def _pd_completer [context: string, offset: int] {
         if $n >= 2 { $args_tokens | get ($n - 2) } else { "" }
     }
 
-    # Flags that expect a bookmark name next
-    if ($prev in ["-d" "--del" "-x" "--expand"]) {
+    # Flags that expect a bookmark name (del) or bookmark name/relative path (expand) next
+    if ($prev in ["-d" "--del"]) {
         return (_pd_bookmark_names)
+    }
+    if ($prev in ["-x" "--expand"]) {
+        return (_pd_nav_complete $cur)
     }
 
     # Flags that expect a file/dir path next — return empty so nushell
@@ -278,46 +337,13 @@ def _pd_completer [context: string, offset: int] {
     let subcmd = if $n > 0 { $args_tokens.0 } else { "" }
 
     if $cur_pos == 0 {
-        if ($cur | str contains '/') {
-            # Relative-path completion: "bookmarkname/partial/path<TAB>"
-            let ref_name = ($cur | split row '/' | first)
-            let rel_typed = ($cur | str replace $"($ref_name)/" "")
-
-            # Resolve the bookmark without printing an error if not found
-            let get_result = (do { ^pd get $ref_name } | complete)
-            if $get_result.exit_code != 0 { return [] }
-            let base = ($get_result.stdout | str trim)
-            if ($base | is-empty) { return [] }
-
-            # Determine which directory to list.
-            # Strip the partial name being typed (everything after the last '/')
-            # so "Aletheia42/sub_par" and "Aletheia42/" both search in "$base/Aletheia42".
-            let search_dir = if ($rel_typed | is-empty) or (not ($rel_typed | str contains '/')) {
-                $base
-            } else {
-                let dir_part = ($rel_typed | str replace --regex '[^/]*$' '' | str trim --right --char '/')
-                if ($dir_part | is-empty) { $base } else { $"($base)/($dir_part)" }
-            }
-
-            try {
-                ls $search_dir
-                | where type == dir
-                | get name
-                | each { |p|
-                    # Normalize OS path separators to '/' for the completion string
-                    let p_norm = ($p | into string | str replace --all '\' '/')
-                    let base_norm = ($base | str replace --all '\' '/')
-                    let rel = ($p_norm | str replace $"($base_norm)/" "")
-                    $"($ref_name)/($rel)"
-                }
-            } catch { [] }
-        } else {
-            # Complete bookmark names (navigation target or subcommand being typed)
-            _pd_bookmark_names
-        }
-    } else if ($subcmd in ["del" "expand"]) and $cur_pos == 1 {
+        _pd_nav_complete $cur
+    } else if ($subcmd == "del") and $cur_pos == 1 {
         # Subcommand form: complete the bookmark name argument
         _pd_bookmark_names
+    } else if ($subcmd == "expand") and $cur_pos == 1 {
+        # Subcommand form: complete bookmark name or relative path
+        _pd_nav_complete $cur
     } else if ($subcmd in ["add" "-a" "--add"]) and $cur_pos >= 2 {
         # Path argument of add: complete directories.
         # When cur ends with a separator the user wants to list inside that
@@ -388,6 +414,36 @@ def _pd_bookmark_names [] {
     } catch { [] }
 }
 
+def _pd_nav_complete [cur: string] {
+    if ($cur | str contains '/') {
+        let ref_name = ($cur | split row '/' | first)
+        let rel_typed = ($cur | str replace $"($ref_name)/" "")
+        let get_result = (do { ^pd get $ref_name } | complete)
+        if $get_result.exit_code != 0 { return [] }
+        let base = ($get_result.stdout | str trim)
+        if ($base | is-empty) { return [] }
+        let search_dir = if ($rel_typed | is-empty) or (not ($rel_typed | str contains '/')) {
+            $base
+        } else {
+            let dir_part = ($rel_typed | str replace --regex '[^/]*$' '' | str trim --right --char '/')
+            if ($dir_part | is-empty) { $base } else { $"($base)/($dir_part)" }
+        }
+        try {
+            ls --all $search_dir
+            | where type == dir
+            | get name
+            | each { |p|
+                let p_norm = ($p | into string | str replace --all '\' '/')
+                let base_norm = ($base | str replace --all '\' '/')
+                let rel = ($p_norm | str replace $"($base_norm)/" "")
+                $"($ref_name)/($rel)"
+            }
+        } catch { [] }
+    } else {
+        _pd_bookmark_names
+    }
+}
+
 def _pd_completer [context: string, offset: int] {
     let args_tokens = (
         $context
@@ -404,8 +460,11 @@ def _pd_completer [context: string, offset: int] {
         if $n >= 2 { $args_tokens | get ($n - 2) } else { "" }
     }
 
-    if ($prev in ["-d" "--del" "-x" "--expand"]) {
+    if ($prev in ["-d" "--del"]) {
         return (_pd_bookmark_names)
+    }
+    if ($prev in ["-x" "--expand"]) {
+        return (_pd_nav_complete $cur)
     }
     if ($prev in ["-a" "--add" "-e" "--export" "-i" "--import"]) {
         return []
@@ -421,35 +480,11 @@ def _pd_completer [context: string, offset: int] {
     let subcmd = if $n > 0 { $args_tokens.0 } else { "" }
 
     if $cur_pos == 0 {
-        if ($cur | str contains '/') {
-            let ref_name = ($cur | split row '/' | first)
-            let rel_typed = ($cur | str replace $"($ref_name)/" "")
-            let get_result = (do { ^pd get $ref_name } | complete)
-            if $get_result.exit_code != 0 { return [] }
-            let base = ($get_result.stdout | str trim)
-            if ($base | is-empty) { return [] }
-            let search_dir = if ($rel_typed | is-empty) or (not ($rel_typed | str contains '/')) {
-                $base
-            } else {
-                let dir_part = ($rel_typed | str replace --regex '[^/]*$' '' | str trim --right --char '/')
-                if ($dir_part | is-empty) { $base } else { $"($base)/($dir_part)" }
-            }
-            try {
-                ls $search_dir
-                | where type == dir
-                | get name
-                | each { |p|
-                    let p_norm = ($p | into string | str replace --all '\' '/')
-                    let base_norm = ($base | str replace --all '\' '/')
-                    let rel = ($p_norm | str replace $"($base_norm)/" "")
-                    $"($ref_name)/($rel)"
-                }
-            } catch { [] }
-        } else {
-            _pd_bookmark_names
-        }
-    } else if ($subcmd in ["del" "expand"]) and $cur_pos == 1 {
+        _pd_nav_complete $cur
+    } else if ($subcmd == "del") and $cur_pos == 1 {
         _pd_bookmark_names
+    } else if ($subcmd == "expand") and $cur_pos == 1 {
+        _pd_nav_complete $cur
     } else if ($subcmd in ["add" "-a" "--add"]) and $cur_pos >= 2 {
         let dir = if ($cur | is-empty) {
             "."
@@ -536,12 +571,43 @@ Register-ArgumentCompleter -CommandName pd -ScriptBlock ({
              ForEach-Object { ($_ -split '\s+', 2)[0] } |
              Where-Object   { $_ -ne '' }
 
+    # Helper: complete a navigation/expand argument — bookmark names OR relative paths.
+    # Closes over $cur, $names, $mkResult, $_pdBinPath from the enclosing scope.
+    $navComplete = {
+        if ($cur -like '*/*') {
+            $refName  = ($cur -split '/', 2)[0]
+            $relTyped = ($cur -split '/', 2)[1]
+            $rawBase  = & $_pdBinPath get $refName 2>$null
+            $baseExit = $LASTEXITCODE
+            $base     = if ($rawBase) { "$rawBase".Trim() } else { '' }
+            if ($baseExit -ne 0 -or -not $base) { return }
+            $searchDir = if ($relTyped -match '[/\\]') {
+                $lastSep = [Math]::Max($relTyped.LastIndexOf('/'), $relTyped.LastIndexOf('\'))
+                Join-Path $base $relTyped.Substring(0, $lastSep)
+            } else { $base }
+            $baseTrimmed = $base.TrimEnd('\', '/')
+            Get-ChildItem -LiteralPath $searchDir -Directory -ErrorAction SilentlyContinue |
+                ForEach-Object {
+                    $rel = $_.FullName.Substring($baseTrimmed.Length).TrimStart('\', '/')
+                    "$refName/$($rel -replace '\\', '/')"
+                } |
+                Where-Object { $_ -like "$cur*" } |
+                ForEach-Object { & $mkResult $_ }
+        } else {
+            $names | Where-Object { $_ -like "$cur*" } | ForEach-Object { & $mkResult $_ }
+        }
+    }
+
     # ── Prev-based dispatch ──────────────────────────────────────────────────
 
-    # Flags that expect a bookmark name next
-    if ($prev -in '-d', '--del', '-x', '--expand') {
+    # -d/--del expects a bookmark name; -x/--expand accepts a bookmark name or relative path
+    if ($prev -in '-d', '--del') {
         $names | Where-Object { $_ -like "$cur*" } |
                  ForEach-Object { & $mkResult $_ }
+        return
+    }
+    if ($prev -in '-x', '--expand') {
+        & $navComplete
         return
     }
 
@@ -565,41 +631,13 @@ Register-ArgumentCompleter -CommandName pd -ScriptBlock ({
     # ── Position-aware dispatch ──────────────────────────────────────────────
 
     if ($curPos -eq 0) {
-        if ($cur -like '*/*') {
-            # Relative-path completion: "bookmarkname/partial/path"
-            $refName  = ($cur -split '/', 2)[0]
-            $relTyped = ($cur -split '/', 2)[1]
+        & $navComplete
 
-            $rawBase  = & $_pdBinPath get $refName 2>$null
-            $baseExit = $LASTEXITCODE
-            $base     = if ($rawBase) { "$rawBase".Trim() } else { '' }
-            if ($baseExit -ne 0 -or -not $base) { return }
-
-            # Strip the partial filename component to find the directory to list
-            $searchDir = if ($relTyped -match '[/\\]') {
-                $lastSep = [Math]::Max($relTyped.LastIndexOf('/'), $relTyped.LastIndexOf('\'))
-                $dirPart = $relTyped.Substring(0, $lastSep)
-                Join-Path $base $dirPart
-            } else {
-                $base
-            }
-
-            $baseTrimmed = $base.TrimEnd('\', '/')
-            Get-ChildItem -LiteralPath $searchDir -Directory -ErrorAction SilentlyContinue |
-                ForEach-Object {
-                    $rel = $_.FullName.Substring($baseTrimmed.Length).TrimStart('\', '/')
-                    "$refName/$($rel -replace '\\', '/')"
-                } |
-                Where-Object { $_ -like "$cur*" } |
-                ForEach-Object { & $mkResult $_ }
-
-        } else {
-            # Complete bookmark names (navigation target)
-            $names | Where-Object { $_ -like "$cur*" } | ForEach-Object { & $mkResult $_ }
-        }
-
-    } elseif ($subcmd -in 'del', 'expand' -and $curPos -eq 1) {
+    } elseif ($subcmd -eq 'del' -and $curPos -eq 1) {
         $names | Where-Object { $_ -like "$cur*" } | ForEach-Object { & $mkResult $_ }
+
+    } elseif ($subcmd -eq 'expand' -and $curPos -eq 1) {
+        & $navComplete
 
     } elseif ($subcmd -in 'add', '-a', '--add' -and $curPos -ge 2) {
         # Directory completion for the path argument of 'add'
@@ -658,11 +696,37 @@ Register-ArgumentCompleter -CommandName pd -ScriptBlock ({
              ForEach-Object { ($_ -split '\s+', 2)[0] } |
              Where-Object   { $_ -ne '' }
 
-    if ($prev -in '-d', '--del', '-x', '--expand') {
+    $navComplete = {
+        if ($cur -like '*/*') {
+            $refName  = ($cur -split '/', 2)[0]
+            $relTyped = ($cur -split '/', 2)[1]
+            $rawBase  = & $_pdBinPath get $refName 2>$null
+            $baseExit = $LASTEXITCODE
+            $base     = if ($rawBase) { "$rawBase".Trim() } else { '' }
+            if ($baseExit -ne 0 -or -not $base) { return }
+            $searchDir = if ($relTyped -match '[/\\]') {
+                $lastSep = [Math]::Max($relTyped.LastIndexOf('/'), $relTyped.LastIndexOf('\'))
+                Join-Path $base $relTyped.Substring(0, $lastSep)
+            } else { $base }
+            $baseTrimmed = $base.TrimEnd('\', '/')
+            Get-ChildItem -LiteralPath $searchDir -Directory -ErrorAction SilentlyContinue |
+                ForEach-Object {
+                    $rel = $_.FullName.Substring($baseTrimmed.Length).TrimStart('\', '/')
+                    "$refName/$($rel -replace '\\', '/')"
+                } |
+                Where-Object { $_ -like "$cur*" } |
+                ForEach-Object { & $mkResult $_ }
+        } else {
+            $names | Where-Object { $_ -like "$cur*" } | ForEach-Object { & $mkResult $_ }
+        }
+    }
+
+    if ($prev -in '-d', '--del') {
         $names | Where-Object { $_ -like "$cur*" } |
                  ForEach-Object { & $mkResult $_ }
         return
     }
+    if ($prev -in '-x', '--expand') { & $navComplete; return }
     if ($prev -in '-e', '--export', '-i', '--import') { return }
     if ($prev -in '-l', '--list', '-c', '--clear', '-v', '--version', '-h', '--help') { return }
 
@@ -676,32 +740,11 @@ Register-ArgumentCompleter -CommandName pd -ScriptBlock ({
     }
 
     if ($curPos -eq 0) {
-        if ($cur -like '*/*') {
-            $refName  = ($cur -split '/', 2)[0]
-            $relTyped = ($cur -split '/', 2)[1]
-            $rawBase  = & $_pdBinPath get $refName 2>$null
-            $baseExit = $LASTEXITCODE
-            $base     = if ($rawBase) { "$rawBase".Trim() } else { '' }
-            if ($baseExit -ne 0 -or -not $base) { return }
-            $searchDir = if ($relTyped -match '[/\\]') {
-                $lastSep = [Math]::Max($relTyped.LastIndexOf('/'), $relTyped.LastIndexOf('\'))
-                Join-Path $base $relTyped.Substring(0, $lastSep)
-            } else {
-                $base
-            }
-            $baseTrimmed = $base.TrimEnd('\', '/')
-            Get-ChildItem -LiteralPath $searchDir -Directory -ErrorAction SilentlyContinue |
-                ForEach-Object {
-                    $rel = $_.FullName.Substring($baseTrimmed.Length).TrimStart('\', '/')
-                    "$refName/$($rel -replace '\\', '/')"
-                } |
-                Where-Object { $_ -like "$cur*" } |
-                ForEach-Object { & $mkResult $_ }
-        } else {
-            $names | Where-Object { $_ -like "$cur*" } | ForEach-Object { & $mkResult $_ }
-        }
-    } elseif ($subcmd -in 'del', 'expand' -and $curPos -eq 1) {
+        & $navComplete
+    } elseif ($subcmd -eq 'del' -and $curPos -eq 1) {
         $names | Where-Object { $_ -like "$cur*" } | ForEach-Object { & $mkResult $_ }
+    } elseif ($subcmd -eq 'expand' -and $curPos -eq 1) {
+        & $navComplete
     } elseif ($subcmd -in 'add', '-a', '--add' -and $curPos -ge 2) {
         $dirBase = if ($cur -eq '') {
                        '.'
