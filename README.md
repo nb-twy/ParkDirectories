@@ -228,7 +228,8 @@ pd proj/docs/getting-started
 | `pd <Tab>` | Bookmark names |
 | `pd name/<Tab>` | Subdirectories of the bookmarked path |
 | `pd -a name <Tab>` | Filesystem directories |
-| `pd -d <Tab>`, `pd -x <Tab>` | Bookmark names |
+| `pd -d <Tab>` | Bookmark names |
+| `pd -x <Tab>`, `pd -x name/<Tab>` | Bookmark names / subdirectories (same as navigation) |
 | `pd -<Tab>`, `pd --<Tab>` | Available flags |
 
 Tab completion extends into subdirectories: `pd proj/<Tab>` lists the
