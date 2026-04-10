@@ -1,6 +1,6 @@
 [package]
 name = "pd"
-version = "3.1.0"
+version = "3.1.1"
 edition = "2021"
 description = "Park Directories — directory bookmarks for your terminal"
 license = "BSD-3-Clause"
