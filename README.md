@@ -26,7 +26,7 @@
 
 ## Introduction
 
-Do you have a handful of directories you work in every day — your dev root, a 
+Do you have a handful of directories you work in every day — your dev root, 
 several project roots, a log directory? Do you find yourself setting up shell
 aliases that have to be updated regularly, or using tab-completion to reach
 a deep directory, or opening multiple terminals, tabs, or views to avoid having
@@ -55,11 +55,8 @@ Park Directories is designed with scripting in mind. Use `pd -x name` to expand
 a bookmark to its full path without navigating — handy for building up shell
 commands.
 ```nushell
+## nushell
 cp $"(pd -x proj/target/release/bin.exe)" ~/local/bin
-```
-
-```bash
-cp "$(pd -x proj/target/release/bin.exe)" ~/local/bin
 ```
 
 ### Technology Overview
@@ -264,6 +261,7 @@ command.
 making it easy to use bookmarks in shell commands:
 
 ```nushell
+## nushell
 cp -r $"(pd -x src)/assets" $"(pd -x build)/assets"
 ```
 ---
