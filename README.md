@@ -1,4 +1,4 @@
-![Version](https://img.shields.io/badge/Version-3.1.1-blue)
+![Version](https://img.shields.io/badge/Version-3.2.0-blue)
 
 # Park Directories
 
