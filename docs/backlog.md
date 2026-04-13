@@ -53,7 +53,7 @@ All bookmark logic implemented in Rust. No shell integration yet — this phase 
 - [x] Unit tests for name validation
 - [x] Unit tests for path resolution with relative suffixes and `..` normalization
 - [x] Unit tests for `BookmarkStore` CRUD operations
-- [ ] Integration tests using a temporary data file for each subcommand
+- [x] Integration tests using a temporary data file for each subcommand
 
 ---
 
@@ -178,7 +178,7 @@ Target the two mainstream shells not yet covered. Both require only a new
 
 ## Phase 9: Refinements and Carry-over Items
 
-- [ ] Integration tests using a temporary data file for each subcommand (moved from Phase 1)
+- [x] Integration tests using a temporary data file for each subcommand (moved from Phase 1)
 - [ ] `--force` flag behavior audit across all commands
 - [ ] Improve `pd list` output formatting for very long names or paths (truncation/wrapping)
 - [ ] `pd rename <old> <new>` — rename a bookmark without changing its path
