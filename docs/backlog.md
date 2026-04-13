@@ -53,7 +53,7 @@ All bookmark logic implemented in Rust. No shell integration yet — this phase 
 - [x] Unit tests for name validation
 - [x] Unit tests for path resolution with relative suffixes and `..` normalization
 - [x] Unit tests for `BookmarkStore` CRUD operations
-- [ ] Integration tests using a temporary data file for each subcommand
+- [x] Integration tests using a temporary data file for each subcommand
 
 ---
 
@@ -118,19 +118,19 @@ The binary generates the shell shim code, making installation self-contained.
 ## Phase 6: CI, GitHub Releases, and cargo install
 
 ### CI and GitHub Releases
-- [ ] Set up GitHub Actions CI
-  - [ ] Build and test on Windows (x64)
-  - [ ] Build and test on Linux x64 (musl for fully static binary)
-  - [ ] Build on Linux ARM64 (musl)
-- [ ] Automate GitHub Release creation on version tag push
-  - [ ] Attach pre-built binaries for each target
-  - [ ] Include SHA256 checksums
-- [ ] Write installation guide in README (download binary, add to PATH, run `pd init`)
+- [x] Set up GitHub Actions CI
+  - [x] Build and test on Windows (x64)
+  - [x] Build and test on Linux x64 (musl for fully static binary)
+  - [x] Build on Linux ARM64 (musl)
+- [x] Automate GitHub Release creation on version tag push
+  - [x] Attach pre-built binaries for each target
+  - [x] Include SHA256 checksums
+- [x] Write installation guide in README (download binary, add to PATH, run `pd init`)
 - [ ] Version the shell init scripts alongside the binary
 
 ### cargo install (crates.io)
-- [ ] Verify crate name `pd` is available on crates.io; if not, use `park-directories` with `[[bin]] name = "pd"`
-- [ ] Complete `Cargo.toml` metadata: `repository`, `keywords`, `categories`, `readme`
+- [x] Verify crate name `pd` is available on crates.io; if not, use `park-directories` with `[[bin]] name = "pd"`
+- [x] Complete `Cargo.toml` metadata: `repository`, `keywords`, `categories`, `readme`
 - [ ] `cargo publish` after CI is in place and confirms clean cross-platform builds
 
 ---
@@ -178,7 +178,7 @@ Target the two mainstream shells not yet covered. Both require only a new
 
 ## Phase 9: Refinements and Carry-over Items
 
-- [ ] Integration tests using a temporary data file for each subcommand (moved from Phase 1)
+- [x] Integration tests using a temporary data file for each subcommand (moved from Phase 1)
 - [ ] `--force` flag behavior audit across all commands
 - [ ] Improve `pd list` output formatting for very long names or paths (truncation/wrapping)
 - [ ] `pd rename <old> <new>` — rename a bookmark without changing its path

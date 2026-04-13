@@ -1,9 +1,13 @@
 [package]
-name = "pd"
+name = "park-directories"
 version = "3.1.1"
 edition = "2021"
 description = "Park Directories — directory bookmarks for your terminal"
 license = "BSD-3-Clause"
+repository = "https://github.com/nb-twy/ParkDirectories"
+keywords = ["bookmark", "directory", "navigation", "shell", "cli"]
+categories = ["command-line-utilities"]
+readme = "README.md"
 
 [[bin]]
 name = "pd"
@@ -13,3 +17,6 @@ path = "src/main.rs"
 clap = { version = "4", features = ["derive", "env"] }
 dirs = "5"
 thiserror = "1"
+
+[dev-dependencies]
+tempfile = "3"

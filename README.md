@@ -11,6 +11,7 @@
     - [Scripting](#scripting)
     - [Technology Overview](#technology-overview)
   - [Installation](#installation)
+    - [Get the binary](#get-the-binary)
     - [Nushell — Windows and Linux](#nushell--windows-and-linux)
     - [Bash — Linux](#bash--linux)
     - [PowerShell — Windows](#powershell--windows)
@@ -70,11 +71,32 @@ available in all others.
 
 ## Installation
 
-### Nushell — Windows and Linux
+### Get the binary
 
-**Step 1 — Get the binary**
+**Option 1 — Download a pre-built binary (recommended)**
 
-Build from source (requires [Rust](https://rustup.rs)):
+Download the latest release from the
+[Releases page](https://github.com/nb-twy/ParkDirectories/releases/latest):
+
+| Platform | File |
+|---|---|
+| Windows x64 | `pd-x86_64-pc-windows-msvc.exe` |
+| Linux x64 | `pd-x86_64-unknown-linux-musl` |
+| Linux ARM64 | `pd-aarch64-unknown-linux-musl` |
+
+Rename the file to `pd` (or `pd.exe` on Windows) and copy it to a directory in
+your PATH:
+
+- **Windows:** `C:\Users\you\bin\pd.exe` (where `C:\Users\you\bin` is in `$env:PATH`)
+- **Linux:** `~/.local/bin/pd` (where `~/.local/bin` is in `$PATH`)
+
+**Option 2 — Install with cargo**
+
+```
+cargo install park-directories
+```
+
+**Option 3 — Build from source**
 
 ```
 git clone https://github.com/nb-twy/ParkDirectories.git
@@ -82,12 +104,14 @@ cd ParkDirectories
 cargo build --release
 ```
 
-Copy the binary to a directory in your PATH:
+Copy `target/release/pd` (or `target\release\pd.exe` on Windows) to a directory
+in your PATH.
 
-- **Windows:** copy `target\release\pd.exe` to a directory in `$env.PATH`,
-  for example `C:\Users\you\bin\`
-- **Linux:** copy `target/release/pd` to a directory in `$PATH`,
-  for example `~/.local/bin/`
+---
+
+### Nushell — Windows and Linux
+
+**Step 1 — [Get the binary](#get-the-binary)** (see above)
 
 **Step 2 — Generate the nushell integration file**
 
@@ -117,18 +141,7 @@ pd init nu | save -f ~/.config/nushell/pd.nu
 
 ### Bash — Linux
 
-**Step 1 — Get the binary**
-
-Build from source (requires [Rust](https://rustup.rs)):
-
-```bash
-git clone https://github.com/nb-twy/ParkDirectories.git
-cd ParkDirectories
-cargo build --release
-```
-
-Copy `target/release/pd` to a directory in your `$PATH`, for example
-`~/.local/bin/`.
+**Step 1 — [Get the binary](#get-the-binary)** (see above)
 
 **Step 2 — Add shell integration to your bashrc**
 
@@ -149,18 +162,7 @@ eval "$(pd init bash)"
 
 ### PowerShell — Windows
 
-**Step 1 — Get the binary**
-
-Build from source (requires [Rust](https://rustup.rs)):
-
-```powershell
-git clone https://github.com/nb-twy/ParkDirectories.git
-cd ParkDirectories
-cargo build --release
-```
-
-Copy `target\release\pd.exe` to a directory in your `$env:PATH`, for example
-`C:\Users\you\bin\`.
+**Step 1 — [Get the binary](#get-the-binary)** (see above)
 
 **Step 2 — Add the PowerShell integration to your profile**
 
