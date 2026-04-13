@@ -184,6 +184,16 @@ fn parse_import_file(src: &Path) -> Result<Vec<(String, PathBuf)>, PdError> {
 }
 
 pub fn cmd_help() {
+    if let Ok(init_ver) = std::env::var("PD_INIT_VERSION") {
+        let bin_ver = env!("CARGO_PKG_VERSION");
+        if init_ver != bin_ver {
+            eprintln!(
+                "pd: note: shell integration is v{init_ver} but binary is v{bin_ver}.\n\
+                 Run `pd init <shell>` to update.\n"
+            );
+        }
+    }
+
     print!(
         "\
 Park Directories — directory bookmarks for your terminal
