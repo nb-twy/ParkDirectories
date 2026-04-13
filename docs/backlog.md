@@ -126,7 +126,7 @@ The binary generates the shell shim code, making installation self-contained.
   - [x] Attach pre-built binaries for each target
   - [x] Include SHA256 checksums
 - [x] Write installation guide in README (download binary, add to PATH, run `pd init`)
-- [ ] Version the shell init scripts alongside the binary
+- [x] Version the shell init scripts alongside the binary
 
 ### cargo install (crates.io)
 - [x] Verify crate name `pd` is available on crates.io; if not, use `park-directories` with `[[bin]] name = "pd"`

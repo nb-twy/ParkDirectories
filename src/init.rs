@@ -11,7 +11,7 @@ pub fn print_init(shell: &str) -> Result<(), PdError> {
             )))
         }
     };
-    print!("{script}");
+    print!("{}", script.replace("{PD_VERSION}", env!("CARGO_PKG_VERSION")));
     Ok(())
 }
 
@@ -37,6 +37,8 @@ pub fn print_completions(shell: &str) -> Result<(), PdError> {
 const BASH_INIT: &str = r#"# Park Directories — bash integration
 # Add to ~/.bashrc:
 #   eval "$(pd init bash)"
+
+export PD_INIT_VERSION="{PD_VERSION}"
 
 pd() {
     # No arguments: list all bookmarks (consistent with nushell shim)
@@ -239,6 +241,8 @@ const NU_INIT: &str = r#"# Park Directories — nushell integration
 #   pd init nu | save -f ~/.config/nushell/pd.nu
 # Add to ~/.config/nushell/config.nu:
 #   source ~/.config/nushell/pd.nu
+
+$env.PD_INIT_VERSION = "{PD_VERSION}"
 
 # ── Internal helpers ─────────────────────────────────────────────────────────
 
@@ -512,6 +516,8 @@ def _pd_completer [context: string, offset: int] {
 const PWSH_INIT: &str = r#"# Park Directories — PowerShell integration
 # Add to $PROFILE:
 #   & pd init pwsh | Out-String | Invoke-Expression
+
+$env:PD_INIT_VERSION = "{PD_VERSION}"
 
 # Resolve the binary path once at load time so the function can bypass itself.
 $script:_pdBin = (Get-Command -Name 'pd' -CommandType Application -ErrorAction SilentlyContinue |
