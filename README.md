@@ -118,30 +118,33 @@ in your PATH.
 
 **Step 1 — [Get the binary](#get-the-binary)** (see above)
 
-**Step 2 — Generate the nushell integration file**
+**Step 2 — Add to your nushell config**
+
+Add these two lines to `~/.config/nushell/config.nu`:
 
 ```nushell
-pd init nu | save -f ~/.config/nushell/pd.nu
-```
-
-**Step 3 — Source it in your nushell config**
-
-Add the following line to `~/.config/nushell/config.nu`:
-
-```nushell
+^pd init nu | save -f ~/.config/nushell/pd.nu
 source ~/.config/nushell/pd.nu
 ```
 
-**Step 4 — Restart your terminal** (or run `source ~/.config/nushell/config.nu`)
+The first line regenerates the integration script from the binary on every
+shell startup, so the integration stays in sync automatically whenever you
+update `pd`. You can store `pd.nu` anywhere you like — just use the same path
+in both lines.
+
+> **Note:** `~/.config/nushell/` does not exist by default. Before adding
+> these lines, either create the directory (`mkdir ~/.config/nushell`) or
+> choose a directory that already exists and adjust the path accordingly.
+> `config.nu` itself is typically found at the path reported by
+> `$nu.config-path`.
+
+**Step 3 — Restart your terminal**
 
 **Updating**
 
 Update the binary (if installed via cargo: `cargo install park-directories`),
-then regenerate `pd.nu` to pick up any shell integration changes:
-
-```nushell
-pd init nu | save -f ~/.config/nushell/pd.nu
-```
+then restart your terminal. The integration script regenerates automatically
+on startup — no additional steps required.
 
 ---
 
