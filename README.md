@@ -92,9 +92,14 @@ your PATH:
 
 **Option 2 — Install with cargo**
 
+Requires [Rust](https://rustup.rs) (rustup is recommended).
+
 ```
 cargo install park-directories
 ```
+
+The binary is installed as `pd` in `~/.cargo/bin/`, which rustup adds to your
+PATH automatically. To update to the latest version, re-run the same command.
 
 **Option 3 — Build from source**
 
@@ -131,7 +136,8 @@ source ~/.config/nushell/pd.nu
 
 **Updating**
 
-When you update the `pd` binary, regenerate `pd.nu` to pick up any changes:
+Update the binary (if installed via cargo: `cargo install park-directories`),
+then regenerate `pd.nu` to pick up any shell integration changes:
 
 ```nushell
 pd init nu | save -f ~/.config/nushell/pd.nu
@@ -152,7 +158,8 @@ source ~/.bashrc
 
 **Updating**
 
-When you update the `pd` binary, restart your terminal or run:
+Update the binary (if installed via cargo: `cargo install park-directories`),
+then restart your terminal or run:
 
 ```bash
 eval "$(pd init bash)"
@@ -179,8 +186,8 @@ exist.
 
 **Updating**
 
-When you update the `pd` binary, restart your terminal or run `. $PROFILE` to
-re-evaluate the integration.
+Update the binary (if installed via cargo: `cargo install park-directories`),
+then restart your terminal or run `. $PROFILE` to re-evaluate the integration.
 
 ---
 
