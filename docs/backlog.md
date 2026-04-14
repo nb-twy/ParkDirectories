@@ -131,7 +131,7 @@ The binary generates the shell shim code, making installation self-contained.
 ### cargo install (crates.io)
 - [x] Verify crate name `pd` is available on crates.io; if not, use `park-directories` with `[[bin]] name = "pd"`
 - [x] Complete `Cargo.toml` metadata: `repository`, `keywords`, `categories`, `readme`
-- [ ] `cargo publish` after CI is in place and confirms clean cross-platform builds
+- [x] `cargo publish` after CI is in place and confirms clean cross-platform builds
 
 ---
 
