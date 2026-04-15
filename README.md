@@ -196,7 +196,7 @@ a navigable popup list — the closest experience to nushell's completion menu.
 | Mode | Behavior |
 |---|---|
 | `TabCompleteNext` (default) | Cycles through matches inline, one at a time |
-| `Complete` | Completes immediately if only one match; lists all if ambiguous |
+| `Complete` | Completes immediately if only one match; lists all after double `Tab` if ambiguous |
 | `MenuComplete` | Opens a navigable popup list — select with arrow keys and `Enter` |
 
 To always use the popup list, add this to your `$PROFILE`:
@@ -205,10 +205,10 @@ To always use the popup list, add this to your `$PROFILE`:
 Set-PSReadLineKeyHandler -Key Tab -Function MenuComplete
 ```
 
-Or keep inline cycling on `Tab` and bind the popup to `Ctrl+Space`:
+Below is the author's preference.
 
 ```powershell
-Set-PSReadLineKeyHandler -Key Tab        -Function TabCompleteNext
+Set-PSReadLineKeyHandler -Key Tab        -Function Complete
 Set-PSReadLineKeyHandler -Key Shift+Tab  -Function TabCompletePrevious
 Set-PSReadLineKeyHandler -Key Ctrl+Spacebar -Function MenuComplete
 ```
