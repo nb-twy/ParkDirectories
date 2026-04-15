@@ -320,9 +320,24 @@ def _pd_completer [context: string, offset: int] {
         return (_pd_nav_complete $cur)
     }
 
-    # Flags that expect a file/dir path next — return empty so nushell
-    # falls back to its built-in file completer
-    if ($prev in ["-a" "--add" "-e" "--export" "-i" "--import"]) {
+    # export/import: complete files and directories
+    if ($prev in ["-e" "--export" "-i" "--import"]) {
+        let dir = if ($cur | is-empty) {
+            "."
+        } else if ($cur | str ends-with '\') or ($cur | str ends-with '/') {
+            $cur
+        } else {
+            $cur | path dirname
+        }
+        return (try {
+            ls --all $dir
+            | get name
+            | each { |p| $p | into string }
+        } catch { [] })
+    }
+
+    # add: no completion for the name argument (path is handled position-aware below)
+    if ($prev in ["-a" "--add"]) {
         return []
     }
 
@@ -363,6 +378,20 @@ def _pd_completer [context: string, offset: int] {
         try {
             ls --all $dir
             | where type == dir
+            | get name
+            | each { |p| $p | into string }
+        } catch { [] }
+    } else if ($subcmd in ["export" "import"]) and $cur_pos == 1 {
+        # Subcommand form of export/import: complete files and directories
+        let dir = if ($cur | is-empty) {
+            "."
+        } else if ($cur | str ends-with '\') or ($cur | str ends-with '/') {
+            $cur
+        } else {
+            $cur | path dirname
+        }
+        try {
+            ls --all $dir
             | get name
             | each { |p| $p | into string }
         } catch { [] }
@@ -470,7 +499,21 @@ def _pd_completer [context: string, offset: int] {
     if ($prev in ["-x" "--expand"]) {
         return (_pd_nav_complete $cur)
     }
-    if ($prev in ["-a" "--add" "-e" "--export" "-i" "--import"]) {
+    if ($prev in ["-e" "--export" "-i" "--import"]) {
+        let dir = if ($cur | is-empty) {
+            "."
+        } else if ($cur | str ends-with '\') or ($cur | str ends-with '/') {
+            $cur
+        } else {
+            $cur | path dirname
+        }
+        return (try {
+            ls --all $dir
+            | get name
+            | each { |p| $p | into string }
+        } catch { [] })
+    }
+    if ($prev in ["-a" "--add"]) {
         return []
     }
     if ($prev in ["-l" "--list" "-c" "--clear" "-v" "--version" "-h" "--help"]) {
@@ -500,6 +543,19 @@ def _pd_completer [context: string, offset: int] {
         try {
             ls --all $dir
             | where type == dir
+            | get name
+            | each { |p| $p | into string }
+        } catch { [] }
+    } else if ($subcmd in ["export" "import"]) and $cur_pos == 1 {
+        let dir = if ($cur | is-empty) {
+            "."
+        } else if ($cur | str ends-with '\') or ($cur | str ends-with '/') {
+            $cur
+        } else {
+            $cur | path dirname
+        }
+        try {
+            ls --all $dir
             | get name
             | each { |p| $p | into string }
         } catch { [] }
