@@ -1,6 +1,6 @@
 [package]
 name = "park-directories"
-version = "3.2.0"
+version = "3.3.0"
 edition = "2021"
 description = "Park Directories — directory bookmarks for your terminal"
 license = "BSD-3-Clause"
