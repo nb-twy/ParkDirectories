@@ -210,7 +210,7 @@ Or keep inline cycling on `Tab` and bind the popup to `Ctrl+Space`:
 ```powershell
 Set-PSReadLineKeyHandler -Key Tab        -Function TabCompleteNext
 Set-PSReadLineKeyHandler -Key Shift+Tab  -Function TabCompletePrevious
-Set-PSReadLineKeyHandler -Key Ctrl+Space -Function MenuComplete
+Set-PSReadLineKeyHandler -Key Ctrl+Spacebar -Function MenuComplete
 ```
 
 **Updating**
