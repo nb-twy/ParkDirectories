@@ -187,6 +187,32 @@ exist.
 
 **Step 3 — Restart your terminal** (or run `. $PROFILE`)
 
+**Tab completion style**
+
+By default, PowerShell cycles through completions one at a time inline. PSReadLine
+(included with PowerShell 5.1+) lets you change this. The `MenuComplete` mode opens
+a navigable popup list — the closest experience to nushell's completion menu.
+
+| Mode | Behavior |
+|---|---|
+| `TabCompleteNext` (default) | Cycles through matches inline, one at a time |
+| `Complete` | Completes immediately if only one match; lists all after double `Tab` if ambiguous |
+| `MenuComplete` | Opens a navigable popup list — select with arrow keys and `Enter` |
+
+To always use the popup list, add this to your `$PROFILE`:
+
+```powershell
+Set-PSReadLineKeyHandler -Key Tab -Function MenuComplete
+```
+
+Below is the author's preference.
+
+```powershell
+Set-PSReadLineKeyHandler -Key Tab           -Function Complete
+Set-PSReadLineKeyHandler -Key Shift+Tab     -Function TabCompletePrevious
+Set-PSReadLineKeyHandler -Key Ctrl+Spacebar -Function MenuComplete
+```
+
 **Updating**
 
 Update the binary (if installed via cargo: `cargo install park-directories`),
