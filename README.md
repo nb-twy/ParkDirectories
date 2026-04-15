@@ -208,8 +208,8 @@ Set-PSReadLineKeyHandler -Key Tab -Function MenuComplete
 Below is the author's preference.
 
 ```powershell
-Set-PSReadLineKeyHandler -Key Tab        -Function Complete
-Set-PSReadLineKeyHandler -Key Shift+Tab  -Function TabCompletePrevious
+Set-PSReadLineKeyHandler -Key Tab           -Function Complete
+Set-PSReadLineKeyHandler -Key Shift+Tab     -Function TabCompletePrevious
 Set-PSReadLineKeyHandler -Key Ctrl+Spacebar -Function MenuComplete
 ```
 
