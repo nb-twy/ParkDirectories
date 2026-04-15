@@ -120,23 +120,30 @@ in your PATH.
 
 **Step 2 — Add to your nushell config**
 
-Add these two lines to `~/.config/nushell/config.nu`:
+Add one line to `~/.config/nushell/env.nu`:
 
 ```nushell
 ^pd init nu | save -f ~/.config/nushell/pd.nu
+```
+
+Then add one line to `~/.config/nushell/config.nu`:
+
+```nushell
 source ~/.config/nushell/pd.nu
 ```
 
-The first line regenerates the integration script from the binary on every
-shell startup, so the integration stays in sync automatically whenever you
-update `pd`. You can store `pd.nu` anywhere you like — just use the same path
-in both lines.
+These two lines must live in **different files**. Nushell resolves `source`
+at parse time, before any code in `config.nu` runs. Putting the `save -f` in
+`env.nu` ensures `pd.nu` exists on disk by the time `config.nu` is parsed —
+whether this is the very first run or after a `pd` upgrade.
+
+You can store `pd.nu` anywhere you like — just use the same path in both lines.
 
 > **Note:** `~/.config/nushell/` does not exist by default. Before adding
 > these lines, either create the directory (`mkdir ~/.config/nushell`) or
 > choose a directory that already exists and adjust the path accordingly.
-> `config.nu` itself is typically found at the path reported by
-> `$nu.config-path`.
+> `env.nu` and `config.nu` are typically found at the paths reported by
+> `$nu.env-path` and `$nu.config-path`.
 
 **Step 3 — Restart your terminal**
 

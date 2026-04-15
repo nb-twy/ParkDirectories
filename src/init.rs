@@ -234,11 +234,11 @@ complete -o nospace -F _pd_completions pd
 // ─── Nushell ─────────────────────────────────────────────────────────────────
 
 /// Full nushell integration: navigation command + tab completion.
-/// Generate with: pd init nu | save -f ~/.config/nushell/pd.nu
-/// Source in config.nu with: source ~/.config/nushell/pd.nu
+/// Add to env.nu:    ^pd init nu | save -f ~/.config/nushell/pd.nu
+/// Add to config.nu: source ~/.config/nushell/pd.nu
 const NU_INIT: &str = r#"# Park Directories — nushell integration
-# Generate this file with:
-#   pd init nu | save -f ~/.config/nushell/pd.nu
+# Add to ~/.config/nushell/env.nu:
+#   ^pd init nu | save -f ~/.config/nushell/pd.nu
 # Add to ~/.config/nushell/config.nu:
 #   source ~/.config/nushell/pd.nu
 
